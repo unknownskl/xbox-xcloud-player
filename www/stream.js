@@ -1,4 +1,5 @@
 console.log('Starting xCloudPlayer...')
+
 var client;
 
 var app = {
@@ -38,7 +39,7 @@ var app = {
                             // Fetch SDP Offer
                             client.createOffer().then((offer) => {
 
-                                console.log('Got offer data:', offer)
+                                console.log('xCloudPlayer Client - Got offer data:', offer)
 
                                 fetch('/api/config/sdp', {
                                     method: 'POST',
@@ -51,18 +52,13 @@ var app = {
                                 })
 
                                 this.isExchangeReady('/api/config').then((data) => {
-                                    console.log(data)
                                     this.isExchangeReady('/api/config/sdp').then((data) => {
 
-                                        console.log('SDP Server response:', data)
+                                        console.log('xCloudPlayer Client - SDP Server response:', data)
 
                                         // Do ICE Handshake
                                         var sdpDetails = JSON.parse(data.exchangeResponse)
-                                        // console.log('xSDK client.js - setRemoteDescription:', sdpDetails.sdpType, sdpDetails.sdp)
-
                                         client.setRemoteOffer(sdpDetails.sdp)
-
-                                        console.log('debug candidates:', client.getIceCandidates()[0])
 
                                         // Send ice config
                                         fetch('/api/config/ice', {
@@ -90,20 +86,33 @@ var app = {
                                             // Got ICE Data. Lets add the candidates to webrtc client
 
                                             var iceDetails = JSON.parse(data.candidates)
-                                            console.log('xSDK client.js - ICE Candidates:', iceDetails)
-
+                                            console.log('xCloudPlayer Client - ICE Candidates:', iceDetails)
                                             client.setIceCandidates(iceDetails)
 
-                                            // We assume that we are connected now...
+                                            // Listen for connection
+                                            client.addEventListener('connectionstate', (event) => {
+                                                // console.log(':: Connection state updated:', event)
 
-                                            console.log('We are connected?', client)
+                                                if(event.state === 'connected'){
+                                                    // We are connected
+
+                                                } else if(event.state === 'closing'){
+                                                    // Connection is closing
+
+                                                } else if(event.state === 'closed'){
+                                                    // Connection has been closed. We have to cleanup here
+                                                }
+                                            })
+                                            
+
+
                                             
                                         }).catch((error) => {
-                                            console.log(error) // Change for throw?
+                                            console.log('xCloudPlayer Client - ICE Exchange error:', error) // Change for throw?
                                         })
                                     
                                     }).catch((error) => {
-                                        console.log('SDP Response Offer failed:', error)
+                                        console.log('xCloudPlayer Client - SDP Response Offer failed:', error)
                                     })
                                 })
 
@@ -132,7 +141,7 @@ var app = {
                     } else if(data.state === 'Failed'){
                         reject({ error: 'Cannot provision stream. Reason: '+data.errorDetails.code+': '+data.errorDetails.message })
                     } else {
-                        console.log('/api/session - state is:', data.state, 'Waiting...');
+                        console.log('xCloudPlayer Client - /api/session - state is:', data.state, 'Waiting...');
 
                         setTimeout(() => {
                             this.isSessionsReady().then((data ) => {
@@ -172,7 +181,7 @@ var app = {
 }
 
 window.addEventListener('load', (event) => {
-    client = new xCloudPlayer.Client()
+    client = new xCloudPlayer.Client('videoHolder')
 
     // Retrieve consoles
     app.getConsoles().then((consoles) => {

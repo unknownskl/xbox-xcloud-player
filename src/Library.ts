@@ -1,4 +1,6 @@
-import DebugChannel from './Channels/Debug'
+import DebugChannel from './Channel/Debug'
+import VideoChannel from './Channel/Video'
+import AudioChannel from './Channel/Audio'
 
 export class Client {
 
@@ -58,8 +60,18 @@ export class Client {
 
     _iceCandidates:Array<RTCIceCandidate> = []
 
-    constructor() {
+    _elementHolder:string
+    _elementHolderRandom:Number
+
+    _events = {
+        'connectionstate': []
+    }
+
+    constructor(elementId:string) {
         console.log('xCloudPlayer loaded!')
+
+        this._elementHolder = elementId
+        this._elementHolderRandom = (Math.floor(Math.random() * 100) + 1)
 
         this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration);
         this._openDataChannels()
@@ -105,13 +117,11 @@ export class Client {
                 iceDetails[candidate].candidate = ""
             }
 
-            // if(iceDetails[candidate].candidate.includes('192.168.2.9')){
-                this._webrtcClient.addIceCandidate({
-                    candidate: iceDetails[candidate].candidate,
-                    sdpMid: iceDetails[candidate].sdpMid,
-                    sdpMLineIndex: iceDetails[candidate].sdpMLineIndex
-                })
-            // }
+            this._webrtcClient.addIceCandidate({
+                candidate: iceDetails[candidate].candidate,
+                sdpMid: iceDetails[candidate].sdpMid,
+                sdpMLineIndex: iceDetails[candidate].sdpMLineIndex
+            })
         }
     }
 
@@ -132,10 +142,10 @@ export class Client {
 
         switch(name) {
             case "video":
-                this._webrtcChannelProcessors[name] = new DebugChannel('video', this);
+                this._webrtcChannelProcessors[name] = new VideoChannel('video', this);
                 break;
             case "audio":
-                this._webrtcChannelProcessors[name] = new DebugChannel('audio', this);
+                this._webrtcChannelProcessors[name] = new AudioChannel('audio', this);
                 break;
             case "input":
                 this._webrtcChannelProcessors[name] = new DebugChannel('input', this);
@@ -157,7 +167,7 @@ export class Client {
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onOpen !== undefined){
                 this._webrtcChannelProcessors[name].onOpen(event)
             } else {
-                console.log('xSDK Library.ts - ['+name+'] Got open channel:', event)
+                console.log('xCloudPlayer Library.ts - ['+name+'] Got open channel:', event)
             }
         })
     
@@ -166,7 +176,7 @@ export class Client {
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onMessage !== undefined){
                 this._webrtcChannelProcessors[name].onMessage(event)
             } else {
-                console.log('xSDK Library.ts - ['+name+'] Received channel message:', event)
+                console.log('xCloudPlayer Library.ts - ['+name+'] Received channel message:', event)
             }
         })
 
@@ -175,7 +185,7 @@ export class Client {
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onClosing !== undefined){
                 this._webrtcChannelProcessors[name].onClosing(event)
             } else {
-                console.log('xSDK Library.ts - ['+name+'] Got closing channel:', event)
+                console.log('xCloudPlayer Library.ts - ['+name+'] Got closing channel:', event)
             }
         })
 
@@ -184,7 +194,7 @@ export class Client {
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onClose !== undefined){
                 this._webrtcChannelProcessors[name].onClose(event)
             } else {
-                console.log('xSDK Library.ts - ['+name+'] Got close channel:', event)
+                console.log('xCloudPlayer Library.ts - ['+name+'] Got close channel:', event)
             }
         })
 
@@ -193,13 +203,16 @@ export class Client {
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onError !== undefined){
                 this._webrtcChannelProcessors[name].onError(event)
             } else {
-                console.log('xSDK Library.ts - ['+name+'] Got error channel:', event)
+                console.log('xCloudPlayer Library.ts - ['+name+'] Got error channel:', event)
             } 
         })
 
-        // Listen for channel state changes
-        this._webrtcChannelProcessors[name].addEventListener('state', (event) => {
-            console.log('xSDK Library.ts - ['+name+'] Channel state changed to:', event)
+        // Check if we have a video connection
+        this._webrtcChannelProcessors['video'].addEventListener('state', (event) => {
+            this._webrtcStates.streamConnection = event.state
+
+            this.emitEvent('connectionstate', { state: event.state})
+            console.log('xCloudPlayer Library.ts - ['+name+'] Channel state changed to:', event)
         })
     }
 
@@ -210,19 +223,24 @@ export class Client {
                 this._iceCandidates.push(event.candidate)
             }
         });
-
-        // this._webrtcClient.addEventListener('connectionstatechange', event => {
-        //     console.log(':: connectionstatechange', event)
-        //     // this._webrtcStates.streamConnection = event.currentTarget.connectionState
-        //     // if (event.currentTarget.connectionState === 'connected') {
-        //     //     console.log('xSDK client.js - Client has been connected to stream. Lets create the videosource..')
-
-        //     //     this.createMediaSources()
-        //     //     this.emitEvent('openstream', { event: event })
-        //     // }
-        // });
     }
 
+    getDataChannel(name:string) {
+        return this._webrtcDataChannels[name]
+    }
 
+    getChannelProcessor(name:string) {
+        return this._webrtcChannelProcessors[name]
+    }
+
+    addEventListener(name, callback) {
+        this._events[name].push(callback)
+    }
+
+    emitEvent(name, event) {
+        for(var callback in this._events[name]){
+            this._events[name][callback](event)
+        }
+    }
 
 }
