@@ -151,10 +151,7 @@ export class Client {
                 break;
         }
 
-        // this._webrtcChannelProcessors[name] = new DebugChannel('message', this);
-
-        // console.log('Datachannel:', this._webrtcDataChannels[name])
-
+        // Setup channel processors
         this._webrtcDataChannels[name].addEventListener('open', (event) => {
             // const message = event.data;
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onOpen !== undefined){
@@ -200,7 +197,10 @@ export class Client {
             } 
         })
 
-        // console.log('Datachannel2:', this._webrtcDataChannels[name])
+        // Listen for channel state changes
+        this._webrtcChannelProcessors[name].addEventListener('state', (event) => {
+            console.log('xSDK Library.ts - ['+name+'] Channel state changed to:', event)
+        })
     }
 
     _gatherIce(){
@@ -211,16 +211,16 @@ export class Client {
             }
         });
 
-        this._webrtcClient.addEventListener('connectionstatechange', event => {
-            console.log(':: connectionstatechange', event)
-            // this._webrtcStates.streamConnection = event.currentTarget.connectionState
-            // if (event.currentTarget.connectionState === 'connected') {
-            //     console.log('xSDK client.js - Client has been connected to stream. Lets create the videosource..')
+        // this._webrtcClient.addEventListener('connectionstatechange', event => {
+        //     console.log(':: connectionstatechange', event)
+        //     // this._webrtcStates.streamConnection = event.currentTarget.connectionState
+        //     // if (event.currentTarget.connectionState === 'connected') {
+        //     //     console.log('xSDK client.js - Client has been connected to stream. Lets create the videosource..')
 
-            //     this.createMediaSources()
-            //     this.emitEvent('openstream', { event: event })
-            // }
-        });
+        //     //     this.createMediaSources()
+        //     //     this.emitEvent('openstream', { event: event })
+        //     // }
+        // });
     }
 
 

@@ -7,6 +7,10 @@ export default class BaseChannel {
     _channelName:string;
     _state:'new'|'connected'|'closing'|'closed';
 
+    _events = {
+        'state': []
+    }
+
     constructor(channelName:string, client:Client) {
         this._channelName = channelName;
         this._client = client;
@@ -16,8 +20,7 @@ export default class BaseChannel {
     // Events
     onOpen(event) {
         console.log('xCloudPlayer Channels/Base.ts - ['+this._channelName+'] onOpen:', event)
-
-        this._state = 'connected'
+        this.setState('connected')
     }
     
     // onMessage(event) {
@@ -26,14 +29,12 @@ export default class BaseChannel {
 
     onClosing(event) {
         console.log('xCloudPlayer Channels/Base.ts - ['+this._channelName+'] onClosing:', event)
-
-        this._state = 'closing'
+        this.setState('closing')
     }
 
     onClose(event) {
         console.log('xCloudPlayer Channels/Base.ts - ['+this._channelName+'] onClose:', event)
-
-        this._state = 'closed'
+        this.setState('closed')
     }
 
     // Queue functions
@@ -43,6 +44,13 @@ export default class BaseChannel {
 
     addToQueue(data:Buffer) {
         this._queue.push(data)
+    }
+
+    setState(state) {
+        this._state = state
+        this.emitEvent('state', {
+            state: this._state
+        })
     }
 
     // Channel functions
@@ -67,5 +75,15 @@ export default class BaseChannel {
     // Base functions
     getClient() {
         return this._client
+    }
+
+    addEventListener(name, callback) {
+        this._events[name].push(callback)
+    }
+
+    emitEvent(name, event) {
+        for(var callback in this._events[name]){
+            this._events[name][callback](event)
+        }
     }
 }
