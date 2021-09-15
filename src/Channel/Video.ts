@@ -1,12 +1,6 @@
 import BaseChannel from './Base'
 import VideoComponent from '../Component/Video'
 import VideoWorker from '../Worker/Video'
-// import fs from 'fs'
-
-// const WorkerCode = require('../Worker/Video')
-// console.log('VideoWorker', WorkerCode)
-
-// const workerCode = fs.readFileSync('../Worker/Video.ts')
 
 export default class VideoChannel extends BaseChannel {
 
@@ -28,6 +22,10 @@ export default class VideoChannel extends BaseChannel {
 
         this._component.create()
 
+        // setInterval(() => {
+        //     console.log('Video performance: _videoBuffer', this._videoBuffer.length, '_frameMetadataQueue', this._frameMetadataQueue.length)
+        // }, 1000)
+
         // Create worker to process Video
         const blob = new Blob(['var func = '+VideoWorker.toString()+'; func(self)']);
         this._worker = new Worker(window.URL.createObjectURL(blob));
@@ -35,14 +33,7 @@ export default class VideoChannel extends BaseChannel {
         //
         this._worker.onmessage = (workerMessage) => {
             
-            if(workerMessage.data.action == 'startStream'){
-                if(workerMessage.data.status === 200){
-                    console.log('xCloudPlayer Channels/Video.ts - Worker onOpen finished successfully')
-                } else {
-                    console.log('xCloudPlayer Channels/Video.ts - Worker onOpen failed:', workerMessage.data)
-                }
-
-            } else if(workerMessage.data.action == 'doRender'){
+            if(workerMessage.data.action == 'doRender'){
                 // console.log('xSDK channels/video.js - doRender, render frameid:=', (workerMessage.data.data.frameId), 'data:', (workerMessage.data.data.data))
                 if(workerMessage.data.status !== 200){
                     console.log('xCloudPlayer Channels/Video.ts - Worker onPacket failed:', workerMessage.data)
@@ -64,9 +55,9 @@ export default class VideoChannel extends BaseChannel {
             }
         }
 
-        this._worker.postMessage({
-            action: 'startStream'
-        })
+        // this._worker.postMessage({
+        //     action: 'startStream'
+        // })
     }
 
     onMessage(event) {
@@ -99,7 +90,7 @@ export default class VideoChannel extends BaseChannel {
             this.addProcessedFrame(frame)
             framesBuffer = this.mergeFrames(framesBuffer, frame.frameData)
 
-            this._component.getSource().appendBuffer(framesBuffer);
+            this._component.getSource().appendBuffer(framesBuffer)
             // this.#bitrateCounter.video.push(frame.frameData.byteLength)
         } else {
             this._videoBuffer.push(frame)
@@ -116,6 +107,15 @@ export default class VideoChannel extends BaseChannel {
         // Calc latency
         // var frameLatency = (frame.frameRenderedTimeMs - frame.firstFramePacketArrivalTimeMs)
         // this.#videoLatency.push(frameLatency)
+    }
+
+    getMetadataQueue(size=30) {
+        const metadataFrames = this._frameMetadataQueue.splice(0, (size-1))
+        return metadataFrames
+    }
+
+    getMetadataQueueLength() {
+        return this._frameMetadataQueue.length
     }
 
     mergeFrames(buffer1, buffer2) {

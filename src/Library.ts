@@ -2,6 +2,8 @@ import DebugChannel from './Channel/Debug'
 import VideoChannel from './Channel/Video'
 import AudioChannel from './Channel/Audio'
 import InputChannel from './Channel/Input'
+import ControlChannel from './Channel/Control'
+import MessageChannel from './Channel/Message'
 
 export class Client {
 
@@ -157,13 +159,13 @@ export class Client {
                 this._webrtcChannelProcessors[name] = new InputChannel('input', this);
                 break;
             case "control":
-                this._webrtcChannelProcessors[name] = new DebugChannel('control', this);
+                this._webrtcChannelProcessors[name] = new ControlChannel('control', this);
                 break;
             case "chat":
                 this._webrtcChannelProcessors[name] = new DebugChannel('chat', this);
                 break;
             case "message":
-                this._webrtcChannelProcessors[name] = new DebugChannel('message', this);
+                this._webrtcChannelProcessors[name] = new MessageChannel('message', this);
                 break;
         }
 

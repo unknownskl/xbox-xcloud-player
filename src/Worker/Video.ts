@@ -6,16 +6,20 @@ export default function worker(self:any) {
 
     var _performanceInterval;
 
-    self.init = function() {
-        return new Promise((resolve, reject) => {
+    // _performanceInterval = setInterval(() => {
+    //     console.log('xCloudPlayer Worker/Video.ts - [Performance] _frameQueue size:', Object.keys(_frameQueue).length, '_metadataQueue size:', this._metadataQueue.length)
+    // }, 1000)
 
-            this._performanceInterval = setInterval(() => {
-                console.log('xCloudPlayer Worker/Video.ts - [Performance] _frameQueue size:', Object.keys(_frameQueue).length)
-            }, 1000)
+    // self.init = function() {
+    //     return new Promise((resolve, reject) => {
 
-            resolve('ok')
-        })
-    }
+    //         this._performanceInterval = setInterval(() => {
+    //             console.log('xCloudPlayer Worker/Video.ts - [Performance] _frameQueue size:', Object.keys(_frameQueue).length)
+    //         }, 1000)
+
+    //         resolve('ok')
+    //     })
+    // }
 
     self.destroy = function() {
         return new Promise((resolve, reject) => {
@@ -111,20 +115,20 @@ export default function worker(self:any) {
 
         switch(workerMessage.data.action){
 
-            case 'startStream':
-                self.init().then(() => {
-                    postMessage({
-                        action: 'startStream',
-                        status: 200
-                    });
-                }).catch((error) => {
-                    postMessage({
-                        action: 'startStream',
-                        status: 500,
-                        message: error
-                    });
-                })
-                break;
+            // case 'startStream':
+            //     self.init().then(() => {
+            //         postMessage({
+            //             action: 'startStream',
+            //             status: 200
+            //         });
+            //     }).catch((error) => {
+            //         postMessage({
+            //             action: 'startStream',
+            //             status: 500,
+            //             message: error
+            //         });
+            //     })
+            //     break;
             case 'endStream':
                 self.destroy().then(() => {
                     postMessage({

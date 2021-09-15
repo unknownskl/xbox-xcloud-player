@@ -2,7 +2,6 @@ import { Client } from "../Library";
 
 export default class BaseChannel {
 
-    // _queue:Array<Buffer> = []
     _client:Client;
     _channelName:string;
     _state:'new'|'connected'|'closing'|'closed';
@@ -41,15 +40,6 @@ export default class BaseChannel {
         // Called when we want to destroy the channel.
     }
 
-    // Queue functions
-    // getQueueLength() {
-    //     return this._queue.length
-    // }
-
-    // addToQueue(data:Buffer) {
-    //     this._queue.push(data)
-    // }
-
     setState(state) {
         this._state = state
         this.emitEvent('state', {
@@ -67,7 +57,7 @@ export default class BaseChannel {
         }
         
         if(channel.readyState === 'open') {
-            // if(this._channelName !== 'input')
+            if(this._channelName !== 'input')
                 console.log('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] Sending message:', data)
 
             channel.send(data)
