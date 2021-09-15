@@ -43,7 +43,7 @@ export default class VideoComponent {
         return this._videoSource
     }
 
-    createMediaSource(){
+    createMediaSource() {
         var mediaSource = new MediaSource(),
         videoSourceUrl = window.URL.createObjectURL(mediaSource);
 
@@ -71,6 +71,19 @@ export default class VideoComponent {
         this._mediaSource = mediaSource
 
         return videoSourceUrl
+    }
+
+    resetMediaSource() {
+        this._mediaSource.removeSourceBuffer(this._videoSource)
+        delete this._videoSource
+
+        const videoSrc = this.createMediaSource()
+        const videoRender = document.getElementById(this.getElementId()) as any
+        videoRender.src = videoSrc
+        videoRender.play()
+        
+        this._videoRender = videoRender
+
     }
 
     destroy() {

@@ -9,6 +9,7 @@ export default class VideoChannel extends BaseChannel {
 
     _videoBuffer:Array<any> = []
     _frameMetadataQueue:Array<any> = []
+    _keyframeNeeded = true
 
     constructor(channelName, client){
         super(channelName, client)
@@ -38,12 +39,13 @@ export default class VideoChannel extends BaseChannel {
                 if(workerMessage.data.status !== 200){
                     console.log('xCloudPlayer Channels/Video.ts - Worker doRender failed:', workerMessage.data)
                 } else {
-                    // console.log('isKeyFrame:', workerMessage.data.data.isKeyFrame)
-                    if(workerMessage.data.data.isKeyFrame === 1){
-                        // Restart video and re-queue..
-                        console.log('xCloudPlayer Channels/Video.ts - @TODO: Implement video source restart...')
+                    if(this._keyframeNeeded === true && workerMessage.data.data.isKeyFrame === 1){
+                        this._keyframeNeeded = false
+                        this.doRender(workerMessage.data.data)
+
+                    } else if(this._keyframeNeeded === false){
+                        this.doRender(workerMessage.data.data)
                     }
-                    this.doRender(workerMessage.data.data)
                 }
 
             // } else if(workerMessage.data.action == 'onPacket'){
@@ -131,6 +133,15 @@ export default class VideoChannel extends BaseChannel {
         console.log('xCloudPlayer Channels/Video.ts - ['+this._channelName+'] onClose:', event)
 
         this._component.destroy()
+    }
+
+    resetBuffer() {
+        // Request key frame index
+        this.getClient().getChannelProcessor('control').requestKeyframeRequest()
+        this._component.resetMediaSource()
+
+        this._keyframeNeeded = true
+
     }
 
     destroy() {
