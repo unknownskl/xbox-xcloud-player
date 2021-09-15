@@ -1,0 +1,45 @@
+name: NPM Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # the Node.js versions to build on
+        node-version: [14.x]
+
+    steps:
+    - uses: actions/checkout@master
+      with:
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+        fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+
+    - name: Get tag name
+      id: tag_name
+      run: |
+        echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build the project
+      run: npm run build
+
+    - name: NPM publish beta package
+      if: ${{ contains(steps.tag_name.outputs.SOURCE_TAG, 'beta') }}2
+      uses: JS-DevTools/npm-publish@v1
+      with:
+        token: ${{ secrets.NPM_TOKEN }}
+        tag: beta
+
+    - name: NPM publish package
+      if: ${{ !contains(steps.tag_name.outputs.SOURCE_TAG, 'beta') }}
+      uses: JS-DevTools/npm-publish@v1
+      with:
+        token: ${{ secrets.NPM_TOKEN }}
