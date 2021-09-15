@@ -2,103 +2,43 @@ export default function worker(self:any) {
 
     console.log('xCloudPlayer Worker/Audio.ts - Loading worker...')
 
-    // var _frameQueue = {}
-    // // var _opusDecoder = new OggOpusDecoder({
+    self.onPacket = function(eventData, timePerformanceNow){
+        var messageBuffer = new DataView(eventData.data);
 
-    // //     decoderSampleRate: 48000,
-    // //     outputBufferSampleRate: 48000,
-    // //     numberOfChannels: 2,
-    // //     rawOpus: true,
+        var frameId = messageBuffer.getUint32(0, true);
+        var timestamp = (messageBuffer.getUint32(4, true)/10);
+        var frameSize = messageBuffer.getUint32(8, true);
 
-    // // }, OpusDecoderLib );
+        var frameBuffer = new Uint8Array(eventData.data, 12)
 
-    // var init = function() {
-    //     return new Promise((resolve, reject) => {
-    //         // console.log('LIBOPUS IN WORKER:', _opusDecoder)
+        var frameData = {
+            frameId: frameId,
+            timestamp: timestamp,
+            frameSize: frameSize,
+            frameData: frameBuffer,
+            frameReceived: timePerformanceNow
+        }
 
-    //         setInterval(() => {
-    //             console.log('xCloudPlayer Worker/Audio.ts - [Performance] _frameQueue size:', Object.keys(_frameQueue).length)
-    //         }, 1000)
+        postMessage({
+            action: 'decodeAudio',
+            status: 200,
+            data: {
+                frame: frameData
+            }
+        });
 
-    //         resolve('ok')
-    //     })
-    // }
-
-    // var onPacket = function(eventData, timePerformanceNow){
-
-    //     return new Promise((resolve, reject) => {
-    //         var messageBuffer = new DataView(eventData.data);
-
-    //         var frameId = messageBuffer.getUint32(0, true);
-    //         var timestamp = (messageBuffer.getUint32(4, true)/10);
-    //         var frameSize = messageBuffer.getUint32(8, true);
-    //         // var frameOffset = messageBuffer.getUint32(12, true);
-
-    //         var frameBuffer = new Uint8Array(eventData.data, 12)
-
-    //         var frameData = {
-    //             frameId: frameId,
-    //             timestamp: timestamp,
-    //             frameSize: frameSize,
-    //             // frameOffset: frameOffset,
-    //             // serverDataKey: serverDataKey,
-    //             frameData: frameBuffer,
-    //             frameReceived: timePerformanceNow
-    //         }
-
-    //         _opusDecoder.decodeRaw(frameData.frameData, (output) => {
-    //             var audioOutput = output.slice(0)
-
-    //             postMessage({
-    //                 action: 'doRenderAudio',
-    //                 status: 200,
-    //                 data: {
-    //                     frame: frameData,
-    //                     audioBuffer: audioOutput
-    //                 }
-    //             });
-    //         })
-            
-    //         resolve(frameData)
-    //     })
-    // }
+        return frameData
+    }
 
     onmessage = async (workerMessage) => {
-        
-    //     switch(workerMessage.data.action){
-    //         case 'startStream':
-    //             self.init().then(() => {
-    //                 postMessage({
-    //                     action: 'startStream',
-    //                     status: 200
-    //                 });
-    //             }).catch((error) => {
-    //                 postMessage({
-    //                     action: 'startStream',
-    //                     status: 500,
-    //                     message: error
-    //                 });
-    //             })
-    //             break;
-    //         case 'onPacket':
-    //             // Process incoming input
-    //             self.onPacket(workerMessage.data.data, workerMessage.data.data.timePerformanceNow).then((response) => {
-    //                 postMessage({
-    //                     action: 'onPacket',
-    //                     status: 200,
-    //                     frame: response
-    //                 });
-    //             }).catch((error) => {
-    //                 postMessage({
-    //                     action: 'onPacket',
-    //                     status: 500,
-    //                     message: error
-    //                 });
-    //             })
-    //             break;
-    //         default:
-    //             console.log('xCloudPlayer Worker/Audio.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
-    //     }
+        switch(workerMessage.data.action){
+            case 'onPacket':
+                // Process incoming input
+                self.onPacket(workerMessage.data.data, workerMessage.data.data.timePerformanceNow)
+                break;
+            default:
+                console.log('xCloudPlayer Worker/Audio.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
+        }
     }
 
     return self

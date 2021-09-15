@@ -10,7 +10,7 @@ importScripts('../opus/libopus-decoder.min.js');
 importScripts('../opus/oggOpusDecoder.js');
 
 console.log('xCloudPlayer Worker/Opus.ts - Files loaded. Creating OPUS Decoder...')
-var _frameQueue = {}
+
 var _opusDecoder = new self.OggOpusDecoder({
 
     decoderSampleRate: 48000,
@@ -21,3 +21,28 @@ var _opusDecoder = new self.OggOpusDecoder({
 }, self.OpusDecoderLib );
 
 console.log('xCloudPlayer Worker/Opus.ts - Decoder is ready:', _opusDecoder)
+
+onmessage = async (workerMessage) => {
+
+    switch(workerMessage.data.action){
+        case 'decodeAudio':
+            self.decode(workerMessage.data.data.buffer)
+            break;
+        default:
+            console.log('xCloudPlayer Worker/Opus.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
+    }
+}
+
+self.decode = (inputBuffer) => {
+    _opusDecoder.decodeRaw(inputBuffer, (output) => {
+        var audioOutput = output.slice(0)
+
+        self.postMessage({
+            action: 'bufferAudio',
+            status: 200,
+            data: {
+                buffer: audioOutput
+            }
+        });
+    })
+}
