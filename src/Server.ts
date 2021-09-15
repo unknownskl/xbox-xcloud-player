@@ -14,6 +14,7 @@ app.use(bodyParser.json())
 
 app.use(express.static('www'))
 app.use('/dist', express.static('dist/assets'))
+app.use('/opus', express.static('src/Opus'))
 
 app.listen(port, () => {
   console.log(`Streaming App listening at http://localhost:${port}`)
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/api/consoles', (req, res) => {
+    // res.send('ok'); return
     https.get({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
         path: '/v6/servers/home',
@@ -191,8 +193,10 @@ app.post('/api/config/sdp', (req, res) => {
               "bytesPerSample":2,
               "expectedClipDurationMs":100,
               "format":{
-                 "codec":"opus",
-                 "container":"webm"
+                // "codec":"aac",
+                // "container":"mp4"
+                "codec":"opus",
+                "container":"webm"
               },
               "numChannels":1,
               "sampleFrequencyHz":24000
