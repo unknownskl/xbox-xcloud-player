@@ -2,7 +2,7 @@
   "name": "xbox-xcloud-player",
   "version": "0.1.0",
   "description": "",
-  "main": "app.js",
+  "main": "dist/Library.js",
   "scripts": {
     "start": "rm -rf dist && tsc && webpack && node dist/Server.js",
     "build": "rm -rf dist && tsc && webpack && npm run opus",
