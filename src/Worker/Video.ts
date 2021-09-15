@@ -4,12 +4,23 @@ export default function worker(self:any) {
 
     var _frameQueue = {}
 
+    var _performanceInterval;
+
     self.init = function() {
         return new Promise((resolve, reject) => {
 
-            setInterval(() => {
+            this._performanceInterval = setInterval(() => {
                 console.log('xCloudPlayer Worker/Video.ts - [Performance] _frameQueue size:', Object.keys(_frameQueue).length)
             }, 1000)
+
+            resolve('ok')
+        })
+    }
+
+    self.destroy = function() {
+        return new Promise((resolve, reject) => {
+
+            clearInterval(this._performanceInterval)
 
             resolve('ok')
         })
@@ -114,6 +125,20 @@ export default function worker(self:any) {
                     });
                 })
                 break;
+            case 'endStream':
+                self.destroy().then(() => {
+                    postMessage({
+                        action: 'endStream',
+                        status: 200
+                    });
+                }).catch((error) => {
+                    postMessage({
+                        action: 'endStream',
+                        status: 500,
+                        message: error
+                    });
+                })
+                break;
             case 'onPacket':
                 // Process incoming input
                 self.onPacket(workerMessage.data.data, workerMessage.data.data.timePerformanceNow).then((response) => {
@@ -134,4 +159,6 @@ export default function worker(self:any) {
                 console.log('xCloudPlayer Worker/Video.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
         }
     }
+
+    return self
 }

@@ -1,7 +1,10 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/Library.ts',
+  entry: {
+    xCloudPlayer: './src/Library.ts',
+    opusWorker: './src/Worker/Opus.js',
+  },
   module: {
     rules: [
       {
@@ -9,15 +12,22 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.wasm?$/,
+        use: 'wasm-loader'
+      },
     ],
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
-    filename: 'xcloud-player.min.js',
+    filename: '[name].min.js',
     path: path.resolve(__dirname, 'dist/assets'),
-    libraryTarget: 'var',
-    library: 'xCloudPlayer'
+    // libraryTarget: 'var',
+    library: '[name]'
   },
+  experiments: {
+    asyncWebAssembly: true,
+  }
 };

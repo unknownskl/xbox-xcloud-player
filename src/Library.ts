@@ -100,6 +100,11 @@ export class Client {
 
     reset(){
         this._webrtcClient.close()
+        
+        // Close data channels
+        for(const name in this._webrtcChannelProcessors){
+            this._webrtcChannelProcessors[name].destroy()
+        }
 
         this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration);
         this._openDataChannels()

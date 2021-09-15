@@ -25,5 +25,8 @@
     "typescript": "^4.4.3",
     "webpack": "^5.52.1",
     "webpack-cli": "^4.8.0"
+  },
+  "dependencies": {
+    "wasm-loader": "^1.3.0"
   }
 }

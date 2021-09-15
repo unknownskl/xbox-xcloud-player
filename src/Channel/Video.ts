@@ -130,9 +130,18 @@ export default class VideoChannel extends BaseChannel {
         super.onClose(event)
         console.log('xCloudPlayer Channels/Video.ts - ['+this._channelName+'] onClose:', event)
 
-        // this._worker.close()
+        this._component.destroy()
+    }
+
+    destroy() {
+
+        // this._worker.postMessage({
+        //     action: 'endStream'
+        // })
+        this._worker.terminate()
         console.log('xCloudPlayer Channels/Video.ts - Worker terminated', this._worker)
 
-        this._component.destroy()
+        // Called when we want to destroy the channel.
+        super.destroy()
     }
 }

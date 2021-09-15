@@ -37,6 +37,10 @@ export default class BaseChannel {
         this.setState('closed')
     }
 
+    destroy() {
+        // Called when we want to destroy the channel.
+    }
+
     // Queue functions
     getQueueLength() {
         return this._queue.length
