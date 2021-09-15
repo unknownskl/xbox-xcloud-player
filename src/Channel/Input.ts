@@ -22,12 +22,12 @@ export default class InputChannel extends BaseChannel {
 
         this.send(metadataReport)
 
-        setInterval(() => {
-            // Check for metadata interval
-            let reportType = this._reportTypes.None
-            // reportType |= this._reportTypes.Metadata
-            const inputReport = this._createInputPacket(reportType, [])
-        }, 10)
+        // setInterval(() => {
+        //     // Check for metadata interval
+        //     let reportType = this._reportTypes.None
+        //     // reportType |= this._reportTypes.Metadata
+        //     const inputReport = this._createInputPacket(reportType, [])
+        // }, 10)
     }
     
     onMessage(event) {
