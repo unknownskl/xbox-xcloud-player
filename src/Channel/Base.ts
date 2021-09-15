@@ -2,7 +2,7 @@ import { Client } from "../Library";
 
 export default class BaseChannel {
 
-    _queue:Array<Buffer> = []
+    // _queue:Array<Buffer> = []
     _client:Client;
     _channelName:string;
     _state:'new'|'connected'|'closing'|'closed';
@@ -28,12 +28,12 @@ export default class BaseChannel {
     // }
 
     onClosing(event) {
-        console.log('xCloudPlayer Channels/Base.ts - ['+this._channelName+'] onClosing:', event)
+        console.log('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] onClosing:', event)
         this.setState('closing')
     }
 
     onClose(event) {
-        console.log('xCloudPlayer Channels/Base.ts - ['+this._channelName+'] onClose:', event)
+        console.log('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] onClose:', event)
         this.setState('closed')
     }
 
@@ -42,13 +42,13 @@ export default class BaseChannel {
     }
 
     // Queue functions
-    getQueueLength() {
-        return this._queue.length
-    }
+    // getQueueLength() {
+    //     return this._queue.length
+    // }
 
-    addToQueue(data:Buffer) {
-        this._queue.push(data)
-    }
+    // addToQueue(data:Buffer) {
+    //     this._queue.push(data)
+    // }
 
     setState(state) {
         this._state = state
@@ -67,12 +67,12 @@ export default class BaseChannel {
         }
         
         if(channel.readyState === 'open') {
-            if(this._channelName !== 'input')
-                console.log('xSDK channels/base.js - ['+this._channelName+'] Sending message:', data)
+            // if(this._channelName !== 'input')
+                console.log('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] Sending message:', data)
 
             channel.send(data)
         } else {
-            console.warn('xSDK channels/base.js - ['+this._channelName+'] Channel is closed. Failed to send packet:', data)
+            console.warn('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] Channel is closed. Failed to send packet:', data)
         }
     }
 
