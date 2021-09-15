@@ -218,8 +218,13 @@ export default class AudioChannel extends BaseChannel {
         clearInterval(this._softResetInterval)
         clearInterval(this._mediaInterval)
 
-        this._worker.terminate()
-        this._opusWorker.terminate()
+        if(this._worker !== undefined){
+            this._worker.terminate()
+        }
+
+        if(this._opusWorker !== undefined){
+            this._opusWorker.terminate()
+        }
         console.log('xCloudPlayer Channel/Audio.ts - Workers terminated', this._opusWorker, this._worker)
 
         // Called when we want to destroy the channel.
