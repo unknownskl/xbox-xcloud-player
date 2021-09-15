@@ -12,9 +12,7 @@ export default class AudioChannel extends BaseChannel {
         super(channelName, client)
 
         this._component = new AudioComponent(this.getClient())
-        this._opusWorker = new Worker(new URL('dist/opusWorker.min.js', 'http://localhost:3000/'));
-
-        this._setupOpusWorker()
+        
     }
 
     onOpen(event) {
@@ -26,7 +24,9 @@ export default class AudioChannel extends BaseChannel {
         // Create worker to process Audio
         const blob = new Blob(['var func = '+AudioWorker.toString()+'; self = func(self)']);
         this._worker = new Worker(window.URL.createObjectURL(blob));
+        this._opusWorker = new Worker(new URL('dist/opusWorker.min.js', 'http://localhost:3000/'));
 
+        this._setupOpusWorker()
         this._setupAudioWorker()
     }
     
@@ -59,12 +59,9 @@ export default class AudioChannel extends BaseChannel {
 
     destroy() {
 
-        // this._worker.postMessage({
-        //     action: 'endStream'
-        // })
-
         this._worker.terminate()
-        console.log('xCloudPlayer Channels/Audio.ts - Worker terminated', this._worker)
+        this._opusWorker.terminate()
+        console.log('xCloudPlayer Channels/Audio.ts - Workers terminated', this._opusWorker, this._worker)
 
         // Called when we want to destroy the channel.
         super.destroy()
