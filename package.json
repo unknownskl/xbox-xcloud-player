@@ -5,6 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "rm -rf dist && tsc && webpack && node dist/Server.js",
+    "build": "rm -rf dist && tsc && webpack && npm run opus",
+    "opus": "cp -R src/Opus/ dist/assets/opus/",
     "webpack": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
