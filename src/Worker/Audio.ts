@@ -1,33 +1,49 @@
+import { normalize } from "path/posix"
+
 export default function worker(self:any) {
 
     console.log('xCloudPlayer Worker/Audio.ts - Loading worker...')
 
-    self.onPacket = function(eventData, timePerformanceNow){
-        var messageBuffer = new DataView(eventData.data);
+    self.onPacket = function(eventData, timePerformanceNow):void {
 
-        var frameId = messageBuffer.getUint32(0, true);
-        var timestamp = (messageBuffer.getUint32(4, true)/10);
-        var frameSize = messageBuffer.getUint32(8, true);
+        self._normalizeBuffer(eventData.data).then((buffer) => {
 
-        var frameBuffer = new Uint8Array(eventData.data, 12)
+            // if(eventData.data instanceof Blob){
+            //     const bytesBuffer = Buffer.from(eventData.data)
+            //     var messageBuffer = new DataView(eventData.data);
+            // } else {
+            //     var messageBuffer = new DataView(eventData.data);
+            // }
 
-        var frameData = {
-            frameId: frameId,
-            timestamp: timestamp,
-            frameSize: frameSize,
-            frameData: frameBuffer,
-            frameReceived: timePerformanceNow
-        }
+            var messageBuffer = new DataView(buffer);
 
-        postMessage({
-            action: 'decodeAudio',
-            status: 200,
-            data: {
-                frame: frameData
+            var frameId = messageBuffer.getUint32(0, true);
+            var timestamp = (messageBuffer.getUint32(4, true)/10);
+            var frameSize = messageBuffer.getUint32(8, true);
+
+            var frameBuffer = new Uint8Array(buffer, 12)
+
+            var frameData = {
+                frameId: frameId,
+                timestamp: timestamp,
+                frameSize: frameSize,
+                frameData: frameBuffer,
+                frameReceived: timePerformanceNow
             }
-        });
 
-        return frameData
+            postMessage({
+                action: 'decodeAudio',
+                status: 200,
+                data: {
+                    frame: frameData
+                }
+            });
+
+        }).catch((error) => {
+            console.warn('xCloudPlayer Worker/Audio.ts - _normalizeBuffer failed')
+        })
+
+        // return frameData
     }
 
     onmessage = async (workerMessage) => {
@@ -39,6 +55,20 @@ export default function worker(self:any) {
             default:
                 console.log('xCloudPlayer Worker/Audio.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
         }
+    }
+
+    self._normalizeBuffer = (eventData:any) => {
+        return new Promise((resolve, reject) => {
+            if(eventData instanceof Blob){
+                const bytesBuffer = eventData.arrayBuffer().then((buffer) => {
+                    resolve(buffer)
+                }).catch((error) => {
+                    reject(error)
+                })
+            } else {
+                resolve(eventData)
+            }
+        })
     }
 
     return self

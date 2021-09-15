@@ -47,8 +47,15 @@ export default class AudioComponent {
 
         mediaSource.addEventListener('sourceopen', () => {
             console.log('xCloudPlayer Component/Audio.ts - MediaSource opened. Attaching audioSourceBuffer...');
+
+            // if safari?
+            let codec = 'audio/webm;codecs=opus'
+            if (this._isSafari())
+                codec = 'audio/mp4' // @TODO: Fix audio issues on Safari
+
+            // alert('codec: '+codec)
         
-            var audioSourceBuffer = mediaSource.addSourceBuffer('audio/webm;codecs=opus');
+            var audioSourceBuffer = mediaSource.addSourceBuffer(codec);
             audioSourceBuffer.mode = 'sequence'
 
             audioSourceBuffer.addEventListener('updateend', (event) => {
@@ -81,5 +88,9 @@ export default class AudioComponent {
         document.getElementById(this.getElementId())?.remove()
 
         console.log('xCloudPlayer Component/Audio.ts - Cleaning up audio element');
+    }
+
+    _isSafari(){
+        return (navigator.userAgent.search('Safari') >= 0 && navigator.userAgent.search('Chrome') < 0)
     }
 }

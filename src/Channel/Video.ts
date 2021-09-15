@@ -36,7 +36,7 @@ export default class VideoChannel extends BaseChannel {
             if(workerMessage.data.action == 'doRender'){
                 // console.log('xSDK channels/video.js - doRender, render frameid:=', (workerMessage.data.data.frameId), 'data:', (workerMessage.data.data.data))
                 if(workerMessage.data.status !== 200){
-                    console.log('xCloudPlayer Channels/Video.ts - Worker onPacket failed:', workerMessage.data)
+                    console.log('xCloudPlayer Channels/Video.ts - Worker doRender failed:', workerMessage.data)
                 } else {
                     // console.log('isKeyFrame:', workerMessage.data.data.isKeyFrame)
                     if(workerMessage.data.data.isKeyFrame === 1){
@@ -46,12 +46,12 @@ export default class VideoChannel extends BaseChannel {
                     this.doRender(workerMessage.data.data)
                 }
 
-            } else if(workerMessage.data.action == 'onPacket'){
-                if(workerMessage.data.status !== 200){
-                    console.log('xCloudPlayer Channels/Video.ts - Worker onPacket failed:', workerMessage.data)
-                }
-            } else {
-                console.log('xCloudPlayer Channels/Video.ts - Unknown worker response action:', workerMessage.data)
+            // } else if(workerMessage.data.action == 'onPacket'){
+            //     if(workerMessage.data.status !== 200){
+            //         console.log('xCloudPlayer Channels/Video.ts - Worker onPacket failed:', workerMessage.data)
+            //     }
+            // } else {
+            //     console.log('xCloudPlayer Channels/Video.ts - Unknown worker response action:', workerMessage.data)
             }
         }
 
@@ -91,6 +91,7 @@ export default class VideoChannel extends BaseChannel {
             framesBuffer = this.mergeFrames(framesBuffer, frame.frameData)
 
             this._component.getSource().appendBuffer(framesBuffer)
+            this._component._videoRender.play()
             // this.#bitrateCounter.video.push(frame.frameData.byteLength)
         } else {
             this._videoBuffer.push(frame)
@@ -110,8 +111,7 @@ export default class VideoChannel extends BaseChannel {
     }
 
     getMetadataQueue(size=30) {
-        const metadataFrames = this._frameMetadataQueue.splice(0, (size-1))
-        return metadataFrames
+        return this._frameMetadataQueue.splice(0, (size-1))
     }
 
     getMetadataQueueLength() {

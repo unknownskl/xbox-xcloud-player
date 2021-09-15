@@ -43,7 +43,8 @@ export default class AudioChannel extends BaseChannel {
         // Create worker to process Audio
         const blob = new Blob(['var func = '+AudioWorker.toString()+'; self = func(self)']);
         this._worker = new Worker(window.URL.createObjectURL(blob));
-        this._opusWorker = new Worker(new URL('dist/opusWorker.min.js', 'http://localhost:3000/'));
+        // this._opusWorker = new Worker(new URL('dist/opusWorker.min.js', 'http://localhost:3000/'));
+        this._opusWorker = new Worker('dist/opusWorker.min.js');
 
         this._setupOpusWorker()
         this._setupAudioWorker()

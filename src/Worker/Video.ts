@@ -33,9 +33,7 @@ export default function worker(self:any) {
     self.onPacket = function(eventData, timePerformanceNow){
 
         return new Promise((resolve, reject) => {
-            const data = new Response(eventData.data).arrayBuffer()
-
-            data.then((buffer) => {
+            this._normalizeBuffer(eventData.data).then((buffer) => {
             
                 var messageBuffer = new DataView(buffer);
 
@@ -146,22 +144,39 @@ export default function worker(self:any) {
             case 'onPacket':
                 // Process incoming input
                 self.onPacket(workerMessage.data.data, workerMessage.data.data.timePerformanceNow).then((response) => {
-                    postMessage({
-                        action: 'onPacket',
-                        status: 200,
-                        frame: response
-                    });
+                    // postMessage({
+                    //     action: 'onPacket',
+                    //     status: 200,
+                    //     frame: response
+                    // });
+
+                    // Packet succeeded
                 }).catch((error) => {
-                    postMessage({
-                        action: 'onPacket',
-                        status: 500,
-                        message: error
-                    });
+                    // postMessage({
+                    //     action: 'onPacket',
+                    //     status: 500,
+                    //     message: error
+                    // });
+                    console.warn('xCloudPlayer Worker/Video.ts - Failed onPacket()')
                 })
                 break;
             default:
                 console.log('xCloudPlayer Worker/Video.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
         }
+    }
+
+    self._normalizeBuffer = (eventData:any) => {
+        return new Promise((resolve, reject) => {
+            if(eventData instanceof Blob){
+                const bytesBuffer = eventData.arrayBuffer().then((buffer) => {
+                    resolve(buffer)
+                }).catch((error) => {
+                    reject(error)
+                })
+            } else {
+                resolve(eventData)
+            }
+        })
     }
 
     return self
