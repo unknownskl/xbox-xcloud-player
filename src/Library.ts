@@ -12,7 +12,7 @@ interface xCloudPlayerConfig {
     worker_location?:string
 }
 
-export default class Client {
+export default class xCloudPlayer {
 
     _webrtcClient:RTCPeerConnection;
 
