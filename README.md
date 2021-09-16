@@ -6,12 +6,11 @@ Features:
 - WebWorkers for processing Audio and Video
 - Send controller input
 - Support for Keyframes
+- FPS, Latency and Bitrate counters
 
 Future wantted features:
 - Configs
 - Dialog modals
-- FPS Counters
-- Bitrate counter
-- Custom UI Components like keyboard input and game switch
+- Custom UI Components like keyboard input and game switch notifications
 - Incept audio and video stream to process into something different then an Audio and Video element
 - Cross-Browser support (Chrome/Firefox/Safari - Windows, OSX, Linux, Android, iOS)
