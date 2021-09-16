@@ -2,6 +2,7 @@ import BaseChannel from './Base'
 import AudioComponent from '../Component/Audio'
 import AudioWorker from '../Worker/Audio'
 import FpsCounter from '../Helper/FpsCounter'
+import BitrateCounter from '../Helper/BitrateCounter'
 
 export default class AudioChannel extends BaseChannel {
 
@@ -29,12 +30,14 @@ export default class AudioChannel extends BaseChannel {
     _performanceInterval
 
     _fpsCounter:FpsCounter
+    _bitrateCounter:BitrateCounter
 
     constructor(channelName, client){
         super(channelName, client)
 
         this._component = new AudioComponent(this.getClient())
         this._fpsCounter = new FpsCounter(this.getClient(), 'audio')
+        this._bitrateCounter = new BitrateCounter(this.getClient(), 'audio')
     }
 
     onOpen(event) {
@@ -43,6 +46,7 @@ export default class AudioChannel extends BaseChannel {
 
         this._component.create()
         this._fpsCounter.start()
+        this._bitrateCounter.start()
 
         // Create worker to process Audio
         const blob = new Blob(['var func = '+AudioWorker.toString()+'; self = func(self)']);
@@ -62,6 +66,7 @@ export default class AudioChannel extends BaseChannel {
     
     onMessage(event) {
         // console.log('xCloudPlayer Channel/Audio.ts - ['+this._channelName+'] onMessage:', event)
+        this._bitrateCounter.countPacket(event.data.byteLength)
 
         this._worker.postMessage({
             action: 'onPacket',
@@ -70,6 +75,7 @@ export default class AudioChannel extends BaseChannel {
                 timePerformanceNow: performance.now()
             }
         })
+
     }
 
     onClose(event) {
@@ -166,6 +172,7 @@ export default class AudioChannel extends BaseChannel {
 
     _playFrameBuffer(outputBuffer) {
         this._fpsCounter.count()
+        this._bitrateCounter.countData(outputBuffer.length)
 
         var audioBuffer:any
 
@@ -226,6 +233,7 @@ export default class AudioChannel extends BaseChannel {
         clearInterval(this._mediaInterval)
         
         this._fpsCounter.stop()
+        this._bitrateCounter.stop()
 
         if(this._worker !== undefined){
             this._worker.terminate()

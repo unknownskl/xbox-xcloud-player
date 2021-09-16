@@ -15,7 +15,7 @@ export default class FpsCounter {
 
     start() {
         this._eventInterval = setInterval(() => {
-            console.log('xCloudPlayer Helper/FpsCounter.ts [fps_'+this._name+'] - Emit counter:', this._counter)
+            // console.log('xCloudPlayer Helper/FpsCounter.ts [fps_'+this._name+'] - Emit fps:', this._counter)
 
             this._application.getEventBus().emit('fps_'+this._name, {
                 fps: this._counter

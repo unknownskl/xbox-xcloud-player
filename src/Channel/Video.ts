@@ -2,6 +2,7 @@ import BaseChannel from './Base'
 import VideoComponent from '../Component/Video'
 import VideoWorker from '../Worker/Video'
 import FpsCounter from '../Helper/FpsCounter'
+import BitrateCounter from '../Helper/BitrateCounter'
 
 export default class VideoChannel extends BaseChannel {
 
@@ -13,12 +14,14 @@ export default class VideoChannel extends BaseChannel {
     _keyframeNeeded = true
 
     _fpsCounter:FpsCounter
+    _bitrateCounter:BitrateCounter
 
     constructor(channelName, client){
         super(channelName, client)
 
         this._component = new VideoComponent(this.getClient())
         this._fpsCounter = new FpsCounter(this.getClient(), 'video')
+        this._bitrateCounter = new BitrateCounter(this.getClient(), 'video')
     }
 
     onOpen(event) {
@@ -27,6 +30,7 @@ export default class VideoChannel extends BaseChannel {
 
         this._component.create()
         this._fpsCounter.start()
+        this._bitrateCounter.start()
 
         // setInterval(() => {
         //     console.log('Video performance: _videoBuffer', this._videoBuffer.length, '_frameMetadataQueue', this._frameMetadataQueue.length)
@@ -58,6 +62,8 @@ export default class VideoChannel extends BaseChannel {
     onMessage(event) {
         // console.log('xCloudPlayer Channels/Video.ts - ['+this._channelName+'] onMessage:', event)
 
+        this._bitrateCounter.countPacket(event.data.byteLength)
+
         this._worker.postMessage({
             action: 'onPacket',
             data: {
@@ -84,6 +90,8 @@ export default class VideoChannel extends BaseChannel {
 
             this.addProcessedFrame(frame)
             framesBuffer = this.mergeFrames(framesBuffer, frame.frameData)
+
+            this._bitrateCounter.countData(framesBuffer.byteLength)
 
             this._component.getSource().appendBuffer(framesBuffer)
             this._component._videoRender.play()
@@ -142,6 +150,7 @@ export default class VideoChannel extends BaseChannel {
 
     destroy() {
         this._fpsCounter.stop()
+        this._bitrateCounter.stop()
 
         if(this._worker !== undefined){
             this._worker.terminate()
