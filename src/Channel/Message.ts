@@ -25,7 +25,7 @@ export default class MessageChannel extends BaseChannel {
             // 31
             // 27
             // 32
-            // 33 = Xbox windows app, unknown
+            // 33 = Xbox windows app, disables the nexus menu on xCloud (Alt nexus menu?)
             // Possible options: Keyboard, PurchaseModal
         }))
         this.send(data4)
