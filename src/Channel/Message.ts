@@ -60,4 +60,16 @@ export default class MessageChannel extends BaseChannel {
             "cv": ""
         }
     }
+
+    sendTransaction(id, data) {
+        var transaction = JSON.stringify({
+            "type": "TransactionComplete",
+            "content": JSON.stringify(data),
+            // "content":"{\"Result\":0}",
+            "id": id,
+            "cv": ""
+        })
+
+        this.send(transaction)
+    }
 }

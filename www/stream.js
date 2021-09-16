@@ -202,6 +202,81 @@ var app = {
             const element = document.getElementById('fpsCounter_input')
             element.innerHTML = event.fps
         })
+
+        this.setupModal()
+        this.setupDisconnect()
+    },
+
+    setupDisconnect() {
+        client.getEventBus().on('message', (event) => {
+            console.log('ModalHelper event', event)
+
+            if(event.target === '/streaming/sessionLifetimeManagement/serverInitiatedDisconnect') {
+                // Received disconnect message
+                const message = JSON.parse(event.content)
+                alert('Disconnected. Reason: ' + message.reason)
+            }
+        })
+    },
+
+    setupModal() {
+        client.getEventBus().on('message', (event) => {
+            if(event.target === '/streaming/systemUi/messages/ShowMessageDialog') {
+                // Show Modal Dialog
+                const id = event.id
+                const type = event.type
+                const modalContent = JSON.parse(event.content)
+                console.log('Show Modal:', modalContent)
+
+                document.getElementById('dialogTitle').innerHTML = modalContent.TitleText
+                document.getElementById('dialogText').innerHTML = modalContent.ContentText
+
+                if(modalContent.CommandLabel1 !== ''){
+                    const button1 = document.getElementById('dialogButton1')
+                    button1.innerHTML = modalContent.CommandLabel1
+                    button1.onclick = () => {
+                        client.getChannelProcessor('message').sendTransaction(id, JSON.stringify({ Result: 0 }))
+                        this.resetModal()
+                    }
+                }
+                if(modalContent.CommandLabel2 !== ''){
+                    const button2 = document.getElementById('dialogButton2')
+                    button2.innerHTML = modalContent.CommandLabel2
+                    button2.onclick = () => {
+                        client.getChannelProcessor('message').sendTransaction(id, JSON.stringify({ Result: 1 }))
+                        this.resetModal()
+                    }
+                }
+                if(modalContent.CommandLabel3 !== ''){
+                    const button3 = document.getElementById('dialogButton3')
+                    button3.innerHTML = modalContent.CommandLabel3
+                    button3.onclick = () => {
+                        client.getChannelProcessor('message').sendTransaction(id, JSON.stringify({ Result: 2 }))
+                        this.resetModal()
+                    }
+                }
+            } else if(event.type === 'SenderCancel') {
+                // Cancel transaction and reset Modal
+                this.resetModal()
+            }
+        })
+    },
+
+    resetModal() {
+        document.getElementById('dialogTitle').innerHTML = 'No active dialog'
+        document.getElementById('dialogText').innerHTML = ''
+
+        const button1 = document.getElementById('dialogButton1')
+        button1.innerHTML = ''
+        button1.onclick = undefined
+
+        const button2 = document.getElementById('dialogButton2')
+        button1.innerHTML = ''
+        button2.onclick = undefined
+
+        const button3 = document.getElementById('dialogButton3')
+        button1.innerHTML = ''
+        button3.onclick = undefined
     }
 }
 
