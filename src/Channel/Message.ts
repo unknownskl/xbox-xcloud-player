@@ -36,6 +36,14 @@ export default class MessageChannel extends BaseChannel {
     
     onMessage(event) {
         console.log('xCloudPlayer Channel/Message.ts - ['+this._channelName+'] onMessage:', event)
+
+        const jsonMessage = JSON.parse(event.data)
+        console.log('xCloudPlayer Channel/Message.ts - Received json:', jsonMessage)
+
+        this.getClient().getEventBus().emit('message', {
+            ...jsonMessage
+        })
+
     }
 
     onClose(event) {

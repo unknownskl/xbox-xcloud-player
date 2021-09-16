@@ -208,7 +208,7 @@ var app = {
 window.addEventListener('load', (event) => {
     // console.log(xCloudPlayer)
     client = new xCloudPlayer.default('videoHolder', {
-        ui_systemui: [33]
+        ui_systemui: [10,19,31,27,32,33]
     })
 
     // Retrieve consoles
