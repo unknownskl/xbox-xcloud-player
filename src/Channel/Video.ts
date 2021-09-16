@@ -3,6 +3,7 @@ import VideoComponent from '../Component/Video'
 import VideoWorker from '../Worker/Video'
 import FpsCounter from '../Helper/FpsCounter'
 import BitrateCounter from '../Helper/BitrateCounter'
+import LatencyCounter from '../Helper/LatencyCounter'
 
 export default class VideoChannel extends BaseChannel {
 
@@ -15,6 +16,7 @@ export default class VideoChannel extends BaseChannel {
 
     _fpsCounter:FpsCounter
     _bitrateCounter:BitrateCounter
+    _latencyCounter:LatencyCounter
 
     constructor(channelName, client){
         super(channelName, client)
@@ -22,6 +24,7 @@ export default class VideoChannel extends BaseChannel {
         this._component = new VideoComponent(this.getClient())
         this._fpsCounter = new FpsCounter(this.getClient(), 'video')
         this._bitrateCounter = new BitrateCounter(this.getClient(), 'video')
+        this._latencyCounter = new LatencyCounter(this.getClient(), 'video')
     }
 
     onOpen(event) {
@@ -31,6 +34,7 @@ export default class VideoChannel extends BaseChannel {
         this._component.create()
         this._fpsCounter.start()
         this._bitrateCounter.start()
+        this._latencyCounter.start()
 
         // setInterval(() => {
         //     console.log('Video performance: _videoBuffer', this._videoBuffer.length, '_frameMetadataQueue', this._frameMetadataQueue.length)
@@ -107,6 +111,9 @@ export default class VideoChannel extends BaseChannel {
 
         this._fpsCounter.count()
 
+        const frameProcessedMs = (performance.now()-frame.firstFramePacketArrivalTimeMs)
+        this._latencyCounter.count(frameProcessedMs)
+
         // Increase fps counter
         // this.#frameCounter++
 
@@ -151,6 +158,7 @@ export default class VideoChannel extends BaseChannel {
     destroy() {
         this._fpsCounter.stop()
         this._bitrateCounter.stop()
+        this._latencyCounter.stop()
 
         if(this._worker !== undefined){
             this._worker.terminate()

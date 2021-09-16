@@ -3,6 +3,7 @@ import AudioComponent from '../Component/Audio'
 import AudioWorker from '../Worker/Audio'
 import FpsCounter from '../Helper/FpsCounter'
 import BitrateCounter from '../Helper/BitrateCounter'
+import LatencyCounter from '../Helper/LatencyCounter'
 
 export default class AudioChannel extends BaseChannel {
 
@@ -31,6 +32,7 @@ export default class AudioChannel extends BaseChannel {
 
     _fpsCounter:FpsCounter
     _bitrateCounter:BitrateCounter
+    _latencyCounter:LatencyCounter
 
     constructor(channelName, client){
         super(channelName, client)
@@ -38,6 +40,7 @@ export default class AudioChannel extends BaseChannel {
         this._component = new AudioComponent(this.getClient())
         this._fpsCounter = new FpsCounter(this.getClient(), 'audio')
         this._bitrateCounter = new BitrateCounter(this.getClient(), 'audio')
+        this._latencyCounter = new LatencyCounter(this.getClient(), 'audio')
     }
 
     onOpen(event) {
@@ -47,6 +50,7 @@ export default class AudioChannel extends BaseChannel {
         this._component.create()
         this._fpsCounter.start()
         this._bitrateCounter.start()
+        this._latencyCounter.start()
 
         // Create worker to process Audio
         const blob = new Blob(['var func = '+AudioWorker.toString()+'; self = func(self)']);
@@ -104,6 +108,8 @@ export default class AudioChannel extends BaseChannel {
                             timePerformanceNow: performance.now()
                         }
                     })
+                    const frameProcessedMs = (performance.now()-workerMessage.data.data.frame.frameReceived)
+                    this._latencyCounter.count(frameProcessedMs)
                     break;
                 default:
                     console.log('xCloudPlayer Channel/Audio.ts - Unknown incoming _worker message:', workerMessage.data.action, workerMessage.data)
@@ -234,6 +240,7 @@ export default class AudioChannel extends BaseChannel {
         
         this._fpsCounter.stop()
         this._bitrateCounter.stop()
+        this._latencyCounter.stop()
 
         if(this._worker !== undefined){
             this._worker.terminate()
