@@ -1,6 +1,7 @@
 import BaseChannel from './Base'
 import VideoComponent from '../Component/Video'
 import VideoWorker from '../Worker/Video'
+import FpsCounter from '../Helper/FpsCounter'
 
 export default class VideoChannel extends BaseChannel {
 
@@ -11,10 +12,13 @@ export default class VideoChannel extends BaseChannel {
     _frameMetadataQueue:Array<any> = []
     _keyframeNeeded = true
 
+    _fpsCounter:FpsCounter
+
     constructor(channelName, client){
         super(channelName, client)
 
         this._component = new VideoComponent(this.getClient())
+        this._fpsCounter = new FpsCounter(this.getClient(), 'video')
     }
 
     onOpen(event) {
@@ -22,6 +26,7 @@ export default class VideoChannel extends BaseChannel {
         console.log('xCloudPlayer Channels/Video.ts - ['+this._channelName+'] onOpen:', event)
 
         this._component.create()
+        this._fpsCounter.start()
 
         // setInterval(() => {
         //     console.log('Video performance: _videoBuffer', this._videoBuffer.length, '_frameMetadataQueue', this._frameMetadataQueue.length)
@@ -31,13 +36,12 @@ export default class VideoChannel extends BaseChannel {
         const blob = new Blob(['var func = '+VideoWorker.toString()+'; func(self)']);
         this._worker = new Worker(window.URL.createObjectURL(blob));
 
-        //
+        // Process worker messages
         this._worker.onmessage = (workerMessage) => {
-            
             if(workerMessage.data.action == 'doRender'){
-                // console.log('xSDK channels/video.js - doRender, render frameid:=', (workerMessage.data.data.frameId), 'data:', (workerMessage.data.data.data))
                 if(workerMessage.data.status !== 200){
                     console.log('xCloudPlayer Channels/Video.ts - Worker doRender failed:', workerMessage.data)
+
                 } else {
                     if(this._keyframeNeeded === true && workerMessage.data.data.isKeyFrame === 1){
                         this._keyframeNeeded = false
@@ -47,19 +51,8 @@ export default class VideoChannel extends BaseChannel {
                         this.doRender(workerMessage.data.data)
                     }
                 }
-
-            // } else if(workerMessage.data.action == 'onPacket'){
-            //     if(workerMessage.data.status !== 200){
-            //         console.log('xCloudPlayer Channels/Video.ts - Worker onPacket failed:', workerMessage.data)
-            //     }
-            // } else {
-            //     console.log('xCloudPlayer Channels/Video.ts - Unknown worker response action:', workerMessage.data)
             }
         }
-
-        // this._worker.postMessage({
-        //     action: 'startStream'
-        // })
     }
 
     onMessage(event) {
@@ -104,6 +97,8 @@ export default class VideoChannel extends BaseChannel {
         frame.frameRenderedTimeMs = performance.now()
         this._frameMetadataQueue.push(frame)
 
+        this._fpsCounter.count()
+
         // Increase fps counter
         // this.#frameCounter++
 
@@ -129,10 +124,11 @@ export default class VideoChannel extends BaseChannel {
     }
 
     onClose(event) {
-        super.onClose(event)
         console.log('xCloudPlayer Channels/Video.ts - ['+this._channelName+'] onClose:', event)
 
         this._component.destroy()
+
+        super.onClose(event)
     }
 
     resetBuffer() {
@@ -145,13 +141,12 @@ export default class VideoChannel extends BaseChannel {
     }
 
     destroy() {
+        this._fpsCounter.stop()
 
-        // this._worker.postMessage({
-        //     action: 'endStream'
-        // })
         if(this._worker !== undefined){
             this._worker.terminate()
         }
+
         console.log('xCloudPlayer Channels/Video.ts - Worker terminated', this._worker)
 
         // Called when we want to destroy the channel.

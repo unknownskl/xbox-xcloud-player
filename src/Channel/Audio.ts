@@ -1,6 +1,7 @@
 import BaseChannel from './Base'
 import AudioComponent from '../Component/Audio'
 import AudioWorker from '../Worker/Audio'
+import FpsCounter from '../Helper/FpsCounter'
 
 export default class AudioChannel extends BaseChannel {
 
@@ -27,11 +28,13 @@ export default class AudioChannel extends BaseChannel {
     _mediaInterval
     _performanceInterval
 
+    _fpsCounter:FpsCounter
+
     constructor(channelName, client){
         super(channelName, client)
 
         this._component = new AudioComponent(this.getClient())
-        
+        this._fpsCounter = new FpsCounter(this.getClient(), 'audio')
     }
 
     onOpen(event) {
@@ -39,6 +42,7 @@ export default class AudioChannel extends BaseChannel {
         console.log('xCloudPlayer Channel/Audio.ts - ['+this._channelName+'] onOpen:', event)
 
         this._component.create()
+        this._fpsCounter.start()
 
         // Create worker to process Audio
         const blob = new Blob(['var func = '+AudioWorker.toString()+'; self = func(self)']);
@@ -74,6 +78,7 @@ export default class AudioChannel extends BaseChannel {
         this._opusWorker.postMessage({
             action: 'endStream'
         })
+
         this._component.destroy()
 
         super.onClose(event)
@@ -160,6 +165,8 @@ export default class AudioChannel extends BaseChannel {
     }
 
     _playFrameBuffer(outputBuffer) {
+        this._fpsCounter.count()
+
         var audioBuffer:any
 
         if(this._audioBuffers.buffers[this._audioBuffers.num] === undefined) {
@@ -217,6 +224,8 @@ export default class AudioChannel extends BaseChannel {
         clearInterval(this._performanceInterval)
         clearInterval(this._softResetInterval)
         clearInterval(this._mediaInterval)
+        
+        this._fpsCounter.stop()
 
         if(this._worker !== undefined){
             this._worker.terminate()

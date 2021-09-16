@@ -67,17 +67,11 @@ var app = {
                                                 'Content-Type': 'application/json'
                                             },
                                             body: JSON.stringify({
-                                                // ice: client.getIceCandidates()[0]
                                                 ice: {
                                                     candidate: client.getIceCandidates()[0].candidate,
                                                     sdpMLineIndex: client.getIceCandidates()[0].sdpMLineIndex,
                                                     sdpMid: client.getIceCandidates()[0].sdpMid,
                                                 }
-                                                // ice: {
-                                                //     candidate: 'candidate:415190215 1 udp 2122262783 2a02:a210:2a03:dd80:b437:56f3:b2ef:e71 60938 typ host generation 0 ufrag C0sB network-id 2 network-cost 10',
-                                                //     sdpMLineIndex: 0,
-                                                //     sdpMid: '0',
-                                                // }
                                             })
                                         })
 
@@ -89,18 +83,25 @@ var app = {
                                             console.log('xCloudPlayer Client - ICE Candidates:', iceDetails)
                                             client.setIceCandidates(iceDetails)
 
-                                            // Listen for connection
-                                            client.addEventListener('connectionstate', (event) => {
-                                                // console.log(':: Connection state updated:', event)
+                                            // Listen for connection change
+                                            client.getEventBus().on('connectionstate', (event) => {
+                                                console.log(':: Connection state updated:', event)
+                                                const element = document.getElementById('streamStatus')
+                                                element.innerHTML = event.state
 
                                                 if(event.state === 'connected'){
                                                     // We are connected
+                                                    console.log(':: We are connected!')
+
+                                                    this.setupUI()
 
                                                 } else if(event.state === 'closing'){
                                                     // Connection is closing
+                                                    console.log(':: We are going to disconnect!')
 
                                                 } else if(event.state === 'closed'){
                                                     // Connection has been closed. We have to cleanup here
+                                                    console.log(':: We are disconnected!')
                                                 }
                                             })
                                             
@@ -176,6 +177,20 @@ var app = {
                     })
                 }
             })
+        })
+    },
+
+    //
+    // Setup UI
+    //
+    setupUI() {
+        client.getEventBus().on('fps_audio', (event) => {
+            const element = document.getElementById('fpsCounter_audio')
+            element.innerHTML = event.fps
+        })
+        client.getEventBus().on('fps_video', (event) => {
+            const element = document.getElementById('fpsCounter_video')
+            element.innerHTML = event.fps
         })
     }
 }

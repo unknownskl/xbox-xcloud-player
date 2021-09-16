@@ -5,6 +5,8 @@ import InputChannel from './Channel/Input'
 import ControlChannel from './Channel/Control'
 import MessageChannel from './Channel/Message'
 
+import EventBus from './Helper/EventBus'
+
 interface xCloudPlayerConfig {
     libopus_path?:string
     worker_location?:string
@@ -13,6 +15,8 @@ interface xCloudPlayerConfig {
 export default class Client {
 
     _webrtcClient:RTCPeerConnection;
+
+    _eventBus:EventBus
 
     _webrtcConfiguration = {
         iceServers: [{
@@ -71,13 +75,14 @@ export default class Client {
     _elementHolder:string
     _elementHolderRandom:Number
 
-    _events = {
-        'connectionstate': []
-    }
+    // _events = {
+    //     'connectionstate': []
+    // }
 
     constructor(elementId:string, config:xCloudPlayerConfig = {}) {
         console.log('xCloudPlayer loaded!')
 
+        this._eventBus = new EventBus()
         this._elementHolder = elementId
         this._elementHolderRandom = (Math.floor(Math.random() * 100) + 1)
 
@@ -221,12 +226,14 @@ export default class Client {
         })
 
         // Check if we have a video connection
-        this._webrtcChannelProcessors['video'].addEventListener('state', (event) => {
-            this._webrtcStates.streamConnection = event.state
+        if(name === 'video'){
+            this._webrtcChannelProcessors[name].addEventListener('state', (event) => {
+                this._webrtcStates.streamConnection = event.state
 
-            this.emitEvent('connectionstate', { state: event.state})
-            console.log('xCloudPlayer Library.ts - ['+name+'] Channel state changed to:', event)
-        })
+                this.getEventBus().emit('connectionstate', { state: event.state})
+                console.log('xCloudPlayer Library.ts - ['+name+'] Channel state changed to:', event)
+            })
+        }
     }
 
     _gatherIce(){
@@ -246,14 +253,18 @@ export default class Client {
         return this._webrtcChannelProcessors[name]
     }
 
-    addEventListener(name, callback) {
-        this._events[name].push(callback)
-    }
+    // addEventListener(name, callback) {
+    //     this._events[name].push(callback)
+    // }
 
-    emitEvent(name, event) {
-        for(var callback in this._events[name]){
-            this._events[name][callback](event)
-        }
+    // emitEvent(name, event) {
+    //     for(var callback in this._events[name]){
+    //         this._events[name][callback](event)
+    //     }
+    // }
+
+    getEventBus() {
+        return this._eventBus
     }
 
 }
