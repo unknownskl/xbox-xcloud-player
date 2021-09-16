@@ -64,7 +64,7 @@ export default class AudioChannel extends BaseChannel {
         this._createAudioContext()
 
         this._performanceInterval = setInterval(() => {
-            console.log('xCloudPlayer Channel/Audio.ts - frameQueue length:', this._frameQueue.length)
+            // console.log('xCloudPlayer Channel/Audio.ts - frameQueue length:', this._frameQueue.length)
         }, 1000)
     }
     

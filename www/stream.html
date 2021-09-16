@@ -14,7 +14,11 @@
     
     <hr />
     
-    Xbox XCloud POC - <strong>Status:</strong> <span id="streamStatus">Not connected</span> <strong>Video FPS:</strong> <span id="fpsCounter_video">0</span> <strong>Audio FPS:</strong> <span id="fpsCounter_audio">0</span>
+    Xbox XCloud POC - <strong>Status:</strong> <span id="streamStatus">Not connected</span>
+    <strong>Video FPS:</strong> <span id="fpsCounter_video">0</span>
+    <strong>Audio FPS:</strong> <span id="fpsCounter_audio">0</span>
+    <strong>Metadata FPS:</strong> <span id="fpsCounter_metadata">0</span>
+    <strong>Input FPS:</strong> <span id="fpsCounter_input">0</span>
     <br />
     <br />
     
@@ -24,10 +28,10 @@
         <div id="uiButtons" style="padding-left: 20px;">
             <strong>Controls</strong> <br />
     
-            Current bitrate: <span id="currentBitrate">N/A</span> (min: 512, max: 12000) <br />
+            <!-- Current bitrate: <span id="currentBitrate">N/A</span> (min: 512, max: 12000) <br />
             <button onclick="client.setBitrate(client.getChannelProcessor('control').getBitrate()+1000)">+ 1000</button> <button onclick="client.setBitrate(client.getChannelProcessor('control').getBitrate()-1000)">- 1000</button> <br />
             <button onclick="client.setBitrate(512)">512</button> <button onclick="client.setBitrate(2700)">2700</button> <button onclick="client.setBitrate(5000)">5000</button> <button onclick="client.setBitrate(8000)">8000</button>  <button onclick="client.setBitrate(12000)">12000</button> <br />
-            <br />
+            <br /> -->
     
             <button onclick="client.reset()">Reset stream</button> <button onclick="client.getChannelProcessor('video').resetBuffer()">Reset Videobuffer</button>
             <br /><br />

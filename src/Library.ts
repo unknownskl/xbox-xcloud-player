@@ -10,10 +10,13 @@ import EventBus from './Helper/EventBus'
 interface xCloudPlayerConfig {
     libopus_path?:string
     worker_location?:string
+    ui_systemui?:Array<number> // Default: [10,19,31,27,32,33]
+    ui_version?:Array<number> // Default: [0,1,0]
 }
 
 export default class xCloudPlayer {
 
+    _config:xCloudPlayerConfig
     _webrtcClient:RTCPeerConnection;
 
     _eventBus:EventBus
@@ -82,6 +85,8 @@ export default class xCloudPlayer {
     constructor(elementId:string, config:xCloudPlayerConfig = {}) {
         console.log('xCloudPlayer loaded!')
 
+        this._config = config
+
         this._eventBus = new EventBus()
         this._elementHolder = elementId
         this._elementHolderRandom = (Math.floor(Math.random() * 100) + 1)
@@ -95,6 +100,8 @@ export default class xCloudPlayer {
     createOffer(){
         return new Promise((resolve, reject) => {
 
+            this.getEventBus().emit('connectionstate', { state: 'new'})
+
             this._webrtcClient.createOffer().then((offer) => {
                 this._webrtcClient.setLocalDescription(offer)
                 
@@ -104,11 +111,13 @@ export default class xCloudPlayer {
     }
 
     setRemoteOffer(sdpdata:string){
-        console.log('sdpData', sdpdata)
+        // console.log('sdpData', sdpdata)
         this._webrtcClient.setRemoteDescription({
             type: 'answer',
             sdp: sdpdata
         })
+
+        this.getEventBus().emit('connectionstate', { state: 'connecting'})
     }
 
     reset(){

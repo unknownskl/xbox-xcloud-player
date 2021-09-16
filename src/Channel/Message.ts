@@ -14,9 +14,11 @@ export default class MessageChannel extends BaseChannel {
         })
         this.send(handshake)
 
+        const systemUis = this.getClient()._config.ui_systemui || [10,19,31,27,32,33]
+        const systemVersion = this.getClient()._config.ui_version || [0,1,0]
         var data4 = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
-            "version": [0,1,0],
-            "systemUis":[10,19,31,27,32,33], // Xbox Windows app has [33], xCloud has [10,19,31,27,32]
+            "version": systemVersion,
+            "systemUis":systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32]
             
             // 10
             // 19 = Modal UI

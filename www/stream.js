@@ -115,11 +115,12 @@ var app = {
                                     }).catch((error) => {
                                         console.log('xCloudPlayer Client - SDP Response Offer failed:', error)
                                     })
+                                }).catch((error) => {
+                                    console.log('xCloudPlayer Client - Configuration failed:', error)
                                 })
 
                             })
 
-                            // this.startWebrtcConnection()
                         }).catch((error)  => {
                             throw error;
                             // console.log('/api/start - Could not start session. Error:', error)
@@ -192,12 +193,23 @@ var app = {
             const element = document.getElementById('fpsCounter_video')
             element.innerHTML = event.fps
         })
+
+        client.getEventBus().on('fps_metadata', (event) => {
+            const element = document.getElementById('fpsCounter_metadata')
+            element.innerHTML = event.fps
+        })
+        client.getEventBus().on('fps_input', (event) => {
+            const element = document.getElementById('fpsCounter_input')
+            element.innerHTML = event.fps
+        })
     }
 }
 
 window.addEventListener('load', (event) => {
     // console.log(xCloudPlayer)
-    client = new xCloudPlayer.default('videoHolder')
+    client = new xCloudPlayer.default('videoHolder', {
+        ui_systemui: [33]
+    })
 
     // Retrieve consoles
     app.getConsoles().then((consoles) => {

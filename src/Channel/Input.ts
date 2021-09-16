@@ -1,3 +1,5 @@
+import FpsCounter from '../Helper/FpsCounter'
+import LatencyCounter from '../Helper/LatencyCounter'
 import BaseChannel from './Base'
 
 export interface InputFrame {
@@ -40,8 +42,29 @@ export default class InputChannel extends BaseChannel {
 
     _gamepadFrames:Array<InputFrame> = []
 
+    _metadataFps:FpsCounter
+    // _metadataLatency:LatencyCounter
+
+    _inputFps:FpsCounter
+    // _inputLatency:LatencyCounter
+
+    constructor(channelName, client) {
+        super(channelName, client)
+
+        this._metadataFps = new FpsCounter(this.getClient(), 'metadata')
+        // this._metadataLatency = new LatencyCounter(this.getClient(), 'metadata')
+
+        this._inputFps = new FpsCounter(this.getClient(), 'input')
+        // this._inputLatency = new LatencyCounter(this.getClient(), 'input')
+    }
+
     onOpen(event) {
         super.onOpen(event)
+
+        this._metadataFps.start()
+        // this._metadataLatency.start()
+        this._inputFps.start()
+        // this._inputLatency.start()
 
         // console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onOpen:', event)
 
@@ -110,6 +133,7 @@ export default class InputChannel extends BaseChannel {
             offset++
 
             for (; metadataQueue.length > 0;) {
+                this._metadataFps.count()
                 var frame = metadataQueue.shift()
 
                 var dateNow = performance.now();
@@ -150,7 +174,7 @@ export default class InputChannel extends BaseChannel {
             offset++
 
             for (; gamepadQueue.length > 0;) {
-
+                this._inputFps.count()
                 var shift = gamepadQueue.shift()
                 if(shift !== undefined){
 
@@ -266,5 +290,14 @@ export default class InputChannel extends BaseChannel {
 
             this.queueGamepadState(newState)
         }, 50)
+    }
+
+    destroy() {
+        this._metadataFps.stop()
+        // this._metadataLatency.stop()
+        this._inputFps.stop()
+        // this._inputLatency.stop()
+
+        super.destroy()
     }
 }
