@@ -1,8 +1,8 @@
-import { Client } from "../Library";
+import xCloudPlayer from "../Library";
 
 export default class BaseChannel {
 
-    _client:Client;
+    _client:xCloudPlayer;
     _channelName:string;
     _state:'new'|'connected'|'closing'|'closed';
 
@@ -10,7 +10,7 @@ export default class BaseChannel {
         'state': []
     }
 
-    constructor(channelName:string, client:Client) {
+    constructor(channelName:string, client:xCloudPlayer) {
         this._channelName = channelName;
         this._client = client;
         this._state = 'new';

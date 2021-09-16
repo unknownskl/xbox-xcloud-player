@@ -1,14 +1,14 @@
-import { Client } from "../Library";
+import xCloudPlayer from "../Library";
 
 export default class VideoComponent {
 
-    _client:Client
+    _client:xCloudPlayer
 
     _videoSource
     _mediaSource
     _videoRender
 
-    constructor(client:Client) {
+    constructor(client:xCloudPlayer) {
         this._client = client
     }
 

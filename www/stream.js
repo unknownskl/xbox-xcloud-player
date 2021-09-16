@@ -181,7 +181,8 @@ var app = {
 }
 
 window.addEventListener('load', (event) => {
-    client = new xCloudPlayer.Client('videoHolder')
+    // console.log(xCloudPlayer)
+    client = new xCloudPlayer.default('videoHolder')
 
     // Retrieve consoles
     app.getConsoles().then((consoles) => {

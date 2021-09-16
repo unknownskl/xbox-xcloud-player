@@ -5,7 +5,12 @@ import InputChannel from './Channel/Input'
 import ControlChannel from './Channel/Control'
 import MessageChannel from './Channel/Message'
 
-export class Client {
+interface xCloudPlayerConfig {
+    libopus_path?:string
+    worker_location?:string
+}
+
+export default class Client {
 
     _webrtcClient:RTCPeerConnection;
 
@@ -70,7 +75,7 @@ export class Client {
         'connectionstate': []
     }
 
-    constructor(elementId:string) {
+    constructor(elementId:string, config:xCloudPlayerConfig = {}) {
         console.log('xCloudPlayer loaded!')
 
         this._elementHolder = elementId

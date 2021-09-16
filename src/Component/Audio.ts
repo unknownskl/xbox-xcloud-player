@@ -1,14 +1,14 @@
-import { Client } from "../Library";
+import xCloudPlayer from "../Library";
 
 export default class AudioComponent {
 
-    _client:Client
+    _client:xCloudPlayer
 
     _audioSource
     _mediaSource
     _audioRender
 
-    constructor(client:Client) {
+    constructor(client:xCloudPlayer) {
         this._client = client
     }
 

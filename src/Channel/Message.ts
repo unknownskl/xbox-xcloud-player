@@ -16,7 +16,15 @@ export default class MessageChannel extends BaseChannel {
 
         var data4 = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
             "version": [0,1,0],
-            "systemUis":[10,19,31,27,32]
+            "systemUis":[10,19,31,27,32,33], // Xbox Windows app has [33], xCloud has [10,19,31,27,32]
+            
+            // 10
+            // 19 = Modal UI
+            // 31
+            // 27
+            // 32
+            // 33 = Xbox windows app, unknown
+            // Possible options: Keyboard, PurchaseModal
         }))
         this.send(data4)
 
