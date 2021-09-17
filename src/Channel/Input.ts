@@ -41,6 +41,7 @@ export default class InputChannel extends BaseChannel {
     }
 
     _gamepadFrames:Array<InputFrame> = []
+    _inputInterval
 
     _metadataFps:FpsCounter
     // _metadataLatency:LatencyCounter
@@ -73,7 +74,7 @@ export default class InputChannel extends BaseChannel {
 
         this.send(metadataReport)
 
-        setInterval(() => {
+        this._inputInterval = setInterval(() => {
             let reportType = this._reportTypes.None
 
             if(this.getGamepadQueueLength() === 0){
@@ -291,6 +292,8 @@ export default class InputChannel extends BaseChannel {
         // this._metadataLatency.stop()
         this._inputFps.stop()
         // this._inputLatency.stop()
+        
+        clearInterval(this._inputInterval)
 
         super.destroy()
     }
