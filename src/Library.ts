@@ -7,11 +7,14 @@ import MessageChannel from './Channel/Message'
 
 import EventBus from './Helper/EventBus'
 
+import GamepadDriver from './Driver/Gamepad'
+
 interface xCloudPlayerConfig {
     libopus_path?:string
     worker_location?:string
     ui_systemui?:Array<number> // Default: [10,19,31,27,32,33]
     ui_version?:Array<number> // Default: [0,1,0]
+    input_driver?:any // Default: GamepadDriver(), false to diisable
 }
 
 export default class xCloudPlayer {
@@ -78,6 +81,8 @@ export default class xCloudPlayer {
     _elementHolder:string
     _elementHolderRandom:Number
 
+    _inputDriver:any = undefined
+
     // _events = {
     //     'connectionstate': []
     // }
@@ -94,11 +99,20 @@ export default class xCloudPlayer {
         this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration);
         this._openDataChannels()
 
+        if(this._config.input_driver === undefined){
+            this._inputDriver = new GamepadDriver(this)
+
+        } else if(this._config.input_driver !== null){
+            this._inputDriver = this._config.input_driver
+        }
+
         this._gatherIce()
     }
 
     createOffer(){
         return new Promise((resolve, reject) => {
+
+            this._inputDriver.start()
 
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
@@ -128,8 +142,11 @@ export default class xCloudPlayer {
             this._webrtcChannelProcessors[name].destroy()
         }
 
+        this._inputDriver.stop()
+
         this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration);
         this._openDataChannels()
+        this._inputDriver.start()
 
         this._gatherIce()
     }

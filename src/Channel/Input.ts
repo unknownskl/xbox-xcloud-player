@@ -74,18 +74,18 @@ export default class InputChannel extends BaseChannel {
         this.send(metadataReport)
 
         setInterval(() => {
-            // Check for metadata interval
-            if(this.getClient().getChannelProcessor('video').getMetadataQueueLength() > 4 || this.getGamepadQueueLength() > 0){
-                let reportType = this._reportTypes.None
+            let reportType = this._reportTypes.None
 
-                const metadataQueue = this.getClient().getChannelProcessor('video').getMetadataQueue()
-                const gamepadQueue = this.getGamepadQueue()
-                const inputReport = this._createInputPacket(reportType, metadataQueue, gamepadQueue)
-
-                // console.log('inputReport', inputReport, metadataQueue)
-                this.send(inputReport)
+            if(this.getGamepadQueueLength() === 0){
+                this.getClient()._inputDriver.requestState()
             }
-        }, 16)
+
+            const metadataQueue = this.getClient().getChannelProcessor('video').getMetadataQueue()
+            const gamepadQueue = this.getGamepadQueue()
+            const inputReport = this._createInputPacket(reportType, metadataQueue, gamepadQueue)
+
+            this.send(inputReport)
+        }, 16)// 16 ms = 1 frame (1000/60)
     }
     
     onMessage(event) {
@@ -109,14 +109,12 @@ export default class InputChannel extends BaseChannel {
 
         if(metadataQueue.length > 0){
             reportType |= this._reportTypes.Metadata // Set bitmask for metadata
-            // Calc metadata. We can have max 30 only due size.
             metadataSize = 1 + ((7 * 4) * metadataQueue.length)
             totalSize += metadataSize
         }
 
         if(gamepadQueue.length > 0){
-            reportType |= this._reportTypes.GamepadReport // Set bitmask for metadata
-            // Calc metadata. We can have max 30 only due size.
+            reportType |= this._reportTypes.GamepadReport // Set bitmask for gamepad data
             gamepadSize = 1 + (23 * gamepadQueue.length)
             totalSize += gamepadSize
         }
@@ -168,8 +166,6 @@ export default class InputChannel extends BaseChannel {
         }
 
         if(gamepadQueue.length > 0){
-            // console.log('processing gameinputs:', gamepadQueue.length, gamepadQueue)
-
             metadataReport.setUint8(offset, gamepadQueue.length)
             offset++
 
@@ -180,8 +176,6 @@ export default class InputChannel extends BaseChannel {
 
                     var input:InputFrame = shift
                     var dateNow = performance.now();
-
-                    // console.log('processing gameinputs Nexus:', input.Nexus)
 
                     metadataReport.setUint8(offset, input.GamepadIndex)
                     offset++
