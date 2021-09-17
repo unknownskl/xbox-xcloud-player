@@ -1,6 +1,6 @@
 {
   "name": "xbox-xcloud-player",
-  "version": "0.1.0-beta5",
+  "version": "0.1.0-beta6",
   "description": "",
   "main": "dist/Library.js",
   "scripts": {
