@@ -8,6 +8,8 @@ export default class VideoComponent {
     _mediaSource
     _videoRender
 
+    _focusEvent
+
     constructor(client:xCloudPlayer) {
         this._client = client
     }
@@ -24,6 +26,11 @@ export default class VideoComponent {
             videoRender.width = videoHolder.clientWidth
             videoRender.height = videoHolder.clientHeight
             videoRender.play()
+
+            this._focusEvent = () => {
+                this._client.getChannelProcessor('video').resetBuffer()
+            }
+            window.addEventListener('focus', this._focusEvent)
 
             this._videoRender = videoRender
             
@@ -74,20 +81,15 @@ export default class VideoComponent {
     }
 
     resetMediaSource() {
-        this._mediaSource.removeSourceBuffer(this._videoSource)
-        delete this._videoSource
-
-        const videoSrc = this.createMediaSource()
-        const videoRender = document.getElementById(this.getElementId()) as any
-        videoRender.src = videoSrc
-        videoRender.play()
-        
-        this._videoRender = videoRender
+        this.destroy()
+        this.create()
 
     }
 
     destroy() {
         // this._videoRender.pause()
+
+        window.removeEventListener('focus', this._focusEvent)
 
         delete this._mediaSource
         delete this._videoRender

@@ -113,13 +113,6 @@ export default class VideoChannel extends BaseChannel {
 
         const frameProcessedMs = (performance.now()-frame.firstFramePacketArrivalTimeMs)
         this._latencyCounter.count(frameProcessedMs)
-
-        // Increase fps counter
-        // this.#frameCounter++
-
-        // Calc latency
-        // var frameLatency = (frame.frameRenderedTimeMs - frame.firstFramePacketArrivalTimeMs)
-        // this.#videoLatency.push(frameLatency)
     }
 
     getMetadataQueue(size=30) {
@@ -163,6 +156,8 @@ export default class VideoChannel extends BaseChannel {
         if(this._worker !== undefined){
             this._worker.terminate()
         }
+        
+        this._component.destroy()
 
         console.log('xCloudPlayer Channels/Video.ts - Worker terminated', this._worker)
 

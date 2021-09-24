@@ -249,6 +249,9 @@ export default class AudioChannel extends BaseChannel {
         if(this._opusWorker !== undefined){
             this._opusWorker.terminate()
         }
+        
+        this._component.destroy()
+        
         console.log('xCloudPlayer Channel/Audio.ts - Workers terminated', this._opusWorker, this._worker)
 
         // Called when we want to destroy the channel.
