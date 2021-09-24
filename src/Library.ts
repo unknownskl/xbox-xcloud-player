@@ -14,7 +14,7 @@ interface xCloudPlayerConfig {
     worker_location?:string
     ui_systemui?:Array<number> // Default: [10,19,31,27,32,33]
     ui_version?:Array<number> // Default: [0,1,0]
-    input_driver?:any // Default: GamepadDriver(), false to diisable
+    input_driver?:any // Default: GamepadDriver(), false to disable
 }
 
 export default class xCloudPlayer {
@@ -100,11 +100,13 @@ export default class xCloudPlayer {
         this._openDataChannels()
 
         if(this._config.input_driver === undefined){
-            this._inputDriver = new GamepadDriver(this)
+            this._inputDriver = new GamepadDriver()
 
         } else if(this._config.input_driver !== null){
             this._inputDriver = this._config.input_driver
         }
+
+        this._inputDriver.setApplication(this)
 
         this._gatherIce()
     }

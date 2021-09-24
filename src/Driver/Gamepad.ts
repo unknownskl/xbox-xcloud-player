@@ -1,48 +1,69 @@
 import xCloudPlayer from "../Library"
 import { InputFrame } from '../Channel/Input'
 
-export default class GammepadDriver {
+export default class GamepadDriver {
 
-    _application:xCloudPlayer
+    _application:xCloudPlayer|null = null
 
     _gamepads:Array<any> = []
 
-    constructor(application:xCloudPlayer) {
+    _gamepadConnectedListener
+    _gamepadDisconnectedListener
+
+    constructor() {
+
+    }
+
+    setApplication(application:xCloudPlayer) {
         this._application = application
+    }
 
-        window.addEventListener("gamepadconnected", (e) => {
+    start() {
+        // console.log('xCloudPlayer Driver/Gamepad.ts - Start collecting events:', this._gamepads)
 
+        this._gamepadConnectedListener = (e) => {
             var gamepad = {
                 index: e.gamepad.index,
                 name: e.gamepad.id,
                 buttons: e.gamepad.buttons,
                 axes: e.gamepad.axes,
             }
-            this._gamepads.push(gamepad)
 
-            this._application.getEventBus().emit('gamepad_connect', gamepad)
+            let gamepadExists = false
+            for(const gamepad in this._gamepads){
+                if(this._gamepads[gamepad].index === e.gamepad.index){
+                    gamepadExists = true
+                }
+            }
+
+            if(gamepadExists === false) {
+                this._gamepads.push(gamepad)
+            }
+
+            this._application?.getEventBus().emit('gamepad_connect', gamepad)
             console.log('xCloudPlayer Driver/Gamepad.ts - Controller connected:', this._gamepads)
-        })
+        }
+        window.addEventListener("gamepadconnected", this._gamepadConnectedListener)
 
-        window.addEventListener("gamepaddisconnected", (e) => {
+        this._gamepadDisconnectedListener = (e) => {
             for(var gamepad in this._gamepads){
                 if(this._gamepads[gamepad].index === e.gamepad.index){
                     var removedGamepad = this._gamepads[gamepad]
                     this._gamepads.splice(e.gamepad.index, 1)
 
-                    this._application.getEventBus().emit('gamepad_disconnect', removedGamepad)
+                    this._application?.getEventBus().emit('gamepad_disconnect', removedGamepad)
                     console.log('xCloudPlayer Driver/Gamepad.ts - Controller disconnected:', this._gamepads)
                 }
             }
-        })
-    }
-
-    start() {
-        // console.log('xCloudPlayer Driver/Gamepad.ts - Start collecting events:', this._gamepads)
+        }
+        window.addEventListener("gamepaddisconnected", this._gamepadDisconnectedListener)
     }
 
     stop() {
         // console.log('xCloudPlayer Driver/Gamepad.ts - Stop collecting events:', this._gamepads)
+
+        window.removeEventListener('gamepadconnected', this._gamepadConnectedListener)
+        window.removeEventListener('gamepaddisconnected', this._gamepadDisconnectedListener)
     }
 
     requestState() {
@@ -52,7 +73,7 @@ export default class GammepadDriver {
 
             state.GamepadIndex = this._gamepads[gamepad].index
 
-            this._application.getChannelProcessor('input').queueGamepadState(state)
+            this._application?.getChannelProcessor('input').queueGamepadState(state)
         }
     }
 

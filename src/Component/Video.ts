@@ -44,7 +44,7 @@ export default class VideoComponent {
     }
 
     createMediaSource() {
-        var mediaSource = new MediaSource(),
+        var mediaSource = new MediaSource(), // @TODO: MediaSource (MSE) is not available on iOS. 
         videoSourceUrl = window.URL.createObjectURL(mediaSource);
 
         mediaSource.addEventListener('sourceopen', () => {
