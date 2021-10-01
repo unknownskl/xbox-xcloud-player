@@ -23,7 +23,7 @@
     "brace-style": ["warn"],
     "prefer-arrow-callback": ["warn"],
     "max-len": ["warn", 200],
-    "no-console": ["warn"],
+    // "no-console": ["warn"],
     "no-non-null-assertion": ["off"],
     "comma-spacing": ["error"],
     "no-multi-spaces": ["warn", { "ignoreEOLComments": true }],
