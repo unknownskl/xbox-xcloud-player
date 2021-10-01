@@ -1,10 +1,10 @@
-export default function worker(self:any) {
+export default function worker(self) {
 
     console.log('xCloudPlayer Worker/Video.ts - Loading worker...', self)
 
-    var _frameQueue = {}
+    const _frameQueue = {}
 
-    var _performanceInterval;
+    // let _performanceInterval
 
     // _performanceInterval = setInterval(() => {
     //     console.log('xCloudPlayer Worker/Video.ts - [Performance] _frameQueue size:', Object.keys(_frameQueue).length, '_metadataQueue size:', this._metadataQueue.length)
@@ -22,9 +22,9 @@ export default function worker(self:any) {
     // }
 
     self.destroy = function() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
 
-            clearInterval(this._performanceInterval)
+            // clearInterval(this._performanceInterval)
 
             resolve('ok')
         })
@@ -32,19 +32,19 @@ export default function worker(self:any) {
 
     self.onPacket = function(eventData, timePerformanceNow){
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this._normalizeBuffer(eventData.data).then((buffer) => {
             
-                var messageBuffer = new DataView(buffer);
+                const messageBuffer = new DataView(buffer)
 
-                var frameId = messageBuffer.getUint32(0, true);
-                var timestamp = (messageBuffer.getUint32(4, true)/10);
-                var frameSize = messageBuffer.getUint32(8, true);
-                var frameOffset = messageBuffer.getUint32(12, true);
-                var serverDataKey = messageBuffer.getUint32(16, true);
-                var isKeyFrame = messageBuffer.getUint8(20);
+                const frameId = messageBuffer.getUint32(0, true)
+                const timestamp = (messageBuffer.getUint32(4, true)/10)
+                const frameSize = messageBuffer.getUint32(8, true)
+                const frameOffset = messageBuffer.getUint32(12, true)
+                const serverDataKey = messageBuffer.getUint32(16, true)
+                const isKeyFrame = messageBuffer.getUint8(20)
 
-                var offset = 21;
+                const offset = 21
 
                 const frameBufferData = new Uint8Array(buffer, offset)
 
@@ -55,11 +55,11 @@ export default function worker(self:any) {
                     frameOffset: frameOffset,
                     serverDataKey: serverDataKey,
                     isKeyFrame: isKeyFrame,
-                    frameData: frameBufferData
+                    frameData: frameBufferData,
                 }
 
                 // Check if frame already exists
-                var frameDataBuffer;
+                let frameDataBuffer:Uint8Array
 
                 if(_frameQueue[frameId] !== undefined) {
                     frameDataBuffer = new Uint8Array(_frameQueue[frameId].frameData)
@@ -71,7 +71,7 @@ export default function worker(self:any) {
                 } else {
                     frameDataBuffer = new Uint8Array(new ArrayBuffer(frameData.frameSize))
                     frameDataBuffer.set(frameData.frameData, frameData.frameOffset)
-                    var bytesReceived = frameData.frameData.byteLength
+                    const bytesReceived = frameData.frameData.byteLength
 
                     _frameQueue[frameId] = {
                         frameId: frameId,
@@ -86,7 +86,7 @@ export default function worker(self:any) {
                         firstFramePacketArrivalTimeMs: timePerformanceNow,
                         frameSubmittedTimeMs: timePerformanceNow,
                         frameDecodedTimeMs: timePerformanceNow,
-                        frameRenderedTimeMs: 0
+                        frameRenderedTimeMs: 0,
                     }
                 }
                 
@@ -97,8 +97,8 @@ export default function worker(self:any) {
                     postMessage({
                         action: 'doRender',
                         status: 200,
-                        data: _frameQueue[frameId]
-                    });
+                        data: _frameQueue[frameId],
+                    })
                     resolve(_frameQueue[frameId])
 
                     delete _frameQueue[frameId]
@@ -113,62 +113,37 @@ export default function worker(self:any) {
 
         switch(workerMessage.data.action){
 
-            // case 'startStream':
-            //     self.init().then(() => {
-            //         postMessage({
-            //             action: 'startStream',
-            //             status: 200
-            //         });
-            //     }).catch((error) => {
-            //         postMessage({
-            //             action: 'startStream',
-            //             status: 500,
-            //             message: error
-            //         });
-            //     })
-            //     break;
             case 'endStream':
                 self.destroy().then(() => {
                     postMessage({
                         action: 'endStream',
-                        status: 200
-                    });
+                        status: 200,
+                    })
                 }).catch((error) => {
                     postMessage({
                         action: 'endStream',
                         status: 500,
-                        message: error
-                    });
+                        message: error,
+                    })
                 })
-                break;
+                break
             case 'onPacket':
                 // Process incoming input
-                self.onPacket(workerMessage.data.data, workerMessage.data.data.timePerformanceNow).then((response) => {
-                    // postMessage({
-                    //     action: 'onPacket',
-                    //     status: 200,
-                    //     frame: response
-                    // });
-
+                self.onPacket(workerMessage.data.data, workerMessage.data.data.timePerformanceNow).then(() => {
                     // Packet succeeded
                 }).catch((error) => {
-                    // postMessage({
-                    //     action: 'onPacket',
-                    //     status: 500,
-                    //     message: error
-                    // });
-                    console.warn('xCloudPlayer Worker/Video.ts - Failed onPacket()')
+                    console.warn('xCloudPlayer Worker/Video.ts - Failed onPacket():', error)
                 })
-                break;
+                break
             default:
                 console.log('xCloudPlayer Worker/Video.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
         }
     }
 
-    self._normalizeBuffer = (eventData:any) => {
+    self._normalizeBuffer = (eventData) => {
         return new Promise((resolve, reject) => {
             if(eventData instanceof Blob){
-                const bytesBuffer = eventData.arrayBuffer().then((buffer) => {
+                eventData.arrayBuffer().then((buffer) => {
                     resolve(buffer)
                 }).catch((error) => {
                     reject(error)

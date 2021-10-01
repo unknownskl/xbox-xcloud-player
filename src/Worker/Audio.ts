@@ -1,6 +1,4 @@
-import { normalize } from "path/posix"
-
-export default function worker(self:any) {
+export default function worker(self) {
 
     console.log('xCloudPlayer Worker/Audio.ts - Loading worker...')
 
@@ -15,32 +13,32 @@ export default function worker(self:any) {
             //     var messageBuffer = new DataView(eventData.data);
             // }
 
-            var messageBuffer = new DataView(buffer);
+            const messageBuffer = new DataView(buffer)
 
-            var frameId = messageBuffer.getUint32(0, true);
-            var timestamp = (messageBuffer.getUint32(4, true)/10);
-            var frameSize = messageBuffer.getUint32(8, true);
+            const frameId = messageBuffer.getUint32(0, true)
+            const timestamp = (messageBuffer.getUint32(4, true)/10)
+            const frameSize = messageBuffer.getUint32(8, true)
 
-            var frameBuffer = new Uint8Array(buffer, 12)
+            const frameBuffer = new Uint8Array(buffer, 12)
 
-            var frameData = {
+            const frameData = {
                 frameId: frameId,
                 timestamp: timestamp,
                 frameSize: frameSize,
                 frameData: frameBuffer,
-                frameReceived: timePerformanceNow
+                frameReceived: timePerformanceNow,
             }
 
             postMessage({
                 action: 'decodeAudio',
                 status: 200,
                 data: {
-                    frame: frameData
-                }
-            });
+                    frame: frameData,
+                },
+            })
 
         }).catch((error) => {
-            console.warn('xCloudPlayer Worker/Audio.ts - _normalizeBuffer failed')
+            console.warn('xCloudPlayer Worker/Audio.ts - _normalizeBuffer failed:', error)
         })
 
         // return frameData
@@ -51,16 +49,16 @@ export default function worker(self:any) {
             case 'onPacket':
                 // Process incoming input
                 self.onPacket(workerMessage.data.data, workerMessage.data.data.timePerformanceNow)
-                break;
+                break
             default:
                 console.log('xCloudPlayer Worker/Audio.ts - Unknown incoming worker message:', workerMessage.data.action, workerMessage.data)
         }
     }
 
-    self._normalizeBuffer = (eventData:any) => {
+    self._normalizeBuffer = (eventData) => {
         return new Promise((resolve, reject) => {
             if(eventData instanceof Blob){
-                const bytesBuffer = eventData.arrayBuffer().then((buffer) => {
+                eventData.arrayBuffer().then((buffer) => {
                     resolve(buffer)
                 }).catch((error) => {
                     reject(error)

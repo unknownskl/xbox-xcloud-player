@@ -63,7 +63,7 @@ export default class xCloudPlayer {
         'chat': {
             id: 6,
             protocol: 'chatV1',
-        }
+        },
     }
 
     _webrtcStates = {
@@ -112,7 +112,7 @@ export default class xCloudPlayer {
     }
 
     createOffer(){
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
 
             this._inputDriver.start()
 
@@ -146,7 +146,7 @@ export default class xCloudPlayer {
 
         this._inputDriver.stop()
 
-        this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration);
+        this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
         this._openDataChannels()
         this._inputDriver.start()
 
@@ -181,7 +181,7 @@ export default class xCloudPlayer {
         }
     }
 
-    _openDataChannel(name:string, config:any){
+    _openDataChannel(name:string, config){
         console.log('xCloudPlayer Library.ts - Creating data channel:', name, config)
 
         this._webrtcDataChannels[name] = this._webrtcClient.createDataChannel(name, config)
