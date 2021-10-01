@@ -1,4 +1,4 @@
-import xCloudPlayer from "../Library"
+import xCloudPlayer from '../Library'
 
 export default class LatencyCounter {
 
@@ -17,21 +17,23 @@ export default class LatencyCounter {
     start() {
         this._eventInterval = setInterval(() => {
 
-            var latencyCount = 0;
-            var minLatency = 999;
-            var maxLatency = 0;
+            let latencyCount = 0
+            let minLatency = 999
+            let maxLatency = 0
             // console.log('latency:', this._latency)
 
-            for(var latencyTime in this._latency){
+            for(const latencyTime in this._latency){
                 if(this._latency[latencyTime] !== undefined){
                     latencyCount += this._latency[latencyTime]
                 }
 
-                if(this._latency[latencyTime] < minLatency)
+                if(this._latency[latencyTime] < minLatency){
                     minLatency = this._latency[latencyTime]
+                }
 
-                if(this._latency[latencyTime] > maxLatency)
+                if(this._latency[latencyTime] > maxLatency){
                     maxLatency = this._latency[latencyTime]
+                }
             }
             
             if(this._latency.length > 0){

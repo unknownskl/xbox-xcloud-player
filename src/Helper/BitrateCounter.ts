@@ -1,4 +1,4 @@
-import xCloudPlayer from "../Library"
+import xCloudPlayer from '../Library'
 
 export default class BitrateCounter {
 
@@ -18,15 +18,15 @@ export default class BitrateCounter {
     start() {
         this._eventInterval = setInterval(() => {
 
-            var bitratePacketsValue = 0
-            var bitrateDataValue = 0
+            let bitratePacketsValue = 0
+            let bitrateDataValue = 0
 
-            for(var frame in this._bitratePackets){
+            for(const frame in this._bitratePackets){
                 if(this._bitratePackets[frame] !== undefined){
                     bitratePacketsValue += this._bitratePackets[frame]
                 }
             }
-            for(var audio in this._bitrateData){
+            for(const audio in this._bitrateData){
                 if(this._bitrateData[audio] !== undefined){
                     bitrateDataValue += this._bitrateData[audio]
                 }

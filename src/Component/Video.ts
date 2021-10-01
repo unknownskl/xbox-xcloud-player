@@ -1,4 +1,4 @@
-import xCloudPlayer from "../Library";
+import xCloudPlayer from '../Library'
 
 export default class VideoComponent {
 
@@ -17,10 +17,10 @@ export default class VideoComponent {
     create() {
         console.log('xCloudPlayer Component/Video.ts - Create media element')
 
-        var videoHolder = document.getElementById(this._client._elementHolder)
+        const videoHolder = document.getElementById(this._client._elementHolder)
         if(videoHolder !== null){
             const videoSrc = this.createMediaSource()
-            var videoRender = document.createElement('video')
+            const videoRender = document.createElement('video')
             videoRender.id = this.getElementId()
             videoRender.src = videoSrc
             videoRender.width = videoHolder.clientWidth
@@ -34,7 +34,7 @@ export default class VideoComponent {
 
             this._videoRender = videoRender
             
-            videoHolder.appendChild(videoRender);
+            videoHolder.appendChild(videoRender)
         } else {
             console.log('xCloudPlayer Component/Video.ts - Error fetching videoholder: div#'+this._client._elementHolder)
         }
@@ -51,29 +51,29 @@ export default class VideoComponent {
     }
 
     createMediaSource() {
-        var mediaSource = new MediaSource(), // @TODO: MediaSource (MSE) is not available on iOS. 
-        videoSourceUrl = window.URL.createObjectURL(mediaSource);
+        const mediaSource = new MediaSource() // @TODO: MediaSource (MSE) is not available on iOS. 
+        const videoSourceUrl = window.URL.createObjectURL(mediaSource)
 
         mediaSource.addEventListener('sourceopen', () => {
-            console.log('xCloudPlayer Component/Video.ts - MediaSource opened. Attaching videoSourceBuffer...');
+            console.log('xCloudPlayer Component/Video.ts - MediaSource opened. Attaching videoSourceBuffer...')
         
-            var videoSourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42c020"');
+            const videoSourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42c020"')
             videoSourceBuffer.mode = 'sequence'
 
-            videoSourceBuffer.addEventListener('updateend', (event) => {
-                // console.log('xCloudPlayer Component/Video.ts - Updateend video...', event);
-            });
+            // videoSourceBuffer.addEventListener('updateend', (event) => {
+            //     // console.log('xCloudPlayer Component/Video.ts - Updateend video...', event);
+            // })
 
-            videoSourceBuffer.addEventListener('update', (event) => {
-                // console.log('xCloudPlayer Component/Video.ts - Updateend video...', event);
-            });
+            // videoSourceBuffer.addEventListener('update', (event) => {
+            //     // console.log('xCloudPlayer Component/Video.ts - Updateend video...', event);
+            // })
 
             videoSourceBuffer.addEventListener('error', (event) => {
-                console.log('xCloudPlayer Component/Video.ts - Error video...', event);
-            });
+                console.log('xCloudPlayer Component/Video.ts - Error video...', event)
+            })
 
             this._videoSource = videoSourceBuffer
-        });
+        })
 
         this._mediaSource = mediaSource
 
@@ -97,6 +97,6 @@ export default class VideoComponent {
         
         document.getElementById(this.getElementId())?.remove()
 
-        console.log('xCloudPlayer Component/Video.ts - Cleaning up Video element');
+        console.log('xCloudPlayer Component/Video.ts - Cleaning up Video element')
     }
 }

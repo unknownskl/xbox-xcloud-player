@@ -10,11 +10,11 @@ import EventBus from './Helper/EventBus'
 import GamepadDriver from './Driver/Gamepad'
 
 interface xCloudPlayerConfig {
-    libopus_path?:string
-    worker_location?:string
-    ui_systemui?:Array<number> // Default: [10,19,31,27,32,33]
-    ui_version?:Array<number> // Default: [0,1,0]
-    input_driver?:any // Default: GamepadDriver(), false to disable
+    libopus_path?:string;
+    worker_location?:string;
+    ui_systemui?:Array<number>; // Default: [10,19,31,27,32,33]
+    ui_version?:Array<number>; // Default: [0,1,0]
+    input_driver?:any; // Default: GamepadDriver(), false to disable
 }
 
 export default class xCloudPlayer {
@@ -26,10 +26,10 @@ export default class xCloudPlayer {
 
     _webrtcConfiguration = {
         iceServers: [{
-            urls: "stun:stun.l.google.com:19302"
+            urls: 'stun:stun.l.google.com:19302',
         }, {
-            urls: "stun:stun1.l.google.com:19302"
-        }]
+            urls: 'stun:stun1.l.google.com:19302',
+        }],
     }
     // _webrtcConfiguration = {
     //     iceServers: []
@@ -39,30 +39,30 @@ export default class xCloudPlayer {
         'video': {
             id: 1,
             ordered: true,
-            protocol: '1.0'
+            protocol: '1.0',
         },
         'audio': {
             id: 2,
             maxRetransmits: 0,
             ordered: true,
-            protocol: 'audioV1'
+            protocol: 'audioV1',
         },
         'input': {
             id: 3,
             ordered: true,
-            protocol: '1.0'
+            protocol: '1.0',
         },
         'control': {
             id: 4,
-            protocol: 'controlV1'
+            protocol: 'controlV1',
         },
         'message': {
             id: 5,
-            protocol: 'messageV1'
+            protocol: 'messageV1',
         },
         'chat': {
             id: 6,
-            protocol: "chatV1"
+            protocol: 'chatV1',
         }
     }
 
@@ -79,7 +79,7 @@ export default class xCloudPlayer {
     _iceCandidates:Array<RTCIceCandidate> = []
 
     _elementHolder:string
-    _elementHolderRandom:Number
+    _elementHolderRandom:number
 
     _inputDriver:any = undefined
 
@@ -96,7 +96,7 @@ export default class xCloudPlayer {
         this._elementHolder = elementId
         this._elementHolderRandom = (Math.floor(Math.random() * 100) + 1)
 
-        this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration);
+        this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
         this._openDataChannels()
 
         if(this._config.input_driver === undefined){
@@ -130,7 +130,7 @@ export default class xCloudPlayer {
         // console.log('sdpData', sdpdata)
         this._webrtcClient.setRemoteDescription({
             type: 'answer',
-            sdp: sdpdata
+            sdp: sdpdata,
         })
 
         this.getEventBus().emit('connectionstate', { state: 'connecting'})
@@ -158,15 +158,15 @@ export default class xCloudPlayer {
     }
 
     setIceCandidates(iceDetails){
-        for(var candidate in iceDetails){
+        for(const candidate in iceDetails){
             if(iceDetails[candidate].candidate === 'a=end-of-candidates'){
-                iceDetails[candidate].candidate = ""
+                iceDetails[candidate].candidate = ''
             }
 
             this._webrtcClient.addIceCandidate({
                 candidate: iceDetails[candidate].candidate,
                 sdpMid: iceDetails[candidate].sdpMid,
-                sdpMLineIndex: iceDetails[candidate].sdpMLineIndex
+                sdpMLineIndex: iceDetails[candidate].sdpMLineIndex,
             })
         }
     }
@@ -176,7 +176,7 @@ export default class xCloudPlayer {
     }
 
     _openDataChannels(){
-        for(let channel in this._webrtcDataChannelsConfig){
+        for(const channel in this._webrtcDataChannelsConfig){
             this._openDataChannel(channel, this._webrtcDataChannelsConfig[channel])
         }
     }
@@ -187,24 +187,24 @@ export default class xCloudPlayer {
         this._webrtcDataChannels[name] = this._webrtcClient.createDataChannel(name, config)
 
         switch(name) {
-            case "video":
-                this._webrtcChannelProcessors[name] = new VideoChannel('video', this);
-                break;
-            case "audio":
-                this._webrtcChannelProcessors[name] = new AudioChannel('audio', this);
-                break;
-            case "input":
-                this._webrtcChannelProcessors[name] = new InputChannel('input', this);
-                break;
-            case "control":
-                this._webrtcChannelProcessors[name] = new ControlChannel('control', this);
-                break;
-            case "chat":
-                this._webrtcChannelProcessors[name] = new DebugChannel('chat', this);
-                break;
-            case "message":
-                this._webrtcChannelProcessors[name] = new MessageChannel('message', this);
-                break;
+            case 'video':
+                this._webrtcChannelProcessors[name] = new VideoChannel('video', this)
+                break
+            case 'audio':
+                this._webrtcChannelProcessors[name] = new AudioChannel('audio', this)
+                break
+            case 'input':
+                this._webrtcChannelProcessors[name] = new InputChannel('input', this)
+                break
+            case 'control':
+                this._webrtcChannelProcessors[name] = new ControlChannel('control', this)
+                break
+            case 'chat':
+                this._webrtcChannelProcessors[name] = new DebugChannel('chat', this)
+                break
+            case 'message':
+                this._webrtcChannelProcessors[name] = new MessageChannel('message', this)
+                break
         }
 
         // Setup channel processors
@@ -226,7 +226,7 @@ export default class xCloudPlayer {
             }
         })
 
-        this._webrtcDataChannels[name].addEventListener("closing", event => {
+        this._webrtcDataChannels[name].addEventListener('closing', event => {
             // const message = event.data;
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onClosing !== undefined){
                 this._webrtcChannelProcessors[name].onClosing(event)
@@ -235,7 +235,7 @@ export default class xCloudPlayer {
             }
         })
 
-        this._webrtcDataChannels[name].addEventListener("close", event => {
+        this._webrtcDataChannels[name].addEventListener('close', event => {
             // const message = event.data;
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onClose !== undefined){
                 this._webrtcChannelProcessors[name].onClose(event)
@@ -244,7 +244,7 @@ export default class xCloudPlayer {
             }
         })
 
-        this._webrtcDataChannels[name].addEventListener("error", event => {
+        this._webrtcDataChannels[name].addEventListener('error', event => {
             // const message = event.data;
             if(this._webrtcChannelProcessors[name] !== undefined && this._webrtcChannelProcessors[name].onError !== undefined){
                 this._webrtcChannelProcessors[name].onError(event)
@@ -270,7 +270,7 @@ export default class xCloudPlayer {
                 console.log('xCloudPlayer Library.ts - ICE candidate found:', event.candidate)
                 this._iceCandidates.push(event.candidate)
             }
-        });
+        })
     }
 
     getDataChannel(name:string) {
@@ -280,16 +280,6 @@ export default class xCloudPlayer {
     getChannelProcessor(name:string) {
         return this._webrtcChannelProcessors[name]
     }
-
-    // addEventListener(name, callback) {
-    //     this._events[name].push(callback)
-    // }
-
-    // emitEvent(name, event) {
-    //     for(var callback in this._events[name]){
-    //         this._events[name][callback](event)
-    //     }
-    // }
 
     getEventBus() {
         return this._eventBus

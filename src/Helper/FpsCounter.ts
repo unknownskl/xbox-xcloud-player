@@ -1,4 +1,4 @@
-import xCloudPlayer from "../Library"
+import xCloudPlayer from '../Library'
 
 export default class FpsCounter {
 
@@ -18,7 +18,7 @@ export default class FpsCounter {
             // console.log('xCloudPlayer Helper/FpsCounter.ts [fps_'+this._name+'] - Emit fps:', this._counter)
 
             this._application.getEventBus().emit('fps_'+this._name, {
-                fps: this._counter
+                fps: this._counter,
             })
 
             this._counter = 0
