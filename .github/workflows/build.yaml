@@ -20,5 +20,8 @@ jobs:
         - name: Install dependencies
           run: npm ci
 
+        - name: Lint coce
+          run: npm run lint
+
         - name: Build dist
           run: npm run build
