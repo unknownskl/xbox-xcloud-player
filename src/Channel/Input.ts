@@ -3,29 +3,29 @@ import LatencyCounter from '../Helper/LatencyCounter'
 import BaseChannel from './Base'
 
 export interface InputFrame {
-    GamepadIndex: 0,
-    Nexus: 0,
-    Menu: 0,
-    View: 0,
-    A: 0,
-    B: 0,
-    X: 0,
-    Y: 0,
-    DPadUp: 0,
-    DPadDown: 0,
-    DPadLeft: 0,
-    DPadRight: 0,
-    LeftShoulder: 0,
-    RightShoulder: 0,
-    LeftThumb: 0,
-    RightThumb: 0,
+    GamepadIndex: 0;
+    Nexus: 0;
+    Menu: 0;
+    View: 0;
+    A: 0;
+    B: 0;
+    X: 0;
+    Y: 0;
+    DPadUp: 0;
+    DPadDown: 0;
+    DPadLeft: 0;
+    DPadRight: 0;
+    LeftShoulder: 0;
+    RightShoulder: 0;
+    LeftThumb: 0;
+    RightThumb: 0;
 
-    LeftThumbXAxis: 0.0,
-    LeftThumbYAxis: 0.0,
-    RightThumbXAxis: 0.0,
-    RightThumbYAxis: 0.0,
-    LeftTrigger: 0.0,
-    RightTrigger: 0.0,
+    LeftThumbXAxis: 0.0;
+    LeftThumbYAxis: 0.0;
+    RightThumbXAxis: 0.0;
+    RightThumbYAxis: 0.0;
+    LeftTrigger: 0.0;
+    RightTrigger: 0.0;
 }
 
 export default class InputChannel extends BaseChannel {
@@ -75,7 +75,7 @@ export default class InputChannel extends BaseChannel {
         this.send(metadataReport)
 
         this._inputInterval = setInterval(() => {
-            let reportType = this._reportTypes.None
+            const reportType = this._reportTypes.None
 
             if(this.getGamepadQueueLength() === 0){
                 this.getClient()._inputDriver.requestState()
@@ -120,7 +120,7 @@ export default class InputChannel extends BaseChannel {
             totalSize += gamepadSize
         }
 
-        const metadataAlloc = new Uint8Array(totalSize);
+        const metadataAlloc = new Uint8Array(totalSize)
         const metadataReport = new DataView(metadataAlloc.buffer)
         metadataReport.setUint8(0, reportType)
         metadataReport.setUint32(1, this._inputSequenceNum, true)
@@ -133,16 +133,16 @@ export default class InputChannel extends BaseChannel {
 
             for (; metadataQueue.length > 0;) {
                 this._metadataFps.count()
-                var frame = metadataQueue.shift()
+                const frame = metadataQueue.shift()
 
-                var dateNow = performance.now();
+                const dateNow = performance.now()
     
-                var firstFramePacketArrivalTimeMs = frame.firstFramePacketArrivalTimeMs * 10
-                var frameSubmittedTimeMs = frame.frameSubmittedTimeMs * 10
-                var frameDecodedTimeMs = frame.frameDecodedTimeMs * 10
-                var frameRenderedTimeMs = frame.frameRenderedTimeMs * 10
-                var framePacketTime = packetTimeNow * 10
-                var frameDateNow = dateNow * 10
+                const firstFramePacketArrivalTimeMs = frame.firstFramePacketArrivalTimeMs * 10
+                const frameSubmittedTimeMs = frame.frameSubmittedTimeMs * 10
+                const frameDecodedTimeMs = frame.frameDecodedTimeMs * 10
+                const frameRenderedTimeMs = frame.frameRenderedTimeMs * 10
+                const framePacketTime = packetTimeNow * 10
+                const frameDateNow = dateNow * 10
     
                 metadataReport.setUint32(offset, frame.serverDataKey, true)
                 metadataReport.setUint32(offset+4, firstFramePacketArrivalTimeMs, true)
@@ -172,16 +172,15 @@ export default class InputChannel extends BaseChannel {
 
             for (; gamepadQueue.length > 0;) {
                 this._inputFps.count()
-                var shift = gamepadQueue.shift()
+                const shift = gamepadQueue.shift()
                 if(shift !== undefined){
 
-                    var input:InputFrame = shift
-                    var dateNow = performance.now();
+                    const input:InputFrame = shift
 
                     metadataReport.setUint8(offset, input.GamepadIndex)
                     offset++
 
-                    var buttonMask = 0
+                    let buttonMask = 0
                     if(input.Nexus > 0){ buttonMask |= 2 }
                     if(input.Menu > 0){ buttonMask |= 4 }
                     if(input.View > 0){ buttonMask |= 8 }
@@ -229,29 +228,33 @@ export default class InputChannel extends BaseChannel {
     }
 
     _convertToInt16(e) {
-        var int = new Int16Array(1)
+        const int = new Int16Array(1)
         return int[0] = e, int[0]
     }
+
     _convertToUInt16(e) {
-        var int = new Uint16Array(1)
+        const int = new Uint16Array(1)
         return int[0] = e, int[0]
     }
 
     normalizeTriggerValue(e) {
-        if (e < 0) return this._convertToUInt16(0);
+        if (e < 0) {
+            return this._convertToUInt16(0)
+        }
         const t = 65535 * e,
-            a = t > 65535 ? 65535 : t;
+            a = t > 65535 ? 65535 : t
         return this._convertToUInt16(a)
     }
+
     normalizeAxisValue(e) {
         const t = this._convertToInt16(32767),
             a = this._convertToInt16(-32767),
-            n = e * t;
+            n = e * t
         return n > t ? t : n < a ? a : this._convertToInt16(n)
     }
 
     pressButton(gamepadIndex, state){
-        var newState = {
+        const newState = {
             GamepadIndex: gamepadIndex,
             A: state.A || 0,
             B: state.B || 0,
@@ -279,7 +282,7 @@ export default class InputChannel extends BaseChannel {
         this.queueGamepadState(newState)
 
         setTimeout(() => {
-            for(var button in state){
+            for(const button in state){
                 newState[button] = 0
             }
 

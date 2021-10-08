@@ -1,4 +1,4 @@
-import xCloudPlayer from "../Library";
+import xCloudPlayer from '../Library'
 
 export default class BaseChannel {
 
@@ -7,13 +7,13 @@ export default class BaseChannel {
     _state:'new'|'connected'|'closing'|'closed';
 
     _events = {
-        'state': []
+        'state': [],
     }
 
     constructor(channelName:string, client:xCloudPlayer) {
-        this._channelName = channelName;
-        this._client = client;
-        this._state = 'new';
+        this._channelName = channelName
+        this._client = client
+        this._state = 'new'
     }
     
     // Events
@@ -43,13 +43,13 @@ export default class BaseChannel {
     setState(state) {
         this._state = state
         this.emitEvent('state', {
-            state: this._state
+            state: this._state,
         })
     }
 
     // Channel functions
     send(data) {
-        var channel = this.getClient().getChannel(this._channelName);
+        const channel = this.getClient().getChannel(this._channelName)
 
         // Encode to ArrayBuffer if not ArrayBuffer
         if(typeof data === 'string'){
@@ -57,8 +57,9 @@ export default class BaseChannel {
         }
         
         if(channel.readyState === 'open') {
-            if(this._channelName !== 'input')
+            if(this._channelName !== 'input') {
                 console.log('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] Sending message:', data)
+            }
 
             channel.send(data)
         } else {
@@ -76,7 +77,7 @@ export default class BaseChannel {
     }
 
     emitEvent(name, event) {
-        for(var callback in this._events[name]){
+        for(const callback in this._events[name]){
             this._events[name][callback](event)
         }
     }

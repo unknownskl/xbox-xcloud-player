@@ -7,9 +7,6 @@ export default class GamepadDriver {
 
     _gamepads:Array<any> = []
 
-    _gamepadConnectedListener
-    _gamepadDisconnectedListener
-
     // constructor() {
     // }
 
@@ -19,60 +16,23 @@ export default class GamepadDriver {
 
     start() {
         // console.log('xCloudPlayer Driver/Gamepad.ts - Start collecting events:', this._gamepads)
-
-        this._gamepadConnectedListener = (e) => {
-            const gamepad = {
-                index: e.gamepad.index,
-                name: e.gamepad.id,
-                buttons: e.gamepad.buttons,
-                axes: e.gamepad.axes,
-            }
-
-            let gamepadExists = false
-            for(const gamepadIndex in this._gamepads){
-                if(this._gamepads[gamepadIndex].index === e.gamepad.index){
-                    gamepadExists = true
-                }
-            }
-
-            if(gamepadExists === false) {
-                this._gamepads.push(gamepad)
-            }
-
-            this._application?.getEventBus().emit('gamepad_connect', gamepad)
-            console.log('xCloudPlayer Driver/Gamepad.ts - Controller connected:', this._gamepads)
-        }
-        window.addEventListener('gamepadconnected', this._gamepadConnectedListener)
-
-        this._gamepadDisconnectedListener = (e) => {
-            for(const gamepad in this._gamepads){
-                if(this._gamepads[gamepad].index === e.gamepad.index){
-                    const removedGamepad = this._gamepads[gamepad]
-                    this._gamepads.splice(e.gamepad.index, 1)
-
-                    this._application?.getEventBus().emit('gamepad_disconnect', removedGamepad)
-                    console.log('xCloudPlayer Driver/Gamepad.ts - Controller disconnected:', this._gamepads)
-                }
-            }
-        }
-        window.addEventListener('gamepaddisconnected', this._gamepadDisconnectedListener)
     }
 
     stop() {
         // console.log('xCloudPlayer Driver/Gamepad.ts - Stop collecting events:', this._gamepads)
-
-        window.removeEventListener('gamepadconnected', this._gamepadConnectedListener)
-        window.removeEventListener('gamepaddisconnected', this._gamepadDisconnectedListener)
     }
 
     requestState() {
-        for(const gamepad in this._gamepads){
-            const gamepadState = navigator.getGamepads()[this._gamepads[gamepad].index]
-            const state = this.mapStateLabels(gamepadState?.buttons, gamepadState?.axes)
+        const gamepads = navigator.getGamepads()
+        for(let gamepad = 0; gamepad < gamepads.length; gamepad++){
+            const gamepadState = gamepads[gamepad]
+            
+            if(gamepadState !== null){
+                const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+                state.GamepadIndex = 0 // @TODO: Could we use a second gamepad this way?
 
-            state.GamepadIndex = this._gamepads[gamepad].index
-
-            this._application?.getChannelProcessor('input').queueGamepadState(state)
+                this._application?.getChannelProcessor('input').queueGamepadState(state)
+            }
         }
     }
 
@@ -94,7 +54,7 @@ export default class GamepadDriver {
             DPadDown: buttons[13].value,
             DPadLeft: buttons[14].value,
             DPadRight: buttons[15].value,
-            Nexus: buttons[16].value,
+            Nexus: buttons[16].value || 0,
             LeftThumbXAxis: axes[0],
             LeftThumbYAxis: axes[1],
             RightThumbXAxis: axes[2],

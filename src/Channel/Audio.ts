@@ -21,7 +21,7 @@ export default class AudioChannel extends BaseChannel {
 
     _audioBuffers = {
         num: 0,
-        buffers: [undefined,undefined,undefined,undefined]
+        buffers: [undefined, undefined, undefined, undefined],
     }
 
     _frameQueue:Array<Buffer> = []
@@ -53,10 +53,10 @@ export default class AudioChannel extends BaseChannel {
         this._latencyCounter.start()
 
         // Create worker to process Audio
-        const blob = new Blob(['var func = '+AudioWorker.toString()+'; self = func(self)']);
-        this._worker = new Worker(window.URL.createObjectURL(blob));
+        const blob = new Blob(['var func = '+AudioWorker.toString()+'; self = func(self)'])
+        this._worker = new Worker(window.URL.createObjectURL(blob))
         // this._opusWorker = new Worker(new URL('dist/opusWorker.min.js', 'http://localhost:3000/'));
-        this._opusWorker = new Worker('dist/opusWorker.min.js');
+        this._opusWorker = new Worker('dist/opusWorker.min.js')
 
         this._setupOpusWorker()
         this._setupAudioWorker()
@@ -76,8 +76,8 @@ export default class AudioChannel extends BaseChannel {
             action: 'onPacket',
             data: {
                 data: event.data,
-                timePerformanceNow: performance.now()
-            }
+                timePerformanceNow: performance.now(),
+            },
         })
 
     }
@@ -86,7 +86,7 @@ export default class AudioChannel extends BaseChannel {
         console.log('xCloudPlayer Channel/Audio.ts - ['+this._channelName+'] onClose:', event)
 
         this._opusWorker.postMessage({
-            action: 'endStream'
+            action: 'endStream',
         })
 
         this._component.destroy()
@@ -105,12 +105,12 @@ export default class AudioChannel extends BaseChannel {
                         action: 'decodeAudio',
                         data: {
                             buffer: workerMessage.data.data.frame.frameData,
-                            timePerformanceNow: performance.now()
-                        }
+                            timePerformanceNow: performance.now(),
+                        },
                     })
-                    const frameProcessedMs = (performance.now()-workerMessage.data.data.frame.frameReceived)
-                    this._latencyCounter.count(frameProcessedMs)
-                    break;
+
+                    this._latencyCounter.count((performance.now()-workerMessage.data.data.frame.frameReceived))
+                    break
                 default:
                     console.log('xCloudPlayer Channel/Audio.ts - Unknown incoming _worker message:', workerMessage.data.action, workerMessage.data)
             }
@@ -125,7 +125,7 @@ export default class AudioChannel extends BaseChannel {
                 case 'bufferAudio':
                     // Lets schedule audio into the media buffer.
                     this._frameQueue.push(workerMessage.data.data.buffer)
-                    break;
+                    break
                 default:
                     console.log('xCloudPlayer Channel/Audio.ts - Unknown incoming _worker message:', workerMessage.data.action, workerMessage.data)
             }
@@ -133,12 +133,12 @@ export default class AudioChannel extends BaseChannel {
     }
 
     _createAudioContext() {
-        var AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext
 
         this._audioContext = new AudioContext({
             latencyHint: 'interactive',
             sampleRate: 96000,
-        });
+        })
 
         // For volume? See https://developer.mozilla.org/en-US/docs/Web/API/GainNode
         this._gainNode = this._audioContext.createGain(),
@@ -180,7 +180,7 @@ export default class AudioChannel extends BaseChannel {
         this._fpsCounter.count()
         this._bitrateCounter.countData(outputBuffer.length)
 
-        var audioBuffer:any
+        let audioBuffer:any
 
         if(this._audioBuffers.buffers[this._audioBuffers.num] === undefined) {
             audioBuffer = this._audioContext.createBuffer(2, outputBuffer.length, 96000)
@@ -194,14 +194,14 @@ export default class AudioChannel extends BaseChannel {
             this._audioBuffers.num = 0
         }
 
-        if(audioBuffer.numberOfChannels != 2){
+        if(audioBuffer.numberOfChannels !== 2){
             throw 'audioBuffer.numberOfChannels is not 2.. Cannot process audio...'
         }
 
-        var leftChannel = audioBuffer.getChannelData(0);
-        var rightChannel = audioBuffer.getChannelData(1);
+        const leftChannel = audioBuffer.getChannelData(0)
+        const rightChannel = audioBuffer.getChannelData(1)
 
-        for (var i = 0; i < outputBuffer.length; i++) {
+        for (let i = 0; i < outputBuffer.length; i++) {
             if(! (i % 2)) {
                 leftChannel[i] = outputBuffer[i]
             } else {
@@ -209,19 +209,19 @@ export default class AudioChannel extends BaseChannel {
             }
         }
 
-        var source = this._audioContext.createBufferSource()
+        const source = this._audioContext.createBufferSource()
         source.buffer = audioBuffer
         source.connect(this._gainNode)
         
-        var startTime = (this._audioOffset+this._audioTimeOffset+(this._audioDelay/1000)) // in MS
-        var delay = (startTime-this._audioContext.currentTime) // in MS
+        const startTime = (this._audioOffset+this._audioTimeOffset+(this._audioDelay/1000)) // in MS
+        const delay = (startTime-this._audioContext.currentTime) // in MS
         
-        var delaySteps = 2
+        const delaySteps = 2
         if(delay < 0) {
             console.log('Drop audio packet because the timing are off. Audio should have played ', delay, 'ms ago... Increasing audio delay:', this._audioDelay, '=>', this._audioDelay+delaySteps)
 
         } else {
-            source.start(startTime);
+            source.start(startTime)
         }
     }
 
