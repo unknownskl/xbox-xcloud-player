@@ -41,12 +41,12 @@ export default class VideoChannel extends BaseChannel {
         // }, 1000)
 
         // Create worker to process Video
-        const blob = new Blob(['var func = '+VideoWorker.toString()+'; func(self)']);
-        this._worker = new Worker(window.URL.createObjectURL(blob));
+        const blob = new Blob(['var func = '+VideoWorker.toString()+'; func(self)'])
+        this._worker = new Worker(window.URL.createObjectURL(blob))
 
         // Process worker messages
         this._worker.onmessage = (workerMessage) => {
-            if(workerMessage.data.action == 'doRender'){
+            if(workerMessage.data.action === 'doRender'){
                 if(workerMessage.data.status !== 200){
                     console.log('xCloudPlayer Channels/Video.ts - Worker doRender failed:', workerMessage.data)
 
@@ -72,8 +72,8 @@ export default class VideoChannel extends BaseChannel {
             action: 'onPacket',
             data: {
                 data: event.data,
-                timePerformanceNow: performance.now()
-            }
+                timePerformanceNow: performance.now(),
+            },
         })
         
         // this.#bitrateCounter.packets.push(event.data.byteLength)
@@ -124,11 +124,11 @@ export default class VideoChannel extends BaseChannel {
     }
 
     mergeFrames(buffer1, buffer2) {
-        var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-        tmp.set(new Uint8Array(buffer1), 0);
-        tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+        const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength)
+        tmp.set(new Uint8Array(buffer1), 0)
+        tmp.set(new Uint8Array(buffer2), buffer1.byteLength)
 
-        return tmp.buffer;
+        return tmp.buffer
     }
 
     onClose(event) {
