@@ -94,6 +94,8 @@ export default class InputChannel extends BaseChannel {
     }
 
     onClose(event) {
+        clearInterval(this._inputInterval)
+
         super.onClose(event)
         // console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onClose:', event)
     }
@@ -102,7 +104,6 @@ export default class InputChannel extends BaseChannel {
         this._inputSequenceNum++
         const packetTimeNow = performance.now()
 
-        const defaultLength = 5
         let metadataSize = 0
         let gamepadSize = 0
 
