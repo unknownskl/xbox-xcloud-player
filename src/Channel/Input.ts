@@ -86,7 +86,7 @@ export default class InputChannel extends BaseChannel {
             const inputReport = this._createInputPacket(reportType, metadataQueue, gamepadQueue)
 
             this.send(inputReport)
-        }, 16)// 16 ms = 1 frame (1000/60)
+        }, 32)// 16 ms = 1 frame (1000/60)
     }
     
     onMessage(event) {
