@@ -214,15 +214,9 @@ export default class AudioChannel extends BaseChannel {
         source.connect(this._gainNode)
         
         const startTime = (this._audioOffset+this._audioTimeOffset+(this._audioDelay/1000)) // in MS
-        const delay = (startTime-this._audioContext.currentTime) // in MS
+        // const delay = (startTime-this._audioContext.currentTime) // in MS
         
-        const delaySteps = 2
-        if(delay < 0) {
-            console.log('Drop audio packet because the timing are off. Audio should have played ', delay, 'ms ago... Increasing audio delay:', this._audioDelay, '=>', this._audioDelay+delaySteps)
-
-        } else {
-            source.start(startTime)
-        }
+        source.start(startTime)
     }
 
     _softReset() {
