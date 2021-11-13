@@ -176,8 +176,7 @@ app.post('/api/config/sdp', (req, res) => {
         'messageType':'offer',
         'sdp': req.body.sdp,
         'configuration':{
-            'containerizeVideo':true,
-            'requestedH264Profile':2,
+            'containerizeAudio':false,
             'chatConfiguration':{
                 'bytesPerSample':2,
                 'expectedClipDurationMs':100,
@@ -200,7 +199,7 @@ app.post('/api/config/sdp', (req, res) => {
             },
             'control':{
                 'minVersion':1,
-                'maxVersion':1,
+                'maxVersion':2,
             },
             'input':{
                 'minVersion':1,
