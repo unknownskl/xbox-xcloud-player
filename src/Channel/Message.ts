@@ -13,25 +13,6 @@ export default class MessageChannel extends BaseChannel {
             'cv':'',
         })
         this.send(handshake)
-
-        const systemUis = this.getClient()._config.ui_systemui || [19]
-        const systemVersion = this.getClient()._config.ui_version || [0, 1, 0]
-        const data4 = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
-            'version': systemVersion,
-            'systemUis':systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32]
-            
-            // 10 = ShowVirtualKeyboard
-            // 19 = ShowMessageDialog
-            // 31 = ShowApplication
-            // 27 = ShowPurchase
-            // 32 = ShowTimerExtensions
-            // 33 = Xbox windows app, disables the nexus menu on xCloud (Alt nexus menu?)
-            // Possible options: Keyboard, PurchaseModal
-        }))
-        this.send(data4)
-
-        const data8 = JSON.stringify(this.generateMessage('/streaming/characteristics/dimensionschanged', { 'horizontal':1920, 'vertical':1080 }))
-        this.send(data8)
     }
     
     onMessage(event) {
@@ -39,6 +20,38 @@ export default class MessageChannel extends BaseChannel {
 
         const jsonMessage = JSON.parse(event.data)
         console.log('xCloudPlayer Channel/Message.ts - Received json:', jsonMessage)
+
+        if(jsonMessage.type === 'HandshakeAck'){
+            // Handshake has been acked.
+
+            const systemUis = this.getClient()._config.ui_systemui || [19]
+            const systemVersion = this.getClient()._config.ui_version || [0, 1, 0]
+            const uiConfig = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
+                'version': systemVersion,
+                'systemUis': systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32]
+                
+                // 10 = ShowVirtualKeyboard
+                // 19 = ShowMessageDialog
+                // 31 = ShowApplication
+                // 27 = ShowPurchase
+                // 32 = ShowTimerExtensions
+                // 33 = Xbox windows app, disables the nexus menu on xCloud (Alt nexus menu?)
+                // Possible options: Keyboard, PurchaseModal
+            }))
+            this.send(uiConfig)
+
+            const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': '3f85226a-7af9-4629-bccb-504897143927' }))
+            this.send(clientConfig)
+
+            const orientationConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/orientationchanged', { 'orientation': 0 }))
+            this.send(orientationConfig)
+
+            const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': true }))
+            this.send(touchConfig)
+
+            const dimensionsConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/dimensionschanged', { 'horizontal':1920, 'vertical':1080 }))
+            this.send(dimensionsConfig)
+        }
 
         this.getClient().getEventBus().emit('message', {
             ...jsonMessage,

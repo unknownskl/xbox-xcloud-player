@@ -52,13 +52,14 @@ export default class BaseChannel {
         const channel = this.getClient().getChannel(this._channelName)
 
         // Encode to ArrayBuffer if not ArrayBuffer
-        if(typeof data === 'string'){
-            data = (new TextEncoder).encode(data)
-        }
         
         if(channel.readyState === 'open') {
             if(this._channelName !== 'input') {
                 console.log('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] Sending message:', data)
+            }
+
+            if(typeof data === 'string'){
+                data = (new TextEncoder).encode(data)
             }
 
             channel.send(data)
