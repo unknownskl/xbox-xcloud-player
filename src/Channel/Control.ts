@@ -18,6 +18,11 @@ export default class ControlChannel extends BaseChannel {
             'supportedFormats': [
                 {
                     'container': 'mp4',
+                    'codec': 'hevc',
+                    'profile': 2,
+                },
+                {
+                    'container': 'mp4',
                     'codec': 'avc',
                     'profile': 2,
                 },
@@ -25,6 +30,11 @@ export default class ControlChannel extends BaseChannel {
                     'container': 'mp4',
                     'codec': 'avc',
                     'profile': 1,
+                },
+                {
+                    'container': 'annexb',
+                    'codec': 'avc',
+                    'profile': 2,
                 },
                 {
                     'container': 'annexb',
