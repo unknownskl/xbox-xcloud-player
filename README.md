@@ -9,7 +9,7 @@ Features:
 - FPS, Latency and Bitrate counters
 - Dialog modals
 
-Future wantted features:
+Future wanted features:
 - Custom UI Components like keyboard input and game switch notifications
-- Incept audio and video stream to process into something different then an Audio and Video element
+- Intercept audio and video stream to process into something different then an Audio and Video element
 - Cross-Browser support (Chrome/Firefox/Safari - Windows, OSX, Linux, Android, iOS)
