@@ -89,7 +89,7 @@ export default class ControlChannel extends BaseChannel {
         console.log('xCloudPlayer Channel/Control.ts - ['+this._channelName+'] User requested Video KeyFrame')
         const keyframeRequest = JSON.stringify({
             message: 'videoKeyframeRequested',
-            ifrRequested: false,
+            ifrRequested: true,
         })
 
         this.send(keyframeRequest)

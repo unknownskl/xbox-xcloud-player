@@ -9,6 +9,7 @@ export default class VideoComponent {
     _videoRender
 
     _focusEvent
+    _framekeyInterval
 
     constructor(client:xCloudPlayer) {
         this._client = client
@@ -25,16 +26,25 @@ export default class VideoComponent {
             videoRender.src = videoSrc
             videoRender.width = videoHolder.clientWidth
             videoRender.height = videoHolder.clientHeight
-            videoRender.play()
-
-            this._focusEvent = () => {
-                this._client.getChannelProcessor('video').resetBuffer()
-            }
-            window.addEventListener('focus', this._focusEvent)
-
             this._videoRender = videoRender
             
             videoHolder.appendChild(videoRender)
+            
+            videoRender.play().then(() => {
+                //
+            }).catch((error) => {
+                console.log('xCloudPlayer Component/Video.ts - Error executing play() on videoRender:', error)
+            })
+
+            // this._focusEvent = () => {
+            //     this._client.getChannelProcessor('video').resetBuffer()
+            // }
+            // window.addEventListener('focus', this._focusEvent)
+
+            this._framekeyInterval = setInterval(() => {
+                // this.resetMediaSource()
+                this._client.getChannelProcessor('video').resetBuffer()
+            }, 15000)
         } else {
             console.log('xCloudPlayer Component/Video.ts - Error fetching videoholder: div#'+this._client._elementHolder)
         }
@@ -81,15 +91,44 @@ export default class VideoComponent {
     }
 
     resetMediaSource() {
-        this.destroy()
-        this.create()
+        // this.destroy()
+        // this.create()
+
+
+
+        // const videoSrc = this.createMediaSource()
+        // const videoRender = document.getElementById(this.getElementId()) as HTMLVideoElement | null
+        // if(videoRender !== null){
+        //     videoRender.src = videoSrc
+        // }
+
+
+
+        // this._mediaSource.removeSourceBuffer(this._mediaSource.sourceBuffers[0])
+
+        // const videoSourceBuffer = this._mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42c020"')
+        // videoSourceBuffer.mode = 'sequence'
+        // videoSourceBuffer.addEventListener('error', (event) => {
+        //     console.log('xCloudPlayer Component/Video.ts - Error video...', event)
+        // })
+        // this._videoSource = videoSourceBuffer
+
+        // const videoRender = document.getElementById(this.getElementId()) as HTMLVideoElement | null
+        // if(videoRender !== null){
+        //     videoRender.src = window.URL.createObjectURL(this._mediaSource)
+        // }
+
+
+
+        this._mediaSource.sourceBuffers[0].abort()
 
     }
 
     destroy() {
         // this._videoRender.pause()
 
-        window.removeEventListener('focus', this._focusEvent)
+        // window.removeEventListener('focus', this._focusEvent)
+        clearInterval(this._framekeyInterval)
 
         delete this._mediaSource
         delete this._videoRender
