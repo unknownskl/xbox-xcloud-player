@@ -1,4 +1,5 @@
 import xCloudPlayer from '../Library'
+import FpsCounter from '../Helper/FpsCounter'
 
 export default class VideoComponent {
 
@@ -11,12 +12,16 @@ export default class VideoComponent {
     _focusEvent
     _framekeyInterval
 
+    _videoFps
+
     constructor(client:xCloudPlayer) {
         this._client = client
     }
 
     create(srcObject) {
         console.log('xCloudPlayer Component/Video.ts - Create media element')
+
+        this._videoFps = new FpsCounter(this._client, 'video')
 
         const videoHolder = document.getElementById(this._client._elementHolder)
         if(videoHolder !== null){
@@ -27,11 +32,17 @@ export default class VideoComponent {
             videoRender.height = videoHolder.clientHeight
 
             // videoRender.muted = true
-            // videoRender.autoplay = true
-            // videoRender.setAttribute('playsinline', 'playsinline')
+            videoRender.autoplay = true
+            videoRender.setAttribute('playsinline', 'playsinline')
+
+            videoRender.onclick = () => {
+                videoRender.play()
+                this._client._audioComponent._audioRender.play()
+            }
 
             const serverDataLoop = (t, i) => {
                 videoRender.requestVideoFrameCallback(serverDataLoop)
+                this._videoFps.count()
 
                 this._client.getChannelProcessor('input').addProcessedFrame({
                     serverDataKey: i.rtpTimestamp,
@@ -45,6 +56,7 @@ export default class VideoComponent {
             this._videoRender = videoRender
             
             videoHolder.appendChild(videoRender)
+            this._videoFps.start()
             
             videoRender.play().then(() => {
                 //
@@ -89,6 +101,8 @@ export default class VideoComponent {
     }
 
     destroy() {
+        this._videoFps.stop()
+
         delete this._mediaSource
         delete this._videoRender
         delete this._videoSource

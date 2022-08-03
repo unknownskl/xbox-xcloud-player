@@ -22,6 +22,8 @@ export default class AudioComponent {
             audioRender.srcObject = srcObject
             // audioRender.play()
 
+            audioRender.autoplay = true
+
             this._audioRender = audioRender
             
             audioHolder.appendChild(audioRender)
