@@ -34,40 +34,19 @@ export default class xCloudPlayer {
             urls: 'stun:stun1.l.google.com:19302',
         }],
     }
-    // _webrtcConfiguration = {
-    //     iceServers: []
-    // }
 
     _webrtcDataChannelsConfig = {
-        // 'video': {
-        //     id: 1,
-        //     ordered: true,
-        //     protocol: '1.0',
-        // },
-        // 'audio': {
-        //     id: 2,
-        //     maxRetransmits: 0,
-        //     ordered: true,
-        //     protocol: 'audioV1',
-        // },
-        
         'chat': {
-            // id: 6,
             protocol: 'chatV1',
         },
         'control': {
-            // id: 4,
             protocol: 'controlV1',
         },
         'input': {
-            // id: 3,
             ordered: true,
             protocol: '1.0',
-            // maxRetransmits: null,
-            // maxPacketLifeTime: null,
         },
         'message': {
-            // id: 5,
             protocol: 'messageV1',
         },
     }
@@ -92,10 +71,6 @@ export default class xCloudPlayer {
     _videoComponent
     _audioComponent
 
-    // _events = {
-    //     'connectionstate': []
-    // }
-
     constructor(elementId:string, config:xCloudPlayerConfig = {}) {
         console.log('xCloudPlayer loaded!')
 
@@ -116,10 +91,8 @@ export default class xCloudPlayer {
         }
 
         this._inputDriver.setApplication(this)
-
         this._gatherIce()
 
-        // Add audio and video liisteners
         this._webrtcClient.ontrack = (event) => {
 
             if(event.track.kind === 'video'){
@@ -163,7 +136,6 @@ export default class xCloudPlayer {
     }
 
     setRemoteOffer(sdpdata:string){
-        // console.log('sdpData', sdpdata)
         this._webrtcClient.setRemoteDescription({
             type: 'answer',
             sdp: sdpdata,
@@ -175,7 +147,6 @@ export default class xCloudPlayer {
     reset(){
         this._webrtcClient.close()
         
-        // Close data channels
         for(const name in this._webrtcChannelProcessors){
             this._webrtcChannelProcessors[name].destroy()
         }
@@ -223,12 +194,6 @@ export default class xCloudPlayer {
         this._webrtcDataChannels[name] = this._webrtcClient.createDataChannel(name, config)
 
         switch(name) {
-            // case 'video':
-            //     this._webrtcChannelProcessors[name] = new VideoChannel('video', this)
-            //     break
-            // case 'audio':
-            //     this._webrtcChannelProcessors[name] = new AudioChannel('audio', this)
-            //     break
             case 'input':
                 this._webrtcChannelProcessors[name] = new InputChannel('input', this)
                 break

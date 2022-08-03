@@ -65,25 +65,16 @@ export default class InputChannel extends BaseChannel {
         super.onOpen(event)
 
         this._metadataFps.start()
-        // this._metadataLatency.start()
         this._inputFps.start()
-        // this._inputLatency.start()
 
         // console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onOpen:', event)
 
         const reportType = this._reportTypes.ClientMetadata
         const metadataReport = this._createInputPacket(reportType, [], [])
-
-        // setTimeout(() => {
         this.send(metadataReport)
-        // console.log('Send metadata:', metadataReport)
-        // }, 100)
     }
 
     start(){
-
-        // let firstFrame = false
-
         this._inputInterval = setInterval(() => {
             const reportType = this._reportTypes.None
 
@@ -95,7 +86,7 @@ export default class InputChannel extends BaseChannel {
             const gamepadQueue = this.getGamepadQueue()
 
             if(metadataQueue.length !== 0 || gamepadQueue.length !== 0 ){
-                const inputReport = this._createInputPacket(reportType, [metadataQueue[0]], gamepadQueue)
+                const inputReport = this._createInputPacket(reportType, metadataQueue, gamepadQueue)
                 this.send(inputReport)
             }
         }, 32)// 16 ms = 1 frame (1000/60)
@@ -240,9 +231,6 @@ export default class InputChannel extends BaseChannel {
 
     getGamepadQueue(size=30) {
         return this._gamepadFrames.splice(0, (size-1))
-        // const queue = this._gamepadFrames.splice(-1)
-        // this._gamepadFrames = []
-        // return queue
     }
 
     getGamepadQueueLength() {

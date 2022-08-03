@@ -182,18 +182,12 @@ app.post('/api/config/sdp', (req, res) => {
                 'bytesPerSample':2,
                 'expectedClipDurationMs':20,
                 'format':{
-                    // 'codec':'aac',
-                    // 'container':'mp4'
                     'codec':'opus',
                     'container':'webm',
                 },
                 'numChannels':1,
                 'sampleFrequencyHz':24000,
             },
-            // 'audio':{
-            //     'minVersion':1,
-            //     'maxVersion':1,
-            // },
             'chat':{
                 'minVersion':1,
                 'maxVersion':1,
@@ -210,10 +204,6 @@ app.post('/api/config/sdp', (req, res) => {
                 'minVersion':1,
                 'maxVersion':1,
             },
-            // 'video':{
-            //     'minVersion':1,
-            //     'maxVersion':2,
-            // },
         },
     }))
     postRequest.end()
