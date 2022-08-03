@@ -24,11 +24,14 @@ export default class MessageChannel extends BaseChannel {
         if(jsonMessage.type === 'HandshakeAck'){
             // Handshake has been acked.
 
-            const systemUis = this.getClient()._config.ui_systemui || [19]
+            this.getClient().getChannelProcessor('input').start()
+            this.getClient().getChannelProcessor('control').start()
+
+            const systemUis = this.getClient()._config.ui_systemui || [10, 19, 31, 27, 32, -41]
             const systemVersion = this.getClient()._config.ui_version || [0, 1, 0]
             const uiConfig = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
                 'version': systemVersion,
-                'systemUis': systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32]
+                'systemUis': systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32,-41]
                 
                 // 10 = ShowVirtualKeyboard
                 // 19 = ShowMessageDialog
@@ -36,20 +39,34 @@ export default class MessageChannel extends BaseChannel {
                 // 27 = ShowPurchase
                 // 32 = ShowTimerExtensions
                 // 33 = Xbox windows app, disables the nexus menu on xCloud (Alt nexus menu?)
+                // -41 = unknown
                 // Possible options: Keyboard, PurchaseModal
             }))
             this.send(uiConfig)
 
-            const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': '3f85226a-7af9-4629-bccb-504897143927' }))
+            const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': '4b8f472d-2c82-40e8-895d-bcd6a6ec7e9b' }))
             this.send(clientConfig)
 
             const orientationConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/orientationchanged', { 'orientation': 0 }))
             this.send(orientationConfig)
 
-            const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': true }))
+            const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': false }))
             this.send(touchConfig)
 
-            const dimensionsConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/dimensionschanged', { 'horizontal':1920, 'vertical':1080 }))
+            const deviceConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/clientdevicecapabilities', {}))
+            this.send(deviceConfig)
+
+            const dimensionsConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/dimensionschanged', {
+                'horizontal': 311,
+                'vertical': 175,
+                'preferredWidth': 1751,
+                'preferredHeight': 665,
+                'safeAreaLeft': 0,
+                'safeAreaTop': 0,
+                'safeAreaRight': 1751,
+                'safeAreaBottom': 665,
+                'supportsCustomResolution':true,
+            }))
             this.send(dimensionsConfig)
         }
 

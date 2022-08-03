@@ -12,38 +12,67 @@ export default class ControlChannel extends BaseChannel {
         // })
         // this.send(data)
 
-        const videoConfigRequest = JSON.stringify({
-            'message':'videoChannelConfigUpdate',
-            'maxVideoSctpMessageSizeBytes': 16000, // min = 512, max = 12000, default = 5000 (value = * 1000)
-            'supportedFormats': [
-                {
-                    'container': 'mp4',
-                    'codec': 'hevc',
-                    'profile': 2,
-                },
-                {
-                    'container': 'mp4',
-                    'codec': 'avc',
-                    'profile': 2,
-                },
-                {
-                    'container': 'mp4',
-                    'codec': 'avc',
-                    'profile': 1,
-                },
-                {
-                    'container': 'annexb',
-                    'codec': 'avc',
-                    'profile': 2,
-                },
-                {
-                    'container': 'annexb',
-                    'codec': 'avc',
-                    'profile': 1,
-                },
-            ],
+        // const videoConfigRequest = JSON.stringify({
+        //     'message':'videoChannelConfigUpdate',
+        //     'maxVideoSctpMessageSizeBytes': 16000, // min = 512, max = 12000, default = 5000 (value = * 1000)
+        //     'supportedFormats': [
+        //         {
+        //             'container': 'mp4',
+        //             'codec': 'hevc',
+        //             'profile': 2,
+        //         },
+        //         {
+        //             'container': 'mp4',
+        //             'codec': 'avc',
+        //             'profile': 2,
+        //         },
+        //         {
+        //             'container': 'mp4',
+        //             'codec': 'avc',
+        //             'profile': 1,
+        //         },
+        //         {
+        //             'container': 'annexb',
+        //             'codec': 'avc',
+        //             'profile': 2,
+        //         },
+        //         {
+        //             'container': 'annexb',
+        //             'codec': 'avc',
+        //             'profile': 1,
+        //         },
+        //     ],
+        // })
+        // this.send(videoConfigRequest)
+
+        
+
+
+        /* this.getClient().getChannelProcessor('input').start()
+        
+        const gamepadRequest = JSON.stringify({
+            'message': 'gamepadChanged',
+            'gamepadIndex': 0,
+            'wasAdded': true,
         })
-        this.send(videoConfigRequest)
+        this.send(gamepadRequest) */
+
+    }
+
+    start() {
+        const authRequest = JSON.stringify({
+            'message':'authorizationRequest',
+            'accessKey':'4BDB3609-C1F1-4195-9B37-FEFF45DA8B8E',
+        })
+
+        this.send(authRequest)
+        
+        const gamepadRequest = JSON.stringify({
+            'message': 'gamepadChanged',
+            'gamepadIndex': 0,
+            'wasAdded': true,
+        })
+        this.send(gamepadRequest)
     }
     
     onMessage(event) {
@@ -52,32 +81,18 @@ export default class ControlChannel extends BaseChannel {
         const jsonMessage = JSON.parse(event.data)
         console.log('xCloudPlayer Channel/Control.ts - Received json:', jsonMessage)
 
-        if(jsonMessage.messageType === 'videoChannelConfig'){
-            // Load config:
-            // let streamFormat = {
-            //     "codec":"avc",
-            //     "container":"mp4",
-            //     "frameRate":60,
-            //     "height":1080,
-            //     "mimeType":"video/mp4; codecs=\"avc1.4d0020\"",
-            //     "profile":2,
-            //     "width":1920
-            // }
-
-            const authRequest = JSON.stringify({
-                'message':'authorizationRequest',
-                'accessKey':'4BDB3609-C1F1-4195-9B37-FEFF45DA8B8E',
-            })
-
-            this.send(authRequest)
-
-            const gamepadRequest = JSON.stringify({
-                'message': 'gamepadChanged',
-                'gamepadIndex': 0,
-                'wasAdded': true,
-            })
-            this.send(gamepadRequest)
-        }
+        // if(jsonMessage.messageType === 'videoChannelConfig'){
+        //     // Load config:
+        //     // let streamFormat = {
+        //     //     "codec":"avc",
+        //     //     "container":"mp4",
+        //     //     "frameRate":60,
+        //     //     "height":1080,
+        //     //     "mimeType":"video/mp4; codecs=\"avc1.4d0020\"",
+        //     //     "profile":2,
+        //     //     "width":1920
+        //     // }
+        // }
     }
 
     onClose(event) {

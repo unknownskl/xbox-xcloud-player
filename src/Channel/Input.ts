@@ -40,6 +40,8 @@ export default class InputChannel extends BaseChannel {
         ServerMetadata: 16,
     }
 
+    _frameMetadataQueue:Array<any> = []
+
     _gamepadFrames:Array<InputFrame> = []
     _inputInterval
 
@@ -72,7 +74,15 @@ export default class InputChannel extends BaseChannel {
         const reportType = this._reportTypes.ClientMetadata
         const metadataReport = this._createInputPacket(reportType, [], [])
 
+        // setTimeout(() => {
         this.send(metadataReport)
+        // console.log('Send metadata:', metadataReport)
+        // }, 100)
+    }
+
+    start(){
+
+        // let firstFrame = false
 
         this._inputInterval = setInterval(() => {
             const reportType = this._reportTypes.None
@@ -81,11 +91,13 @@ export default class InputChannel extends BaseChannel {
                 this.getClient()._inputDriver.requestState()
             }
 
-            const metadataQueue = this.getClient().getChannelProcessor('video').getMetadataQueue()
+            const metadataQueue = this.getMetadataQueue()
             const gamepadQueue = this.getGamepadQueue()
-            const inputReport = this._createInputPacket(reportType, metadataQueue, gamepadQueue)
 
-            this.send(inputReport)
+            if(metadataQueue.length !== 0 || gamepadQueue.length !== 0 ){
+                const inputReport = this._createInputPacket(reportType, [metadataQueue[0]], gamepadQueue)
+                this.send(inputReport)
+            }
         }, 32)// 16 ms = 1 frame (1000/60)
     }
     
@@ -107,7 +119,7 @@ export default class InputChannel extends BaseChannel {
         let metadataSize = 0
         let gamepadSize = 0
 
-        let totalSize = 5
+        let totalSize = 13
 
         if(metadataQueue.length > 0){
             reportType |= this._reportTypes.Metadata // Set bitmask for metadata
@@ -121,12 +133,17 @@ export default class InputChannel extends BaseChannel {
             totalSize += gamepadSize
         }
 
+        if(reportType === this._reportTypes.ClientMetadata){
+            totalSize++
+        }
+
         const metadataAlloc = new Uint8Array(totalSize)
         const metadataReport = new DataView(metadataAlloc.buffer)
         metadataReport.setUint8(0, reportType)
         metadataReport.setUint32(1, this._inputSequenceNum, true)
+        metadataReport.setFloat64(5, performance.now(), true)
 
-        let offset = 5
+        let offset = 13
 
         if(metadataQueue.length > 0){
             metadataReport.setUint8(offset, metadataQueue.length)
@@ -138,12 +155,12 @@ export default class InputChannel extends BaseChannel {
 
                 const dateNow = performance.now()
     
-                const firstFramePacketArrivalTimeMs = frame.firstFramePacketArrivalTimeMs * 10
-                const frameSubmittedTimeMs = frame.frameSubmittedTimeMs * 10
-                const frameDecodedTimeMs = frame.frameDecodedTimeMs * 10
-                const frameRenderedTimeMs = frame.frameRenderedTimeMs * 10
-                const framePacketTime = packetTimeNow * 10
-                const frameDateNow = dateNow * 10
+                const firstFramePacketArrivalTimeMs = frame.firstFramePacketArrivalTimeMs
+                const frameSubmittedTimeMs = frame.frameSubmittedTimeMs
+                const frameDecodedTimeMs = frame.frameDecodedTimeMs
+                const frameRenderedTimeMs = frame.frameRenderedTimeMs
+                const framePacketTime = packetTimeNow
+                const frameDateNow = dateNow
     
                 metadataReport.setUint32(offset, frame.serverDataKey, true)
                 metadataReport.setUint32(offset+4, firstFramePacketArrivalTimeMs, true)
@@ -213,11 +230,19 @@ export default class InputChannel extends BaseChannel {
             }
         }
 
+        if(reportType === this._reportTypes.ClientMetadata){
+            metadataReport.setUint8(offset, 0)
+            offset++
+        }
+
         return metadataReport
     }
 
     getGamepadQueue(size=30) {
         return this._gamepadFrames.splice(0, (size-1))
+        // const queue = this._gamepadFrames.splice(-1)
+        // this._gamepadFrames = []
+        // return queue
     }
 
     getGamepadQueueLength() {
@@ -300,5 +325,23 @@ export default class InputChannel extends BaseChannel {
         clearInterval(this._inputInterval)
 
         super.destroy()
+    }
+
+    addProcessedFrame(frame) {
+        frame.frameRenderedTimeMs = performance.now()
+        this._frameMetadataQueue.push(frame)
+
+        // this._fpsCounter.count()
+
+        const frameProcessedMs = (performance.now()-frame.firstFramePacketArrivalTimeMs)
+        // this._latencyCounter.count(frameProcessedMs)
+    }
+
+    getMetadataQueue(size=30) {
+        return this._frameMetadataQueue.splice(0, (size-1))
+    }
+
+    getMetadataQueueLength() {
+        return this._frameMetadataQueue.length
     }
 }

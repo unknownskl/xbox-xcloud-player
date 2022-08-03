@@ -79,7 +79,7 @@ var app = {
                                         this.isExchangeReady('/api/config/ice').then((data) => {
                                             // Got ICE Data. Lets add the candidates to webrtc client
 
-                                            var iceDetails = JSON.parse(data.candidates)
+                                            var iceDetails = JSON.parse(data.exchangeResponse)
                                             console.log('xCloudPlayer Client - ICE Candidates:', iceDetails)
                                             client.setIceCandidates(iceDetails)
 

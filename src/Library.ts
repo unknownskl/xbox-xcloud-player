@@ -1,9 +1,12 @@
 import DebugChannel from './Channel/Debug'
-import VideoChannel from './Channel/Video'
-import AudioChannel from './Channel/Audio'
+// import VideoChannel from './Channel/Video'
+// import AudioChannel from './Channel/Audio'
 import InputChannel from './Channel/Input'
 import ControlChannel from './Channel/Control'
 import MessageChannel from './Channel/Message'
+
+import VideoComponent from './Component/Video'
+import AudioComponent from './Component/Audio'
 
 import EventBus from './Helper/EventBus'
 
@@ -36,33 +39,36 @@ export default class xCloudPlayer {
     // }
 
     _webrtcDataChannelsConfig = {
-        'video': {
-            id: 1,
-            ordered: true,
-            protocol: '1.0',
-        },
-        'audio': {
-            id: 2,
-            maxRetransmits: 0,
-            ordered: true,
-            protocol: 'audioV1',
-        },
-        'input': {
-            id: 3,
-            ordered: true,
-            protocol: '1.0',
+        // 'video': {
+        //     id: 1,
+        //     ordered: true,
+        //     protocol: '1.0',
+        // },
+        // 'audio': {
+        //     id: 2,
+        //     maxRetransmits: 0,
+        //     ordered: true,
+        //     protocol: 'audioV1',
+        // },
+        
+        'chat': {
+            // id: 6,
+            protocol: 'chatV1',
         },
         'control': {
-            id: 4,
+            // id: 4,
             protocol: 'controlV1',
         },
-        'message': {
-            id: 5,
-            protocol: 'messageV1',
+        'input': {
+            // id: 3,
+            ordered: true,
+            protocol: '1.0',
+            // maxRetransmits: null,
+            // maxPacketLifeTime: null,
         },
-        'chat': {
-            id: 6,
-            protocol: 'chatV1',
+        'message': {
+            // id: 5,
+            protocol: 'messageV1',
         },
     }
 
@@ -82,6 +88,9 @@ export default class xCloudPlayer {
     _elementHolderRandom:number
 
     _inputDriver:any = undefined
+
+    _videoComponent
+    _audioComponent
 
     // _events = {
     //     'connectionstate': []
@@ -109,6 +118,30 @@ export default class xCloudPlayer {
         this._inputDriver.setApplication(this)
 
         this._gatherIce()
+
+        // Add audio and video liisteners
+        this._webrtcClient.ontrack = (event) => {
+
+            if(event.track.kind === 'video'){
+                console.log('GOT VIDEOTRACK:', event)
+                this._videoComponent = new VideoComponent(this)
+                this._videoComponent.create(event.streams[0])
+
+            } else if(event.track.kind === 'audio'){
+                console.log('GOT AUDIOTRACK:', event)
+                this._audioComponent = new AudioComponent(this)
+                this._audioComponent.create(event.streams[0])
+            } else {
+                console.log('Unknown Track kind: ', event.track.kind)
+            }
+        }
+
+        this._webrtcClient.addTransceiver('audio', {
+            direction: 'sendrecv',
+        })
+        this._webrtcClient.addTransceiver('video', {
+            direction: 'recvonly',
+        })
     }
 
     createOffer(){
@@ -118,7 +151,10 @@ export default class xCloudPlayer {
 
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
-            this._webrtcClient.createOffer().then((offer) => {
+            this._webrtcClient.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: true,
+            }).then((offer) => {
                 this._webrtcClient.setLocalDescription(offer)
                 
                 resolve(offer)
@@ -187,12 +223,12 @@ export default class xCloudPlayer {
         this._webrtcDataChannels[name] = this._webrtcClient.createDataChannel(name, config)
 
         switch(name) {
-            case 'video':
-                this._webrtcChannelProcessors[name] = new VideoChannel('video', this)
-                break
-            case 'audio':
-                this._webrtcChannelProcessors[name] = new AudioChannel('audio', this)
-                break
+            // case 'video':
+            //     this._webrtcChannelProcessors[name] = new VideoChannel('video', this)
+            //     break
+            // case 'audio':
+            //     this._webrtcChannelProcessors[name] = new AudioChannel('audio', this)
+            //     break
             case 'input':
                 this._webrtcChannelProcessors[name] = new InputChannel('input', this)
                 break
@@ -254,7 +290,7 @@ export default class xCloudPlayer {
         })
 
         // Check if we have a video connection
-        if(name === 'video'){
+        if(name === 'input'){
             this._webrtcChannelProcessors[name].addEventListener('state', (event) => {
                 this._webrtcStates.streamConnection = event.state
 

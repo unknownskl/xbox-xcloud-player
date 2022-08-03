@@ -12,15 +12,15 @@ export default class AudioComponent {
         this._client = client
     }
 
-    create() {
+    create(srcObject) {
         console.log('xCloudPlayer Component/Audio.ts - Create media element')
 
         const audioHolder = document.getElementById(this._client._elementHolder)
         if(audioHolder !== null){
-            const audioSrc = this.createMediaSource()
+            // const audioSrc = this.createMediaSource()
             const audioRender = document.createElement('audio')
             audioRender.id = this.getElementId()
-            audioRender.src = audioSrc
+            audioRender.srcObject = srcObject
             audioRender.play()
 
             this._audioRender = audioRender

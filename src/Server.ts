@@ -14,7 +14,7 @@ app.use(bodyParser.json())
 
 app.use(express.static('www'))
 app.use('/dist', express.static('dist/assets'))
-app.use('/opus', express.static('src/Opus'))
+// app.use('/opus', express.static('src/Opus'))
 
 app.listen(port, () => {
     console.log(`Streaming App listening at http://localhost:${port}`)
@@ -54,7 +54,7 @@ app.get('/api/consoles', (req, res) => {
 app.get('/api/start/:serverId', (req, res) => {
     const postRequest = https.request({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
-        path: '/v4/sessions/home/play',
+        path: '/v5/sessions/home/play',
         method: 'POST',
         headers: {
             'Authorization': 'Bearer '+userToken,
@@ -79,7 +79,7 @@ app.get('/api/start/:serverId', (req, res) => {
         titleId: '',
         systemUpdateGroup: '',
         settings: {
-            nanoVersion: 'V3;RtcdcTransport.dll',
+            nanoVersion: 'V3;WebrtcTransport.dll',
             enableTextToSpeech: false,
             highContrast: 0,
             locale: 'en-US',
@@ -99,7 +99,7 @@ app.get('/api/session', (req, res) => {
 
     https.get({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
-        path: '/v4/sessions/home/'+ tempSessionID +'/state',
+        path: '/v5/sessions/home/'+ tempSessionID +'/state',
         headers: {
             'Authorization': 'Bearer '+userToken,
             'Content-Type': 'application/json; charset=utf-8',
@@ -123,7 +123,7 @@ app.get('/api/config', (req, res) => {
 
     https.get({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
-        path: '/v4/sessions/home/'+ tempSessionID +'/configuration',
+        path: '/v5/sessions/home/'+ tempSessionID +'/configuration',
         headers: {
             'Authorization': 'Bearer '+userToken,
             'Content-Type': 'application/json; charset=utf-8',
@@ -154,7 +154,7 @@ app.post('/api/config/sdp', (req, res) => {
 
     const postRequest = https.request({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
-        path: '/v4/sessions/home/'+ tempSessionID +'/sdp',
+        path: '/v5/sessions/home/'+ tempSessionID +'/sdp',
         method: 'POST',
         headers: {
             'Authorization': 'Bearer '+userToken,
@@ -174,12 +174,13 @@ app.post('/api/config/sdp', (req, res) => {
 
     postRequest.write(JSON.stringify({
         'messageType':'offer',
+        'requestId': 1,
         'sdp': req.body.sdp,
         'configuration':{
             'containerizeAudio':false,
             'chatConfiguration':{
                 'bytesPerSample':2,
-                'expectedClipDurationMs':100,
+                'expectedClipDurationMs':20,
                 'format':{
                     // 'codec':'aac',
                     // 'container':'mp4'
@@ -189,10 +190,10 @@ app.post('/api/config/sdp', (req, res) => {
                 'numChannels':1,
                 'sampleFrequencyHz':24000,
             },
-            'audio':{
-                'minVersion':1,
-                'maxVersion':1,
-            },
+            // 'audio':{
+            //     'minVersion':1,
+            //     'maxVersion':1,
+            // },
             'chat':{
                 'minVersion':1,
                 'maxVersion':1,
@@ -203,16 +204,16 @@ app.post('/api/config/sdp', (req, res) => {
             },
             'input':{
                 'minVersion':1,
-                'maxVersion':4,
+                'maxVersion':7,
             },
             'message':{
                 'minVersion':1,
                 'maxVersion':1,
             },
-            'video':{
-                'minVersion':1,
-                'maxVersion':2,
-            },
+            // 'video':{
+            //     'minVersion':1,
+            //     'maxVersion':2,
+            // },
         },
     }))
     postRequest.end()
@@ -224,7 +225,7 @@ app.post('/api/config/ice', (req, res) => {
 
     const postRequest = https.request({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
-        path: '/v4/sessions/home/'+ tempSessionID +'/ice',
+        path: '/v5/sessions/home/'+ tempSessionID +'/ice',
         method: 'POST',
         headers: {
             'Authorization': 'Bearer '+userToken,
@@ -255,7 +256,7 @@ app.get('/api/config/sdp', (req, res) => {
 
     https.get({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
-        path: '/v4/sessions/home/'+ tempSessionID +'/sdp',
+        path: '/v5/sessions/home/'+ tempSessionID +'/sdp',
         headers: {
             'Authorization': 'Bearer '+userToken,
             'Content-Type': 'application/json; charset=utf-8',
@@ -283,7 +284,7 @@ app.get('/api/config/ice', (req, res) => {
 
     https.get({
         host: 'uks.gssv-play-prodxhome.xboxlive.com',
-        path: '/v4/sessions/home/'+ tempSessionID +'/ice',
+        path: '/v5/sessions/home/'+ tempSessionID +'/ice',
         headers: {
             'Authorization': 'Bearer '+userToken,
             'Content-Type': 'application/json; charset=utf-8',
