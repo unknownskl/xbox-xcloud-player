@@ -12,10 +12,6 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
-      {
-        test: /\.wasm?$/,
-        use: 'wasm-loader'
-      },
     ],
   },
   resolve: {
