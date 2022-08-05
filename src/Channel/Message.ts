@@ -24,8 +24,8 @@ export default class MessageChannel extends BaseChannel {
         if(jsonMessage.type === 'HandshakeAck'){
             // Handshake has been acked.
 
-            this.getClient().getChannelProcessor('input').start()
             this.getClient().getChannelProcessor('control').start()
+            this.getClient().getChannelProcessor('input').start()
 
             const systemUis = this.getClient()._config.ui_systemui || [10, 19, 31, 27, 32, -41]
             const systemVersion = this.getClient()._config.ui_version || [0, 1, 0]

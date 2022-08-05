@@ -68,13 +68,13 @@ export default class InputChannel extends BaseChannel {
         this._inputFps.start()
 
         // console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onOpen:', event)
-
-        const reportType = this._reportTypes.ClientMetadata
-        const metadataReport = this._createInputPacket(reportType, [], [])
-        this.send(metadataReport)
     }
 
     start(){
+        const reportType = this._reportTypes.ClientMetadata
+        const metadataReport = this._createInputPacket(reportType, [], [])
+        this.send(metadataReport)
+        
         this._inputInterval = setInterval(() => {
             const reportType = this._reportTypes.None
 
