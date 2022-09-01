@@ -236,6 +236,8 @@ app.post('/api/config/ice', (req, res) => {
     postRequest.write(JSON.stringify({
         'messageType': 'iceCandidate',
         'candidate': req.body.ice,
+        'connectionId': -1,
+        'requestId': 1,
     }))
 
     postRequest.end()
