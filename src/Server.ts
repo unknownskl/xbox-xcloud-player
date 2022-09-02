@@ -194,7 +194,7 @@ app.post('/api/config/sdp', (req, res) => {
             },
             'control':{
                 'minVersion':1,
-                'maxVersion':2,
+                'maxVersion':3,
             },
             'input':{
                 'minVersion':1,

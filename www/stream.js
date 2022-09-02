@@ -36,6 +36,8 @@ var app = {
                         this.isSessionsReady().then((data) => {
                             console.log('xCloudPlayer Client - /api/start - Session is ready!', data)
 
+                            client.setCodecPreferences('video/H264')
+
                             // Fetch SDP Offer
                             client.createOffer().then((offer) => {
 

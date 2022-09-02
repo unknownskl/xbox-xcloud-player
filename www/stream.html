@@ -28,10 +28,9 @@
         <div id="uiButtons" style="padding-left: 20px;">
             <strong>Controls</strong> <br />
     
-            <!-- Current bitrate: <span id="currentBitrate">N/A</span> (min: 512, max: 12000) <br />
-            <button onclick="client.setBitrate(client.getChannelProcessor('control').getBitrate()+1000)">+ 1000</button> <button onclick="client.setBitrate(client.getChannelProcessor('control').getBitrate()-1000)">- 1000</button> <br />
-            <button onclick="client.setBitrate(512)">512</button> <button onclick="client.setBitrate(2700)">2700</button> <button onclick="client.setBitrate(5000)">5000</button> <button onclick="client.setBitrate(8000)">8000</button>  <button onclick="client.setBitrate(12000)">12000</button> <br />
-            <br /> -->
+            Set bitrate: <small>Set before connecting</small><br />
+            <button onclick="client.setVideoBitrate(2000)">2000</button> <button onclick="client.setVideoBitrate(4000)">4000</button> <button onclick="client.setVideoBitrate(10000)">10000</button> <button onclick="client.setVideoBitrate(20000)">20000</button>  <button onclick="client.setVideoBitrate(40000)">40000</button> <br />
+            <br />
     
             <button onclick="client.reset()">Reset stream</button> <button onclick="client.getChannelProcessor('video').resetBuffer()">Reset Videobuffer</button>
             <br /><br />

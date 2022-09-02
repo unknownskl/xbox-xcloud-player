@@ -38,6 +38,9 @@ export default class InputChannel extends BaseChannel {
         GamepadReport: 2,
         ClientMetadata: 8,
         ServerMetadata: 16,
+        Mouse: 32,
+        Keyboard: 64,
+        Vibration: 128,
     }
 
     _frameMetadataQueue:Array<any> = []
@@ -50,6 +53,8 @@ export default class InputChannel extends BaseChannel {
 
     _inputFps:FpsCounter
     // _inputLatency:LatencyCounter
+
+    _rumbleInterval
 
     constructor(channelName, client) {
         super(channelName, client)
@@ -73,6 +78,8 @@ export default class InputChannel extends BaseChannel {
     start(){
         const reportType = this._reportTypes.ClientMetadata
         const metadataReport = this._createInputPacket(reportType, [], [])
+        // console.log('metadata report:', metadataReport)
+
         this.send(metadataReport)
         
         this._inputInterval = setInterval(() => {
@@ -93,7 +100,78 @@ export default class InputChannel extends BaseChannel {
     }
     
     onMessage(event) {
-        console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onMessage:', event)
+        // console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onMessage:', event)
+
+        const dataView = new DataView(event.data)
+
+        let i = 0
+        const reportType = dataView.getUint8(i)
+        i++
+
+        if(reportType === this._reportTypes.Vibration){
+            dataView.getUint8(i) // rumbleType: 0 = FourMotorRumble
+            i += 2 // Read one unknown byte extra
+
+            const leftMotorPercent = dataView.getUint8(i) / 100
+            const rightMotorPercent = dataView.getUint8(i+1) / 100
+            const leftTriggerMotorPercent = dataView.getUint8(i+2) / 100
+            const rightTriggerMotorPercent = dataView.getUint8(i+3) / 100
+            const durationMs = dataView.getUint16(i+4, !0)
+            const delayMs = dataView.getUint16(i+6, !0)
+            const repeat = dataView.getUint8(i+8)
+            i += 9
+
+            const gamepad = navigator.getGamepads()[0]
+
+            if(gamepad !== undefined){
+
+                const rumbleData = {
+                    startDelay: 0,
+                    duration: durationMs,
+                    weakMagnitude: rightMotorPercent,
+                    strongMagnitude: leftMotorPercent,
+
+                    leftTrigger: leftTriggerMotorPercent,
+                    rightTrigger: rightTriggerMotorPercent,
+                }
+
+                if(this._rumbleInterval !== undefined){
+                    clearInterval(this._rumbleInterval)
+                }
+
+                if((gamepad as any).vibrationActuator !== undefined) {
+
+                    if((gamepad as any).vibrationActuator.type === 'dual-rumble') {
+                        const intensityRumble = rightMotorPercent < .6 ? (.6 - rightMotorPercent) / 2 : 0
+                        const intensityRumbleTriggers = (leftTriggerMotorPercent + rightTriggerMotorPercent) / 4
+                        const endIntensity = Math.min(intensityRumble, intensityRumbleTriggers)
+                        
+                        rumbleData.weakMagnitude = Math.min(1, rightMotorPercent + endIntensity)
+
+                        // Set triggers as we have changed the motor rumble already
+                        rumbleData.leftTrigger = 0
+                        rumbleData.rightTrigger = 0
+                    }
+
+                    (gamepad as any).vibrationActuator.playEffect((gamepad as any).vibrationActuator.type, rumbleData)
+
+                    if(repeat > 0) {
+                        let repeatCount = repeat
+
+                        this._rumbleInterval = setInterval(() => {
+                            if(repeatCount <= 0){
+                                clearInterval(this._rumbleInterval)
+                            }
+
+                            if((gamepad as any).vibrationActuator !== undefined) {
+                                (gamepad as any).vibrationActuator.playEffect((gamepad as any).vibrationActuator.type, rumbleData)
+                            }
+                            repeatCount--
+                        }, delayMs + durationMs)
+                    }
+                }
+            }
+        }
     }
 
     onClose(event) {

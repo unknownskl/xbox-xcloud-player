@@ -71,6 +71,10 @@ export default class xCloudPlayer {
     _videoComponent
     _audioComponent
 
+    _codecPreference = ''
+    _maxVideoBitrate = 0
+    _maxAudioBitrate = 0
+
     constructor(elementId:string, config:xCloudPlayerConfig = {}) {
         console.log('xCloudPlayer loaded!')
 
@@ -96,12 +100,10 @@ export default class xCloudPlayer {
         this._webrtcClient.ontrack = (event) => {
 
             if(event.track.kind === 'video'){
-                console.log('GOT VIDEOTRACK:', event)
                 this._videoComponent = new VideoComponent(this)
                 this._videoComponent.create(event.streams[0])
 
             } else if(event.track.kind === 'audio'){
-                console.log('GOT AUDIOTRACK:', event)
                 this._audioComponent = new AudioComponent(this)
                 this._audioComponent.create(event.streams[0])
             } else {
@@ -124,22 +126,122 @@ export default class xCloudPlayer {
 
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
+            if(this._codecPreference !== ''){
+                console.log('xCloudPlayer Library.ts - createOffer() Set codec preference mimetype to:', this._codecPreference)
+                this._setCodec(this._codecPreference)
+            }
+
             this._webrtcClient.createOffer({
                 offerToReceiveAudio: true,
                 offerToReceiveVideo: true,
             }).then((offer) => {
                 this._webrtcClient.setLocalDescription(offer)
-                
+
+                // Set bitrate
+                if(this._maxVideoBitrate > 0){
+                    console.log('xCloudPlayer Library.ts - createOffer() Set max video bitrate to:', this._maxVideoBitrate, 'kbps')
+                    offer.sdp = this._setBitrate(offer.sdp, 'video', this._maxVideoBitrate)
+                }
+
+                if(this._maxAudioBitrate > 0){
+                    console.log('xCloudPlayer Library.ts - createOffer() Set max audio bitrate to:', this._maxVideoBitrate, 'kbps')
+                    offer.sdp = this._setBitrate(offer.sdp, 'audio', this._maxAudioBitrate)
+                }
+
                 resolve(offer)
             })
         })
     }
 
+    setAudioBitrate(bitrate_kbps:number){
+        this._maxAudioBitrate = bitrate_kbps
+    }
+
+    setVideoBitrate(bitrate_kbps:number){
+        this._maxVideoBitrate = bitrate_kbps
+    }
+
+    _setBitrate(sdp, media, bitrate) {
+        const lines = sdp.split('\n')
+        let line = -1
+        for(let i=0; i < lines.length; i++) {
+            if(lines[i].indexOf('m='+media) === 0) {
+                line = i
+                break
+            }
+        }
+        if (line === -1) {
+            console.debug('Could not find the m line for', media)
+            return sdp
+        }
+        // console.debug('Found the m line for', media, 'at line', line);
+       
+        // Pass the m line
+        line++
+       
+        // Skip i and c lines
+        while(lines[line].indexOf('i=') === 0 || lines[line].indexOf('c=') === 0) {
+            line++
+        }
+       
+        // If we're on a b line, replace it
+        if (lines[line].indexOf('b') === 0) {
+            // console.debug('Replaced b line at line', line);
+            lines[line] = 'b=AS:'+bitrate
+            return lines.join('\n')
+        }
+        
+        // Add a new b line
+        // console.debug('Adding new b line before line', line)
+        let newLines = lines.slice(0, line)
+        newLines.push('b=AS:'+bitrate)
+        newLines = newLines.concat(lines.slice(line, lines.length))
+
+        return newLines.join('\n')
+    }
+
+    setCodecPreferences(mimeType:string){
+        this._codecPreference = mimeType
+    }
+
+    _setCodec(mimeType:string){
+        const tcvr = this._webrtcClient.getTransceivers()[1]
+        const capabilities = RTCRtpReceiver.getCapabilities('video')
+        if(capabilities === null){
+            console.log('xCloudPlayer Library.ts - _setCodec() Failed to get video codecs')
+
+        } else {
+            const codecs = capabilities.codecs
+            const prefCodecs:any = []
+            
+            for(let i = 0; i < codecs.length; i++){
+                if(codecs[i].mimeType === mimeType){
+                    console.log('xCloudPlayer Library.ts - Adding codec as preference:', codecs[i])
+                    prefCodecs.push(codecs[i])
+                }
+            }
+
+            if(prefCodecs.length === 0){
+                console.log('xCloudPlayer Library.ts - _setCodec() No video codec matches with mimetype:', mimeType)
+            }
+
+            if(tcvr.setCodecPreferences !== undefined){
+                tcvr.setCodecPreferences(prefCodecs)
+            } else {
+                console.log('xCloudPlayer Library.ts - _setCodec() Browser does not support setCodecPreferences()')
+            }
+        }
+    }
+
     setRemoteOffer(sdpdata:string){
-        this._webrtcClient.setRemoteDescription({
-            type: 'answer',
-            sdp: sdpdata,
-        })
+        try {
+            this._webrtcClient.setRemoteDescription({
+                type: 'answer',
+                sdp: sdpdata,
+            })
+        } catch(e){
+            console.log('xCloudPlayer Library.ts - setRemoteOffer() Remote SDP is not valid:', sdpdata)
+        }
 
         this.getEventBus().emit('connectionstate', { state: 'connecting'})
     }
