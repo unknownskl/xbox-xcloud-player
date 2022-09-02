@@ -161,6 +161,10 @@ export default class xCloudPlayer {
         this._maxVideoBitrate = bitrate_kbps
     }
 
+    setControllerRumble(state:boolean){
+        this.getChannelProcessor('input')._rumbleEnabled = state
+    }
+
     _setBitrate(sdp, media, bitrate) {
         const lines = sdp.split('\n')
         let line = -1

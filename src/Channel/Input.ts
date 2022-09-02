@@ -55,6 +55,7 @@ export default class InputChannel extends BaseChannel {
     // _inputLatency:LatencyCounter
 
     _rumbleInterval
+    _rumbleEnabled = true
 
     constructor(channelName, client) {
         super(channelName, client)
@@ -121,9 +122,9 @@ export default class InputChannel extends BaseChannel {
             const repeat = dataView.getUint8(i+8)
             i += 9
 
+            // Check if we have an active gamepad and rumble enabled
             const gamepad = navigator.getGamepads()[0]
-
-            if(gamepad !== undefined){
+            if(gamepad !== undefined && this._rumbleEnabled === true){
 
                 const rumbleData = {
                     startDelay: 0,

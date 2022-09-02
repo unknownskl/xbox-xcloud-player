@@ -1,6 +1,6 @@
 {
   "name": "xbox-xcloud-player",
-  "version": "0.2.0-beta2",
+  "version": "0.2.0-beta3",
   "description": "",
   "main": "dist/Library.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/body-parser": "^1.19.1",
     "@types/express": "^4.17.13",
-    "@types/node": "^16.11.47",
+    "@types/node": "^16.11.56",
     "@typescript-eslint/eslint-plugin": "^4.29.3",
     "@typescript-eslint/parser": "^4.29.3",
     "eslint": "^7.32.0",
