@@ -50,21 +50,21 @@ export default class MessageChannel extends BaseChannel {
             const orientationConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/orientationchanged', { 'orientation': 0 }))
             this.send(orientationConfig)
 
-            const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': false }))
+            const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': this.getClient()._config.ui_touchenabled || false }))
             this.send(touchConfig)
 
             const deviceConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/clientdevicecapabilities', {}))
             this.send(deviceConfig)
 
             const dimensionsConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/dimensionschanged', {
-                'horizontal': 311,
-                'vertical': 175,
-                'preferredWidth': 1751,
-                'preferredHeight': 665,
+                'horizontal': 1920,
+                'vertical': 1080,
+                'preferredWidth': 1920,
+                'preferredHeight': 1080,
                 'safeAreaLeft': 0,
                 'safeAreaTop': 0,
-                'safeAreaRight': 1751,
-                'safeAreaBottom': 665,
+                'safeAreaRight': 1920,
+                'safeAreaBottom': 1080,
                 'supportsCustomResolution':true,
             }))
             this.send(dimensionsConfig)
