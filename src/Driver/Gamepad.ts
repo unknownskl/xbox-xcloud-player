@@ -25,7 +25,7 @@ export default class GamepadDriver {
 
     requestState() {
         const gamepads = navigator.getGamepads()
-		
+		let foundActive = false
         for(let gamepad = 0; gamepad < gamepads.length; gamepad++){
             const gamepadState = gamepads[gamepad]
 			
@@ -40,13 +40,19 @@ export default class GamepadDriver {
 				
 				//Queue state of the active gamepad
 				if(gamepadState.index == this._activeGamepadIndex){
+					foundActive = true
 					const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
 					state.GamepadIndex = 0 // @TODO: Could we use a second gamepad this way?
 					this._application?.getChannelProcessor('input').queueGamepadState(state)
+					break;
 				}
-				
 			}
         }
+		
+		//If gamepad is no longer connected, then clear active index
+		if(!foundActive){
+			this._activeGamepadIndex = -1;
+		}
     }
 
     mapStateLabels(buttons, axes) {
