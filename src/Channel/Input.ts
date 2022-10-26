@@ -3,29 +3,29 @@ import LatencyCounter from '../Helper/LatencyCounter'
 import BaseChannel from './Base'
 
 export interface InputFrame {
-    GamepadIndex: 0;
-    Nexus: 0;
-    Menu: 0;
-    View: 0;
-    A: 0;
-    B: 0;
-    X: 0;
-    Y: 0;
-    DPadUp: 0;
-    DPadDown: 0;
-    DPadLeft: 0;
-    DPadRight: 0;
-    LeftShoulder: 0;
-    RightShoulder: 0;
-    LeftThumb: 0;
-    RightThumb: 0;
+    GamepadIndex: number;
+    Nexus: number;
+    Menu: number;
+    View: number;
+    A: number;
+    B: number;
+    X: number;
+    Y: number;
+    DPadUp: number;
+    DPadDown: number;
+    DPadLeft: number;
+    DPadRight: number;
+    LeftShoulder: number;
+    RightShoulder: number;
+    LeftThumb: number;
+    RightThumb: number;
 
-    LeftThumbXAxis: 0.0;
-    LeftThumbYAxis: 0.0;
-    RightThumbXAxis: 0.0;
-    RightThumbYAxis: 0.0;
-    LeftTrigger: 0.0;
-    RightTrigger: 0.0;
+    LeftThumbXAxis: number;
+    LeftThumbYAxis: number;
+    RightThumbXAxis: number;
+    RightThumbYAxis: number;
+    LeftTrigger: number;
+    RightTrigger: number;
 }
 
 export default class InputChannel extends BaseChannel {
@@ -56,6 +56,7 @@ export default class InputChannel extends BaseChannel {
 
     _rumbleInterval
     _rumbleEnabled = true
+    _adhocState
 
     constructor(channelName, client) {
         super(channelName, client)
@@ -87,7 +88,11 @@ export default class InputChannel extends BaseChannel {
             const reportType = this._reportTypes.None
 
             if(this.getGamepadQueueLength() === 0){
-                this.getClient()._inputDriver.requestState()
+                let gpState = this.getClient()._inputDriver.requestState()
+                let kbState = this.getClient()._keyboardDriver.requestState()
+                let mergedState = this.mergeState(gpState, kbState, this._adhocState)
+                this._adhocState = null
+                this.queueGamepadState(mergedState)
             }
 
             const metadataQueue = this.getMetadataQueue()
@@ -98,6 +103,33 @@ export default class InputChannel extends BaseChannel {
                 this.send(inputReport)
             }
         }, 32)// 16 ms = 1 frame (1000/60)
+    }
+
+    mergeState(gpState:InputFrame, kbState:InputFrame, adHoc:InputFrame):InputFrame{
+        return {
+            GamepadIndex: gpState?.GamepadIndex ?? kbState.GamepadIndex,
+            A: Math.max(gpState?.A,kbState.A, adHoc?.A),
+            B: Math.max(gpState?.B,kbState.B, adHoc?.B),
+            X: Math.max(gpState?.X,kbState.X, adHoc?.X),
+            Y: Math.max(gpState?.Y,kbState.Y, adHoc?.Y),
+            LeftShoulder: Math.max(gpState?.LeftShoulder,kbState.LeftShoulder, adHoc?.LeftShoulder),
+            RightShoulder: Math.max(gpState?.RightShoulder,kbState.RightShoulder, adHoc?.RightShoulder),
+            LeftTrigger: Math.max(gpState?.LeftTrigger,kbState.LeftTrigger, adHoc?.LeftTrigger),
+            RightTrigger: Math.max(gpState?.RightTrigger,kbState.RightTrigger, adHoc?.RightTrigger),
+            View: Math.max(gpState?.View,kbState.View, adHoc?.View),
+            Menu: Math.max(gpState?.Menu,kbState.Menu, adHoc?.Menu),
+            LeftThumb: Math.max(gpState?.LeftThumb,kbState.LeftThumb, adHoc?.LeftThumb),
+            RightThumb: Math.max(gpState?.RightThumb,kbState.RightThumb, adHoc?.RightThumb),
+            DPadUp: Math.max(gpState?.DPadUp,kbState.DPadUp, adHoc?.DPadUp),
+            DPadDown: Math.max(gpState?.DPadDown,kbState.DPadDown, adHoc?.DPadDown),
+            DPadLeft: Math.max(gpState?.DPadLeft,kbState.DPadLeft, adHoc?.DPadLeft),
+            DPadRight: Math.max(gpState?.DPadRight,kbState.DPadRight, adHoc?.DPadRight),
+            Nexus: Math.max(gpState?.Nexus,kbState.Nexus, adHoc?.Nexus),
+            LeftThumbXAxis: Math.max(gpState?.LeftThumbXAxis,kbState.LeftThumbXAxis, adHoc?.LeftThumbXAxis),
+            LeftThumbYAxis: Math.max(gpState?.LeftThumbYAxis,kbState.LeftThumbYAxis, adHoc?.LeftThumbYAxis),
+            RightThumbXAxis: Math.max(gpState?.RightThumbXAxis,kbState.RightThumbXAxis, adHoc?.RightThumbXAxis),
+            RightThumbYAxis: Math.max(gpState?.RightThumbYAxis,kbState.RightThumbYAxis,adHoc?.RightThumbYAxis)
+        } as InputFrame;
     }
     
     onMessage(event) {
@@ -346,41 +378,8 @@ export default class InputChannel extends BaseChannel {
         return n > t ? t : n < a ? a : this._convertToInt16(n)
     }
 
-    pressButton(gamepadIndex, state){
-        const newState = {
-            GamepadIndex: gamepadIndex,
-            A: state.A || 0,
-            B: state.B || 0,
-            X: state.X || 0,
-            Y: state.Y || 0,
-            LeftShoulder: state.LeftShoulder || 0,
-            RightShoulder: state.RightShoulder || 0,
-            LeftTrigger: state.LeftTrigger || 0,
-            RightTrigger: state.RightTrigger || 0,
-            View: state.View || 0,
-            Menu: state.Menu || 0,
-            LeftThumb: state.LeftThumb || 0,
-            RightThumb: state.RightThumb || 0,
-            DPadUp: state.DPadUp || 0,
-            DPadDown: state.DPadDown || 0,
-            DPadLeft: state.DPadLeft || 0,
-            DPadRight: state.DPadRight || 0,
-            Nexus: state.Nexus || 0,
-            LeftThumbXAxis: state.LeftThumbXAxis || 0,
-            LeftThumbYAxis: state.LeftThumbYAxis || 0,
-            RightThumbXAxis: state.RightThumbXAxis || 0,
-            RightThumbYAxis: state.RightThumbYAxis || 0,
-        }
-
-        this.queueGamepadState(newState)
-
-        setTimeout(() => {
-            for(const button in state){
-                newState[button] = 0
-            }
-
-            this.queueGamepadState(newState)
-        }, 50)
+    pressButton(index:number, input:InputFrame){
+        this._adhocState = input;
     }
 
     destroy() {

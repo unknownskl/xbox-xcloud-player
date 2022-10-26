@@ -23,7 +23,7 @@ export default class GamepadDriver {
         // console.log('xCloudPlayer Driver/Gamepad.ts - Stop collecting events:', this._gamepads)
     }
 
-    requestState() {
+    requestState() : InputFrame | null {
         const gamepads = navigator.getGamepads()
         let foundActive = false
         for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
@@ -43,8 +43,10 @@ export default class GamepadDriver {
                     foundActive = true
                     const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
                     state.GamepadIndex = 0 // @TODO: Could we use a second gamepad this way?
-                    this._application?.getChannelProcessor('input').queueGamepadState(state)
-                    break;
+                    return state
+                    
+                    //this._application?.getChannelProcessor('input').queueGamepadState(state)
+                    //break;
                 }
             }
         }
@@ -53,6 +55,7 @@ export default class GamepadDriver {
         if (!foundActive) {
             this._activeGamepadIndex = -1;
         }
+        return null
     }
 
     mapStateLabels(buttons, axes) {
