@@ -66,6 +66,12 @@ export default class KeyboardDriver {
     onKeyUp(e) { this.onKeyChange(e, false) }
 
     onKeyChange(e: KeyboardEvent, down: boolean) {
+        if(down){
+            console.log("Keydown")
+        }else{
+            console.log("Keyup")
+        }
+        
         const val = down ? 1 : 0
         switch (e.keyCode) {
             case KEYCODE_ARROW_LEFT:
