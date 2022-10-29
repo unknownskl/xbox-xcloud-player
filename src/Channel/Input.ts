@@ -108,10 +108,10 @@ export default class InputChannel extends BaseChannel {
     mergeState(gpState:InputFrame, kbState:InputFrame, adHoc:InputFrame):InputFrame{
         return {
             GamepadIndex: gpState?.GamepadIndex ?? kbState.GamepadIndex,
-            A: Math.max(gpState?.A ?? 0,kbState.A, adHoc?.A ?? 0),
-            B: Math.max(gpState?.B ?? 0,kbState.B, adHoc?.B ?? 0),
-            X: Math.max(gpState?.X ?? 0,kbState.X, adHoc?.X ?? 0),
-            Y: Math.max(gpState?.Y ?? 0,kbState.Y, adHoc?.Y ?? 0),
+            A: Math.max(gpState?.A ?? 0, kbState.A, adHoc?.A ?? 0),
+            B: Math.max(gpState?.B ?? 0, kbState.B, adHoc?.B ?? 0),
+            X: Math.max(gpState?.X ?? 0, kbState.X, adHoc?.X ?? 0),
+            Y: Math.max(gpState?.Y ?? 0, kbState.Y, adHoc?.Y ?? 0),
             LeftShoulder: Math.max(gpState?.LeftShoulder ?? 0, kbState.LeftShoulder, adHoc?.LeftShoulder ?? 0),
             RightShoulder: Math.max(gpState?.RightShoulder ?? 0, kbState.RightShoulder, adHoc?.RightShoulder ?? 0),
             LeftTrigger: Math.max(gpState?.LeftTrigger ?? 0, kbState.LeftTrigger, adHoc?.LeftTrigger ?? 0),
