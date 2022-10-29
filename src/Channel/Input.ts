@@ -379,7 +379,7 @@ export default class InputChannel extends BaseChannel {
     }
 
     pressButton(index:number, input:InputFrame){
-        this._adhocState = input;
+        this._adhocState = input
     }
 
     destroy() {

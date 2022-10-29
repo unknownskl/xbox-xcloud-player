@@ -53,7 +53,7 @@ export default class GamepadDriver {
 
         //If gamepad is no longer connected, then clear active index
         if (!foundActive) {
-            this._activeGamepadIndex = -1;
+            this._activeGamepadIndex = -1
         }
         return null
     }
