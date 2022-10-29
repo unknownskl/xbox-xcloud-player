@@ -29,7 +29,7 @@ export default class xCloudPlayer {
 
     _eventBus:EventBus
 
-    _isResetting:boolean = false
+    _isResetting = false
 
     _webrtcConfiguration = {
         iceServers: [{
@@ -100,7 +100,7 @@ export default class xCloudPlayer {
         }
 
         this._inputDriver.setApplication(this)
-        this._keyboardDriver = new KeyboardDriver();
+        this._keyboardDriver = new KeyboardDriver()
         this._gatherIce()
 
         this._webrtcClient.ontrack = (event) => {
@@ -275,7 +275,7 @@ export default class xCloudPlayer {
             this._keyboardDriver.start()
 
             this._gatherIce()
-            this._isResetting = false;
+            this._isResetting = false
         }
     }
 

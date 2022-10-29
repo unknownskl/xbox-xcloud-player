@@ -129,7 +129,7 @@ export default class InputChannel extends BaseChannel {
             LeftThumbYAxis: Math.max(gpState?.LeftThumbYAxis ?? 0, kbState.LeftThumbYAxis, adHoc?.LeftThumbYAxis ?? 0),
             RightThumbXAxis: Math.max(gpState?.RightThumbXAxis ?? 0, kbState.RightThumbXAxis, adHoc?.RightThumbXAxis ?? 0),
             RightThumbYAxis: Math.max(gpState?.RightThumbYAxis ?? 0, kbState.RightThumbYAxis, adHoc?.RightThumbYAxis ?? 0)
-        } as InputFrame;
+        } as InputFrame
     }
     
     onMessage(event) {

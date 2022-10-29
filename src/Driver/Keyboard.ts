@@ -79,45 +79,45 @@ export default class KeyboardDriver {
                 break
             case KEYCODE_ARROW_RIGHT:
                 this._keyboardState.DPadRight = val
-                break;
+                break
             case KEYCODE_ARROW_DOWN:
                 this._keyboardState.DPadDown = val
-                break;
+                break
             case KEYCODE_ENTER:
             case KEYCODE_KEY_A:
                 this._keyboardState.A = val
-                break;
+                break
             case KEYCODE_BACKSPACE:
             case KEYCODE_KEY_B:
                 this._keyboardState.B = val
-                break;
+                break
             case KEYCODE_KEY_X:
                 this._keyboardState.X = val
-                break;
+                break
             case KEYCODE_KEY_Y:
                 this._keyboardState.Y = val
-                break;
+                break
             case KEYCODE_KEY_LEFT_BRACKET:
                 this._keyboardState.LeftShoulder = val
-                break;
+                break
             case KEYCODE_KEY_RIGHT_BRACKET:
                 this._keyboardState.RightShoulder = val
-                break;
+                break
             case KEYCODE_KEY_V:
                 this._keyboardState.View = val
-                break;
+                break
             case KEYCODE_KEY_M:
                 this._keyboardState.Menu = val
-                break;
+                break
             case KEYCODE_KEY_N:
                 this._keyboardState.Nexus = val
-                break;
+                break
             case KEYCODE_MINUS:
                 this._keyboardState.LeftTrigger = val
-                break;
+                break
             case KEYCODE_EQUALS:
                 this._keyboardState.RightTrigger = val
-                break;
+                break
         }
     }
 
