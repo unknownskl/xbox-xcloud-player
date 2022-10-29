@@ -88,9 +88,9 @@ export default class InputChannel extends BaseChannel {
             const reportType = this._reportTypes.None
 
             if(this.getGamepadQueueLength() === 0){
-                let gpState = this.getClient()._inputDriver.requestState()
-                let kbState = this.getClient()._keyboardDriver.requestState()
-                let mergedState = this.mergeState(gpState, kbState, this._adhocState)
+                const gpState = this.getClient()._inputDriver.requestState()
+                const kbState = this.getClient()._keyboardDriver.requestState()
+                const mergedState = this.mergeState(gpState, kbState, this._adhocState)
                 this._adhocState = null
                 this.queueGamepadState(mergedState)
             }
@@ -112,23 +112,23 @@ export default class InputChannel extends BaseChannel {
             B: Math.max(gpState?.B ?? 0,kbState.B, adHoc?.B ?? 0),
             X: Math.max(gpState?.X ?? 0,kbState.X, adHoc?.X ?? 0),
             Y: Math.max(gpState?.Y ?? 0,kbState.Y, adHoc?.Y ?? 0),
-            LeftShoulder: Math.max(gpState?.LeftShoulder ?? 0,kbState.LeftShoulder, adHoc?.LeftShoulder ?? 0),
-            RightShoulder: Math.max(gpState?.RightShoulder ?? 0,kbState.RightShoulder, adHoc?.RightShoulder ?? 0),
-            LeftTrigger: Math.max(gpState?.LeftTrigger ?? 0,kbState.LeftTrigger, adHoc?.LeftTrigger ?? 0),
-            RightTrigger: Math.max(gpState?.RightTrigger ?? 0,kbState.RightTrigger, adHoc?.RightTrigger ?? 0),
-            View: Math.max(gpState?.View ?? 0,kbState.View, adHoc?.View ?? 0),
-            Menu: Math.max(gpState?.Menu ?? 0,kbState.Menu, adHoc?.Menu ?? 0),
-            LeftThumb: Math.max(gpState?.LeftThumb ?? 0,kbState.LeftThumb, adHoc?.LeftThumb ?? 0),
-            RightThumb: Math.max(gpState?.RightThumb ?? 0,kbState.RightThumb, adHoc?.RightThumb ?? 0),
-            DPadUp: Math.max(gpState?.DPadUp ?? 0,kbState.DPadUp, adHoc?.DPadUp ?? 0),
-            DPadDown: Math.max(gpState?.DPadDown ?? 0,kbState.DPadDown, adHoc?.DPadDown ?? 0),
-            DPadLeft: Math.max(gpState?.DPadLeft ?? 0,kbState.DPadLeft, adHoc?.DPadLeft ?? 0),
-            DPadRight: Math.max(gpState?.DPadRight ?? 0,kbState.DPadRight, adHoc?.DPadRight ?? 0),
-            Nexus: Math.max(gpState?.Nexus ?? 0,kbState.Nexus, adHoc?.Nexus ?? 0),
-            LeftThumbXAxis: Math.max(gpState?.LeftThumbXAxis ?? 0,kbState.LeftThumbXAxis, adHoc?.LeftThumbXAxis ?? 0),
-            LeftThumbYAxis: Math.max(gpState?.LeftThumbYAxis ?? 0,kbState.LeftThumbYAxis, adHoc?.LeftThumbYAxis ?? 0),
-            RightThumbXAxis: Math.max(gpState?.RightThumbXAxis ?? 0,kbState.RightThumbXAxis, adHoc?.RightThumbXAxis ?? 0),
-            RightThumbYAxis: Math.max(gpState?.RightThumbYAxis ?? 0,kbState.RightThumbYAxis,adHoc?.RightThumbYAxis ?? 0)
+            LeftShoulder: Math.max(gpState?.LeftShoulder ?? 0, kbState.LeftShoulder, adHoc?.LeftShoulder ?? 0),
+            RightShoulder: Math.max(gpState?.RightShoulder ?? 0, kbState.RightShoulder, adHoc?.RightShoulder ?? 0),
+            LeftTrigger: Math.max(gpState?.LeftTrigger ?? 0, kbState.LeftTrigger, adHoc?.LeftTrigger ?? 0),
+            RightTrigger: Math.max(gpState?.RightTrigger ?? 0, kbState.RightTrigger, adHoc?.RightTrigger ?? 0),
+            View: Math.max(gpState?.View ?? 0, kbState.View, adHoc?.View ?? 0),
+            Menu: Math.max(gpState?.Menu ?? 0, kbState.Menu, adHoc?.Menu ?? 0),
+            LeftThumb: Math.max(gpState?.LeftThumb ?? 0, kbState.LeftThumb, adHoc?.LeftThumb ?? 0),
+            RightThumb: Math.max(gpState?.RightThumb ?? 0, kbState.RightThumb, adHoc?.RightThumb ?? 0),
+            DPadUp: Math.max(gpState?.DPadUp ?? 0, kbState.DPadUp, adHoc?.DPadUp ?? 0),
+            DPadDown: Math.max(gpState?.DPadDown ?? 0, kbState.DPadDown, adHoc?.DPadDown ?? 0),
+            DPadLeft: Math.max(gpState?.DPadLeft ?? 0, kbState.DPadLeft, adHoc?.DPadLeft ?? 0),
+            DPadRight: Math.max(gpState?.DPadRight ?? 0, kbState.DPadRight, adHoc?.DPadRight ?? 0),
+            Nexus: Math.max(gpState?.Nexus ?? 0, kbState.Nexus, adHoc?.Nexus ?? 0),
+            LeftThumbXAxis: Math.max(gpState?.LeftThumbXAxis ?? 0, kbState.LeftThumbXAxis, adHoc?.LeftThumbXAxis ?? 0),
+            LeftThumbYAxis: Math.max(gpState?.LeftThumbYAxis ?? 0, kbState.LeftThumbYAxis, adHoc?.LeftThumbYAxis ?? 0),
+            RightThumbXAxis: Math.max(gpState?.RightThumbXAxis ?? 0, kbState.RightThumbXAxis, adHoc?.RightThumbXAxis ?? 0),
+            RightThumbYAxis: Math.max(gpState?.RightThumbYAxis ?? 0, kbState.RightThumbYAxis, adHoc?.RightThumbYAxis ?? 0)
         } as InputFrame;
     }
     
