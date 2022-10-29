@@ -29,6 +29,8 @@ export default class xCloudPlayer {
 
     _eventBus:EventBus
 
+    _isResetting:boolean = false
+
     _webrtcConfiguration = {
         iceServers: [{
             urls: 'stun:stun.l.google.com:19302',
@@ -256,21 +258,25 @@ export default class xCloudPlayer {
     }
 
     reset(){
-        this._webrtcClient.close()
-        
-        for(const name in this._webrtcChannelProcessors){
-            this._webrtcChannelProcessors[name].destroy()
+        if(!this._isResetting){
+            this._isResetting = true
+            this._webrtcClient.close()
+            
+            for(const name in this._webrtcChannelProcessors){
+                this._webrtcChannelProcessors[name].destroy()
+            }
+
+            this._inputDriver.stop()
+            this._keyboardDriver.stop()
+
+            this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
+            this._openDataChannels()
+            this._inputDriver.start()
+            this._keyboardDriver.start()
+
+            this._gatherIce()
+            this._isResetting = false;
         }
-
-        this._inputDriver.stop()
-        this._keyboardDriver.stop()
-
-        this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
-        this._openDataChannels()
-        this._inputDriver.start()
-        this._keyboardDriver.start()
-
-        this._gatherIce()
     }
 
     getIceCandidates(){

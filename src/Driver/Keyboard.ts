@@ -20,6 +20,9 @@ const KEYCODE_KEY_RIGHT_BRACKET = 221
 const KEYCODE_KEY_V = 86
 const KEYCODE_KEY_M = 77
 
+const KEYCODE_MINUS = 189
+const KEYCODE_EQUALS = 187
+
 
 export default class KeyboardDriver {
 
@@ -66,12 +69,6 @@ export default class KeyboardDriver {
     onKeyUp(e) { this.onKeyChange(e, false) }
 
     onKeyChange(e: KeyboardEvent, down: boolean) {
-        if(down){
-            console.log("Keydown")
-        }else{
-            console.log("Keyup")
-        }
-        
         const val = down ? 1 : 0
         switch (e.keyCode) {
             case KEYCODE_ARROW_LEFT:
@@ -114,6 +111,12 @@ export default class KeyboardDriver {
                 break;
             case KEYCODE_KEY_N:
                 this._keyboardState.Nexus = val
+                break;
+            case KEYCODE_MINUS:
+                this._keyboardState.LeftTrigger = val
+                break;
+            case KEYCODE_EQUALS:
+                this._keyboardState.RightTrigger = val
                 break;
         }
     }
