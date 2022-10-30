@@ -125,13 +125,21 @@ export default class InputChannel extends BaseChannel {
             DPadLeft: Math.max(gpState?.DPadLeft ?? 0, kbState.DPadLeft, adHoc?.DPadLeft ?? 0),
             DPadRight: Math.max(gpState?.DPadRight ?? 0, kbState.DPadRight, adHoc?.DPadRight ?? 0),
             Nexus: Math.max(gpState?.Nexus ?? 0, kbState.Nexus, adHoc?.Nexus ?? 0),
-            LeftThumbXAxis: Math.max(gpState?.LeftThumbXAxis ?? 0, kbState.LeftThumbXAxis, adHoc?.LeftThumbXAxis ?? 0),
-            LeftThumbYAxis: Math.max(gpState?.LeftThumbYAxis ?? 0, kbState.LeftThumbYAxis, adHoc?.LeftThumbYAxis ?? 0),
-            RightThumbXAxis: Math.max(gpState?.RightThumbXAxis ?? 0, kbState.RightThumbXAxis, adHoc?.RightThumbXAxis ?? 0),
-            RightThumbYAxis: Math.max(gpState?.RightThumbYAxis ?? 0, kbState.RightThumbYAxis, adHoc?.RightThumbYAxis ?? 0)
+            LeftThumbXAxis: this.mergeAxix(gpState?.LeftThumbXAxis ?? 0, kbState.LeftThumbXAxis),
+            LeftThumbYAxis: this.mergeAxix(gpState?.LeftThumbYAxis ?? 0, kbState.LeftThumbYAxis),
+            RightThumbXAxis: this.mergeAxix(gpState?.RightThumbXAxis ?? 0, kbState.RightThumbXAxis),
+            RightThumbYAxis: this.mergeAxix(gpState?.RightThumbYAxis ?? 0, kbState.RightThumbYAxis)
         } as InputFrame
     }
     
+    mergeAxix(axis1: number, axis2: number){
+        if(Math.abs(axis1) > Math.abs(axis2)){
+            return axis1
+        }else{
+            return axis2
+        }
+    }
+
     onMessage(event) {
         // console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onMessage:', event)
 
