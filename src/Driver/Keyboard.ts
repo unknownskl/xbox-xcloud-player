@@ -49,10 +49,11 @@ export default class KeyboardDriver {
         RightThumbXAxis: 0.0,
         RightThumbYAxis: 0.0,
         LeftTrigger: 0.0,
-        RightTrigger: 0.0
+        RightTrigger: 0.0,
     } as InputFrame
 
     _downFunc = (e: KeyboardEvent) => { this.onKeyChange(e, true) }
+
     _upFunc = (e: KeyboardEvent) => { this.onKeyChange(e, false) }
 
     start() {
@@ -66,6 +67,7 @@ export default class KeyboardDriver {
     }
 
     onKeyDown(e) { this.onKeyChange(e, true) }
+
     onKeyUp(e) { this.onKeyChange(e, false) }
 
     onKeyChange(e: KeyboardEvent, down: boolean) {

@@ -1,5 +1,5 @@
 import FpsCounter from '../Helper/FpsCounter'
-import LatencyCounter from '../Helper/LatencyCounter'
+//import LatencyCounter from '../Helper/LatencyCounter'
 import BaseChannel from './Base'
 
 export interface InputFrame {
@@ -128,7 +128,7 @@ export default class InputChannel extends BaseChannel {
             LeftThumbXAxis: this.mergeAxix(gpState?.LeftThumbXAxis ?? 0, kbState.LeftThumbXAxis),
             LeftThumbYAxis: this.mergeAxix(gpState?.LeftThumbYAxis ?? 0, kbState.LeftThumbYAxis),
             RightThumbXAxis: this.mergeAxix(gpState?.RightThumbXAxis ?? 0, kbState.RightThumbXAxis),
-            RightThumbYAxis: this.mergeAxix(gpState?.RightThumbYAxis ?? 0, kbState.RightThumbYAxis)
+            RightThumbYAxis: this.mergeAxix(gpState?.RightThumbYAxis ?? 0, kbState.RightThumbYAxis),
         } as InputFrame
     }
     
@@ -407,7 +407,7 @@ export default class InputChannel extends BaseChannel {
 
         // this._fpsCounter.count()
 
-        const frameProcessedMs = (performance.now()-frame.firstFramePacketArrivalTimeMs)
+        //const frameProcessedMs = (performance.now()-frame.firstFramePacketArrivalTimeMs)
         // this._latencyCounter.count(frameProcessedMs)
     }
 
