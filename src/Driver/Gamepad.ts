@@ -76,7 +76,7 @@ export default class GamepadDriver {
             DPadDown: buttons[13]?.value || 0,
             DPadLeft: buttons[14]?.value || 0,
             DPadRight: buttons[15]?.value || 0,
-            Nexus: buttons[16]?.value || 0,
+            Nexus: buttons[16]?.value || (buttons[8]?.value && buttons[9]?.value) || 0,
             LeftThumbXAxis: axes[0],
             LeftThumbYAxis: axes[1],
             RightThumbXAxis: axes[2],
