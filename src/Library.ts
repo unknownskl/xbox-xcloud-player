@@ -11,6 +11,7 @@ import AudioComponent from './Component/Audio'
 import EventBus from './Helper/EventBus'
 
 import GamepadDriver from './Driver/Gamepad'
+import KeyboardDriver from './Driver/Keyboard'
 
 interface xCloudPlayerConfig {
     libopus_path?:string;
@@ -27,6 +28,8 @@ export default class xCloudPlayer {
     _webrtcClient:RTCPeerConnection;
 
     _eventBus:EventBus
+
+    _isResetting = false
 
     _webrtcConfiguration = {
         iceServers: [{
@@ -68,6 +71,7 @@ export default class xCloudPlayer {
     _elementHolderRandom:number
 
     _inputDriver:any = undefined
+    _keyboardDriver:KeyboardDriver
 
     _videoComponent
     _audioComponent
@@ -96,6 +100,7 @@ export default class xCloudPlayer {
         }
 
         this._inputDriver.setApplication(this)
+        this._keyboardDriver = new KeyboardDriver()
         this._gatherIce()
 
         this._webrtcClient.ontrack = (event) => {
@@ -124,6 +129,7 @@ export default class xCloudPlayer {
         return new Promise((resolve) => {
 
             this._inputDriver.start()
+            this._keyboardDriver.start()
 
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
@@ -252,19 +258,25 @@ export default class xCloudPlayer {
     }
 
     reset(){
-        this._webrtcClient.close()
-        
-        for(const name in this._webrtcChannelProcessors){
-            this._webrtcChannelProcessors[name].destroy()
+        if(!this._isResetting){
+            this._isResetting = true
+            this._webrtcClient.close()
+            
+            for(const name in this._webrtcChannelProcessors){
+                this._webrtcChannelProcessors[name].destroy()
+            }
+
+            this._inputDriver.stop()
+            this._keyboardDriver.stop()
+
+            this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
+            this._openDataChannels()
+            this._inputDriver.start()
+            this._keyboardDriver.start()
+
+            this._gatherIce()
+            this._isResetting = false
         }
-
-        this._inputDriver.stop()
-
-        this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
-        this._openDataChannels()
-        this._inputDriver.start()
-
-        this._gatherIce()
     }
 
     getIceCandidates(){

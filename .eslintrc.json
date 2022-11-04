@@ -20,7 +20,7 @@
     "dot-notation": "off",
     "eqeqeq": "warn",
     "curly": ["warn", "all"],
-    "brace-style": ["warn"],
+    "brace-style": ["warn", "1tbs", { "allowSingleLine" : true }],
     "prefer-arrow-callback": ["warn"],
     "max-len": ["warn", 200],
     // "no-console": ["warn"],
