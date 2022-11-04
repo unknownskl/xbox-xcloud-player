@@ -29,9 +29,9 @@ export default class GamepadDriver {
         for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
             const gamepadState = gamepads[gamepad]
 
-            if (gamepadState != null && gamepadState.connected) {
+            if (gamepadState !== null && gamepadState.connected) {
                 //We need to find the active gamepad
-                if (this._activeGamepadIndex == -1) {
+                if (this._activeGamepadIndex === -1) {
                     //This gamepad has a button pressed, make it the active gamepad
                     if (gamepadState.buttons.some(b => b.value >= .75)) {
                         this._activeGamepadIndex = gamepadState.index
@@ -39,19 +39,19 @@ export default class GamepadDriver {
                 }
 
                 //Queue state of the active gamepad
-                if (gamepadState.index == this._activeGamepadIndex) {
+                if (gamepadState.index === this._activeGamepadIndex) {
                     foundActive = true
                     const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
                     state.GamepadIndex = 0 // @TODO: Could we use a second gamepad this way?
                     this._application?.getChannelProcessor('input').queueGamepadState(state)
-                    break;
+                    break
                 }
             }
         }
 
         //If gamepad is no longer connected, then clear active index
         if (!foundActive) {
-            this._activeGamepadIndex = -1;
+            this._activeGamepadIndex = -1
         }
     }
 
