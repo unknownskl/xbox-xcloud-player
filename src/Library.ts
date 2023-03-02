@@ -14,12 +14,11 @@ import GamepadDriver from './Driver/Gamepad'
 import KeyboardDriver from './Driver/Keyboard'
 
 interface xCloudPlayerConfig {
-    libopus_path?:string;
-    worker_location?:string;
     ui_systemui?:Array<number>; // Default: [10,19,31,27,32,33]
     ui_version?:Array<number>; // Default: [0,1,0]
     ui_touchenabled?:boolean;
     input_driver?:any; // Default: GamepadDriver(), false to disable
+    sound_force_mono?:boolean; // Force mono sound. Defaults to false
 }
 
 export default class xCloudPlayer {
@@ -142,7 +141,6 @@ export default class xCloudPlayer {
                 offerToReceiveAudio: true,
                 offerToReceiveVideo: true,
             }).then((offer) => {
-                this._webrtcClient.setLocalDescription(offer)
 
                 // Set bitrate
                 if(this._maxVideoBitrate > 0){
@@ -155,6 +153,12 @@ export default class xCloudPlayer {
                     offer.sdp = this._setBitrate(offer.sdp, 'audio', this._maxAudioBitrate)
                 }
 
+                if((this._config.sound_force_mono || false) !== true){
+                    console.log('xCloudPlayer Library.ts - createOffer() Set audio to stereo')
+                    offer.sdp = offer.sdp?.replace('useinbandfec=1', 'useinbandfec=1; stereo=1')
+                }
+
+                this._webrtcClient.setLocalDescription(offer)
                 resolve(offer)
             })
         })
@@ -185,25 +189,17 @@ export default class xCloudPlayer {
             console.debug('Could not find the m line for', media)
             return sdp
         }
-        // console.debug('Found the m line for', media, 'at line', line);
-       
-        // Pass the m line
         line++
-       
-        // Skip i and c lines
+
         while(lines[line].indexOf('i=') === 0 || lines[line].indexOf('c=') === 0) {
             line++
         }
        
-        // If we're on a b line, replace it
         if (lines[line].indexOf('b') === 0) {
-            // console.debug('Replaced b line at line', line);
             lines[line] = 'b=AS:'+bitrate
             return lines.join('\n')
         }
         
-        // Add a new b line
-        // console.debug('Adding new b line before line', line)
         let newLines = lines.slice(0, line)
         newLines.push('b=AS:'+bitrate)
         newLines = newLines.concat(lines.slice(line, lines.length))
