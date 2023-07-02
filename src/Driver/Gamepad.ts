@@ -1,9 +1,16 @@
 import xCloudPlayer from '../Library'
-import { InputFrame } from '../Channel/Input'
+import { InputFrame, InputDriver, PollCallback, RumbleCallback } from '../Channel/Input'
 
-export default class GamepadDriver {
+interface GamepadDriverData {
+    idx: number;
+}
+
+export default class GamepadDriver implements InputDriver<GamepadDriverData> {
+
 
     _application: xCloudPlayer | null = null
+
+    _rumbleTimers: Array<NodeJS.Timer | undefined> = [];
 
     _gamepads: Array<any> = []
     _activeGamepadIndex = -1;
@@ -15,50 +22,138 @@ export default class GamepadDriver {
         this._application = application
     }
 
-    start() {
-        // console.log('xCloudPlayer Driver/Gamepad.ts - Start collecting events:', this._gamepads)
+    start(
+        onNewDevice: (poll: PollCallback<GamepadDriverData>, rumble: RumbleCallback<GamepadDriverData>, deviceObject: GamepadDriverData) => void,
+        /*
+        onRemovedDevice: (device: InputDevice<number>) => void
+        */
+    ) {
+
+        window.addEventListener('gamepadconnected', (e) => {
+            const gp = navigator.getGamepads()[e.gamepad.index]
+            if (gp === null) {
+                console.log('Connected null gamepad')
+                return
+            }
+
+            const newDevice: GamepadDriverData = {
+                idx: e.gamepad.index,
+            }
+
+            onNewDevice(
+                GamepadDriver.poll,
+                (
+                    device, delayMs, durationMS,
+                    rightMotorPercent, leftMotorPercent,
+                    rightTriggerMotorPercent, leftTriggerMotorPercent, repeat
+                ) => {
+                    this.rumbleDevice(
+                        device, delayMs, durationMS,
+                        rightMotorPercent, leftMotorPercent,
+                        rightTriggerMotorPercent, leftTriggerMotorPercent, repeat
+                    )
+                },
+                newDevice,
+            )
+            for (const rumbleTimer of this._rumbleTimers) {
+                if (rumbleTimer) {
+                    clearInterval(rumbleTimer)
+                }
+            }
+            this._rumbleTimers = new Array(navigator.getGamepads().length)
+        })
     }
 
     stop() {
+        for (const rumbleTimer of this._rumbleTimers) {
+            if (rumbleTimer) {
+                clearInterval(rumbleTimer)
+            }
+        }
         // console.log('xCloudPlayer Driver/Gamepad.ts - Stop collecting events:', this._gamepads)
     }
 
-    requestState() : InputFrame | null {
+    static poll(gamepadData: GamepadDriverData): InputFrame | null {
         const gamepads = navigator.getGamepads()
-        let foundActive = false
-        for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
-            const gamepadState = gamepads[gamepad]
-
-            if (gamepadState !== null && gamepadState.connected) {
-                //We need to find the active gamepad
-                if (this._activeGamepadIndex === -1) {
-                    //This gamepad has a button pressed, make it the active gamepad
-                    if (gamepadState.buttons.some(b => b.value >= .75)) {
-                        this._activeGamepadIndex = gamepadState.index
-                    }
-                }
-
-                //Queue state of the active gamepad
-                if (gamepadState.index === this._activeGamepadIndex) {
-                    foundActive = true
-                    const state = this.mapStateLabels(gamepadState.buttons, gamepadState.axes)
-                    state.GamepadIndex = 0 // @TODO: Could we use a second gamepad this way?
-                    return state
-                    
-                    //this._application?.getChannelProcessor('input').queueGamepadState(state)
-                    //break;
-                }
-            }
-        }
-
-        //If gamepad is no longer connected, then clear active index
-        if (!foundActive) {
-            this._activeGamepadIndex = -1
+        const gamepadState = gamepads[gamepadData.idx]
+        if (gamepadState !== null) {
+            console.log("Polled Gamestate from", gamepadData.idx)
+            const state = GamepadDriver.mapStateLabels(gamepadState.buttons, gamepadState.axes)
+            return state
         }
         return null
     }
 
-    mapStateLabels(buttons, axes) {
+    rumbleDevice(
+        device: GamepadDriverData,
+        delayMs: number,
+        durationMs: number,
+        rightMotorPercent: number,
+        leftMotorPercent: number,
+        rightTriggerMotorPercent: number,
+        leftTriggerMotorPercent: number,
+        repeat: number,
+    ) {
+        // Check if we have an active gamepad and rumble enabled
+        console.log('Rumbling', device.idx)
+        const gamepad = navigator.getGamepads()[device.idx]
+        if (gamepad === null) {
+            console.log('No Gamepad at index', device.idx)
+            return
+        }
+
+        if ((gamepad as any).vibrationActuator === undefined) {
+            console.log('Gamepad at index does not support vibrationAcutator', device.idx)
+            return
+        }
+
+        const rumbleData = {
+            startDelay: 0,
+            duration: durationMs,
+            weakMagnitude: rightMotorPercent,
+            strongMagnitude: leftMotorPercent,
+
+            leftTrigger: leftTriggerMotorPercent,
+            rightTrigger: rightTriggerMotorPercent,
+        }
+
+        if (this._rumbleTimers[device.idx]) {
+            clearInterval(this._rumbleTimers[device.idx])
+        }
+
+        if ((gamepad as any).vibrationActuator.type === 'dual-rumble') {
+            const intensityRumble = rightMotorPercent < .6 ? (.6 - rightMotorPercent) / 2 : 0
+            const intensityRumbleTriggers = (leftTriggerMotorPercent + rightTriggerMotorPercent) / 4
+            const endIntensity = Math.min(intensityRumble, intensityRumbleTriggers)
+
+            rumbleData.weakMagnitude = Math.min(1, rightMotorPercent + endIntensity)
+
+            // Set triggers as we have changed the motor rumble already
+            rumbleData.leftTrigger = 0
+            rumbleData.rightTrigger = 0
+        }
+
+        (gamepad as any).vibrationActuator.playEffect((gamepad as any).vibrationActuator.type, rumbleData)
+
+        if (repeat > 0) {
+            let repeatCount = repeat
+
+            this._rumbleTimers[device.idx] = setInterval(() => {
+                if (repeatCount <= 0) {
+                    if (this._rumbleTimers[device.idx]) {
+                        clearInterval(this._rumbleTimers[device.idx])
+                    }
+                }
+
+                if ((gamepad as any).vibrationActuator !== undefined) {
+                    (gamepad as any).vibrationActuator.playEffect((gamepad as any).vibrationActuator.type, rumbleData)
+                }
+                repeatCount--
+            }, delayMs + durationMs)
+        }
+    }
+
+    static mapStateLabels(buttons, axes) {
         return {
             A: buttons[0]?.value || 0,
             B: buttons[1]?.value || 0,

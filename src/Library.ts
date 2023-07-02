@@ -1,7 +1,7 @@
 import DebugChannel from './Channel/Debug'
 // import VideoChannel from './Channel/Video'
 // import AudioChannel from './Channel/Audio'
-import InputChannel from './Channel/Input'
+import InputChannel, { InputDriver } from './Channel/Input'
 import ControlChannel from './Channel/Control'
 import MessageChannel from './Channel/Message'
 
@@ -70,7 +70,6 @@ export default class xCloudPlayer {
     _elementHolderRandom:number
 
     _inputDriver:any = undefined
-    _keyboardDriver:KeyboardDriver
 
     _videoComponent
     _audioComponent
@@ -94,12 +93,9 @@ export default class xCloudPlayer {
         if(this._config.input_driver === undefined){
             this._inputDriver = new GamepadDriver()
 
-        } else if(this._config.input_driver !== null){
-            this._inputDriver = this._config.input_driver
         }
 
         this._inputDriver.setApplication(this)
-        this._keyboardDriver = new KeyboardDriver()
         this._gatherIce()
 
         this._webrtcClient.ontrack = (event) => {
@@ -124,12 +120,16 @@ export default class xCloudPlayer {
         })
     }
 
+    getInputDriver(): InputDriver<any> {
+        return this._inputDriver
+    }
+
+    onDeviceAdded(input: number) {
+        this.getChannelProcessor('control').onRegisterGamepad(input)
+    }
+
     createOffer(){
         return new Promise((resolve) => {
-
-            this._inputDriver.start()
-            this._keyboardDriver.start()
-
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
             if(this._codecPreference !== ''){
@@ -262,13 +262,8 @@ export default class xCloudPlayer {
                 this._webrtcChannelProcessors[name].destroy()
             }
 
-            this._inputDriver.stop()
-            this._keyboardDriver.stop()
-
             this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
             this._openDataChannels()
-            this._inputDriver.start()
-            this._keyboardDriver.start()
 
             this._gatherIce()
             this._isResetting = false
