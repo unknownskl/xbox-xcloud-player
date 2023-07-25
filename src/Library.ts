@@ -1,9 +1,8 @@
 import DebugChannel from './Channel/Debug'
-// import VideoChannel from './Channel/Video'
-// import AudioChannel from './Channel/Audio'
 import InputChannel from './Channel/Input'
 import ControlChannel from './Channel/Control'
 import MessageChannel from './Channel/Message'
+import ChatChannel from './Channel/Chat'
 
 import VideoComponent from './Component/Video'
 import AudioComponent from './Component/Audio'
@@ -39,15 +38,15 @@ export default class xCloudPlayer {
     }
 
     _webrtcDataChannelsConfig = {
+        'input': {
+            ordered: true,
+            protocol: '1.0',
+        },
         'chat': {
             protocol: 'chatV1',
         },
         'control': {
             protocol: 'controlV1',
-        },
-        'input': {
-            ordered: true,
-            protocol: '1.0',
         },
         'message': {
             protocol: 'messageV1',
@@ -316,7 +315,7 @@ export default class xCloudPlayer {
                 this._webrtcChannelProcessors[name] = new ControlChannel('control', this)
                 break
             case 'chat':
-                this._webrtcChannelProcessors[name] = new DebugChannel('chat', this)
+                this._webrtcChannelProcessors[name] = new ChatChannel('chat', this)
                 break
             case 'message':
                 this._webrtcChannelProcessors[name] = new MessageChannel('message', this)

@@ -169,7 +169,7 @@ var app = {
                     setTimeout(() => {
                         this.isExchangeReady(url).then((data) => {
                             resolve(data)
-                        }).catch((error)  => {
+                        }).catch((error) => {
                             reject(error)
                         })
                     }, 1000)
