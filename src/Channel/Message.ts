@@ -9,7 +9,7 @@ export default class MessageChannel extends BaseChannel {
         const handshake = JSON.stringify({
             'type':'Handshake',
             'version':'messageV1',
-            'id':'0ab125e2-6eee-4687-a2f4-5cfb347f0643',
+            'id':'f9c5f412-0e69-4ede-8e62-92c7f5358c56',
             'cv':'',
         })
         this.send(handshake)
@@ -39,12 +39,16 @@ export default class MessageChannel extends BaseChannel {
                 // 27 = ShowPurchase
                 // 32 = ShowTimerExtensions
                 // 33 = Xbox windows app, disables the nexus menu on xCloud (Alt nexus menu?)
-                // -41 = unknown
+                // -44 = unknown
+                // 40 = unknown
+                // 41 = unknown
+                // -43 = unknown
+
                 // Possible options: Keyboard, PurchaseModal
             }))
             this.send(uiConfig)
 
-            const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': '4b8f472d-2c82-40e8-895d-bcd6a6ec7e9b' }))
+            const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': 'c11ddb2e-c7e3-4f02-a62b-fd5448e0b851' }))
             this.send(clientConfig)
 
             const orientationConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/orientationchanged', { 'orientation': 0 }))

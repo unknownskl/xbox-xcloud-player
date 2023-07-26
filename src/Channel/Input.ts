@@ -36,11 +36,13 @@ export default class InputChannel extends BaseChannel {
         None: 0,
         Metadata: 1,
         GamepadReport: 2,
+        Pointer: 4,
         ClientMetadata: 8,
         ServerMetadata: 16,
         Mouse: 32,
         Keyboard: 64,
         Vibration: 128,
+        Sendor: 256,
     }
 
     _frameMetadataQueue:Array<any> = []
@@ -229,7 +231,7 @@ export default class InputChannel extends BaseChannel {
         let metadataSize = 0
         let gamepadSize = 0
 
-        let totalSize = 13
+        let totalSize = 14
 
         if(metadataQueue.length > 0){
             reportType |= this._reportTypes.Metadata // Set bitmask for metadata
@@ -249,11 +251,11 @@ export default class InputChannel extends BaseChannel {
 
         const metadataAlloc = new Uint8Array(totalSize)
         const metadataReport = new DataView(metadataAlloc.buffer)
-        metadataReport.setUint8(0, reportType)
-        metadataReport.setUint32(1, this._inputSequenceNum, true)
-        metadataReport.setFloat64(5, performance.now(), true)
+        metadataReport.setUint16(0, reportType, true)
+        metadataReport.setUint32(2, this._inputSequenceNum, true)
+        metadataReport.setFloat64(6, performance.now(), true)
 
-        let offset = 13
+        let offset = 14
 
         if(metadataQueue.length > 0){
             metadataReport.setUint8(offset, metadataQueue.length)
@@ -262,15 +264,13 @@ export default class InputChannel extends BaseChannel {
             for (; metadataQueue.length > 0;) {
                 this._metadataFps.count()
                 const frame = metadataQueue.shift()
-
-                const dateNow = performance.now()
     
                 const firstFramePacketArrivalTimeMs = frame.firstFramePacketArrivalTimeMs
                 const frameSubmittedTimeMs = frame.frameSubmittedTimeMs
                 const frameDecodedTimeMs = frame.frameDecodedTimeMs
                 const frameRenderedTimeMs = frame.frameRenderedTimeMs
                 const framePacketTime = packetTimeNow
-                const frameDateNow = dateNow
+                const frameDateNow = performance.now()
     
                 metadataReport.setUint32(offset, frame.serverDataKey, true)
                 metadataReport.setUint32(offset+4, firstFramePacketArrivalTimeMs, true)
@@ -341,7 +341,7 @@ export default class InputChannel extends BaseChannel {
         }
 
         if(reportType === this._reportTypes.ClientMetadata){
-            metadataReport.setUint8(offset, 0)
+            metadataReport.setUint8(offset, 0) // Max Touchpoints
             offset++
         }
 
