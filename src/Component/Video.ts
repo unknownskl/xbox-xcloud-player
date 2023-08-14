@@ -30,10 +30,12 @@ export default class VideoComponent {
             videoRender.srcObject = srcObject
             videoRender.width = videoHolder.clientWidth
             videoRender.height = videoHolder.clientHeight
+            videoRender.style.touchAction = 'none'
 
             // videoRender.muted = true
             videoRender.autoplay = true
             videoRender.setAttribute('playsinline', 'playsinline')
+            videoHolder.style.aspectRatio = '16 / 9'
 
             videoRender.onclick = () => {
                 videoRender.play()
@@ -57,6 +59,16 @@ export default class VideoComponent {
             
             videoHolder.appendChild(videoRender)
             this._videoFps.start()
+
+            // Pointer / Mouse events
+            videoRender.addEventListener("pointermove", (e) => this._client.getChannelProcessor('input').onPointerMove(e), { passive: false }),
+            videoRender.addEventListener("pointerdown", (e) => this._client.getChannelProcessor('input').onPointerClick(e), { passive: false }),
+            videoRender.addEventListener("pointerup", (e) => this._client.getChannelProcessor('input').onPointerClick(e), { passive: false }),
+            videoRender.addEventListener("wheel", (e) => this._client.getChannelProcessor('input').onPointerScroll(e), { passive: false })
+
+            // videoHolder.addEventListener("touchmove", (e) => this._client.getChannelProcessor('input').onPointerMove(e)),
+            // videoHolder.addEventListener("touchstart", (e) => this._client.getChannelProcessor('input').onPointerClick(e)),
+            // videoHolder.addEventListener("touchend", (e) => this._client.getChannelProcessor('input').onPointerClick(e)),
             
             videoRender.play().then(() => {
                 //

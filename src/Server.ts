@@ -192,13 +192,17 @@ app.post('/api/config/sdp', (req, res) => {
                 'minVersion':1,
                 'maxVersion':1,
             },
+            // 'chatStream':{
+            //     'minVersion':1,
+            //     'maxVersion':1,
+            // },
             'control':{
                 'minVersion':1,
                 'maxVersion':3,
             },
             'input':{
                 'minVersion':1,
-                'maxVersion':7,
+                'maxVersion':8,
             },
             'message':{
                 'minVersion':1,
