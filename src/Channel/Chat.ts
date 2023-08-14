@@ -11,7 +11,7 @@ export default class ChatChannel extends BaseChannel {
     }
 
     start() {
-       // Do nothing
+        // Do nothing
     }
     
     onMessage(event) {
@@ -34,7 +34,7 @@ export default class ChatChannel extends BaseChannel {
             navigator.mediaDevices.getUserMedia({audio: {
                 channelCount: 1,
                 sampleRate: 24e3,
-                sampleSize: 8 * 2
+                sampleSize: 8 * 2,
             }}).then((stream) => {
 
                 this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' })

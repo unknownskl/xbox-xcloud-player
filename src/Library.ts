@@ -1,4 +1,4 @@
-import DebugChannel from './Channel/Debug'
+// import DebugChannel from './Channel/Debug'
 import InputChannel from './Channel/Input'
 import ControlChannel from './Channel/Control'
 import MessageChannel from './Channel/Message'

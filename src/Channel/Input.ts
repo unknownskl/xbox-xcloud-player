@@ -29,7 +29,7 @@ export interface InputFrame {
 }
 
 export interface PointerFrame {
-    events: Array<any>
+    events: Array<any>;
 }
 
 export interface MouseFrame {
@@ -460,7 +460,8 @@ export default class InputChannel extends BaseChannel {
         //                 metadataReport.setUint32(offset+15, Math.round(l))
         //                 // metadataReport.setUint32(offset+11, shift.events[event].x)
         //                 // metadataReport.setUint32(offset+15, shift.events[event].y)
-        //                 metadataReport.setUint8(offset+19, (shift.events[event].type === 'pointerdown') ? 1 : (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
+        //                 metadataReport.setUint8(offset+19, (shift.events[event].type === 'pointerdown') ? 1 :
+        //                     (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
                         
         //                 console.log('append32:', o)
         //                 console.log('append32:', l)
@@ -541,22 +542,22 @@ export default class InputChannel extends BaseChannel {
     }
 
     onPointerMove(e){
-        e.preventDefault();
+        e.preventDefault()
 
         // if (e.pointerType === 'touch'){
         //     this._mouseActive = false
         //     this._touchActive = true
         // } else if (e.pointerType === 'mouse'){
-            this._mouseActive = true
-            this._touchActive = false
+        this._mouseActive = true
+        this._touchActive = false
         // }
 
         if(this._mouseActive === true){
-            var rect = e.target.getBoundingClientRect();
-                var x = e.clientX - rect.left;
-                var y = e.clientY - rect.top;
-                console.log(e, rect)
-            let [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, rect.width, rect.height)
+            const rect = e.target.getBoundingClientRect()
+            const x = e.clientX - rect.left
+            const y = e.clientY - rect.top
+            console.log(e, rect)
+            const [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, rect.width, rect.height)
             this._mouseStateX = cx
             this._mouseStateY = cy
             this._mouseStateButtons = e.buttons
@@ -577,13 +578,13 @@ export default class InputChannel extends BaseChannel {
     _touchLastPointerId = 0
 
     onPointerClick(e){
-        e.preventDefault();
+        e.preventDefault()
 
         if(this._mouseActive === true){
-            var rect = e.target.getBoundingClientRect();
-                var x = e.clientX - rect.left;
-                var y = e.clientY - rect.top;
-            let [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, rect.width, rect.height)
+            const rect = e.target.getBoundingClientRect()
+            const x = e.clientX - rect.left
+            const y = e.clientY - rect.top
+            const [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, rect.width, rect.height)
             this._mouseStateX = cx
             this._mouseStateY = cy
             this._mouseStateButtons = e.buttons
@@ -601,7 +602,7 @@ export default class InputChannel extends BaseChannel {
     }
 
     onPointerScroll(e){
-        e.preventDefault();
+        e.preventDefault()
         //
         console.log('got onpointerscroll', e)
     }
@@ -642,18 +643,18 @@ export default class InputChannel extends BaseChannel {
     // }
 
     convertAbsoluteMousePositionImpl(e, t, i, n) {
-        let s = i;
-        let a = n;
-        const o = 1920 / 1080;
+        let s = i
+        let a = n
+        const o = 1920 / 1080
         if (o > i / n) {
-            a = s / o;
+            a = s / o
             t -= (n - a) / 2
         } else {
-            s = a * o;
+            s = a * o
             e -= (i - s) / 2
         }
-        e *= 65535 / s;
-        t *= 65535 / a;
+        e *= 65535 / s
+        t *= 65535 / a
         return [e = Math.min(Math.max(Math.round(e), 0), 65535), t = Math.min(Math.max(Math.round(t), 0), 65535)]
     }
 

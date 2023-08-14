@@ -61,10 +61,10 @@ export default class VideoComponent {
             this._videoFps.start()
 
             // Pointer / Mouse events
-            videoRender.addEventListener("pointermove", (e) => this._client.getChannelProcessor('input').onPointerMove(e), { passive: false }),
-            videoRender.addEventListener("pointerdown", (e) => this._client.getChannelProcessor('input').onPointerClick(e), { passive: false }),
-            videoRender.addEventListener("pointerup", (e) => this._client.getChannelProcessor('input').onPointerClick(e), { passive: false }),
-            videoRender.addEventListener("wheel", (e) => this._client.getChannelProcessor('input').onPointerScroll(e), { passive: false })
+            videoRender.addEventListener('pointermove', (e) => this._client.getChannelProcessor('input').onPointerMove(e), { passive: false }),
+            videoRender.addEventListener('pointerdown', (e) => this._client.getChannelProcessor('input').onPointerClick(e), { passive: false }),
+            videoRender.addEventListener('pointerup', (e) => this._client.getChannelProcessor('input').onPointerClick(e), { passive: false }),
+            videoRender.addEventListener('wheel', (e) => this._client.getChannelProcessor('input').onPointerScroll(e), { passive: false })
 
             // videoHolder.addEventListener("touchmove", (e) => this._client.getChannelProcessor('input').onPointerMove(e)),
             // videoHolder.addEventListener("touchstart", (e) => this._client.getChannelProcessor('input').onPointerClick(e)),
