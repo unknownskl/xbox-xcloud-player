@@ -187,10 +187,6 @@ var app = {
     // Setup UI
     //
     setupUI() {
-        client.getEventBus().on('fps_audio', (event) => {
-            const element = document.getElementById('fpsCounter_audio')
-            element.innerHTML = event.fps
-        })
         client.getEventBus().on('fps_video', (event) => {
             const element = document.getElementById('fpsCounter_video')
             element.innerHTML = event.fps
