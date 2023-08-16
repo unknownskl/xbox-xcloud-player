@@ -35,7 +35,7 @@ export default class VideoComponent {
             // videoRender.muted = true
             videoRender.autoplay = true
             videoRender.setAttribute('playsinline', 'playsinline')
-            videoHolder.style.aspectRatio = '16 / 9'
+            // videoHolder.style.aspectRatio = '16 / 9'
 
             videoRender.onclick = () => {
                 videoRender.play()
