@@ -556,7 +556,6 @@ export default class InputChannel extends BaseChannel {
             const rect = e.target.getBoundingClientRect()
             const x = e.clientX - rect.left
             const y = e.clientY - rect.top
-            console.log(e, rect)
             const [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, rect.width, rect.height)
             this._mouseStateX = cx
             this._mouseStateY = cy
@@ -603,22 +602,9 @@ export default class InputChannel extends BaseChannel {
 
     onPointerScroll(e){
         e.preventDefault()
-        //
-        console.log('got onpointerscroll', e)
+        
+        // console.log('got onpointerscroll', e)
     }
-
-    // processMouseClick(x, y, buttons, totalX, totalY){
-    //     let [cx, cy] = this.convertAbsoluteMousePositionImpl(this.lastX, this.lastY, totalX, totalY)
-    //     console.log('mouse dbg:', cx, cy)
-    //     this._mouseFrames.push({
-    //         X: cx,
-    //         Y: cy,
-    //         WheelX: 0,
-    //         WheelY: 0,
-    //         Buttons: buttons,
-    //         Relative: 1, // 0 = Relative, 1 = Absolute
-    //     })
-    // }
 
     _mouseActive = false
     _touchActive = false
@@ -626,21 +612,6 @@ export default class InputChannel extends BaseChannel {
     _mouseStateButtons = 0
     _mouseStateX = 0
     _mouseStateY = 0
-
-    // processMouse(x, y, totalX, totalY){
-    //     let [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, totalX, totalY)
-    //     this.lastX = cx
-    //     this.lastY = cy
-    //     // let [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, totalX, totalY)
-    //     // this._mouseFrames.push({
-    //     //     X: cx,
-    //     //     Y: cy,
-    //     //     WheelX: 0,
-    //     //     WheelY: 0,
-    //     //     Buttons: 0,
-    //     //     Relative: 1, // 0 = Relative, 1 = Absolute
-    //     // })
-    // }
 
     convertAbsoluteMousePositionImpl(e, t, i, n) {
         let s = i
@@ -690,9 +661,7 @@ export default class InputChannel extends BaseChannel {
 
     destroy() {
         this._metadataFps.stop()
-        // this._metadataLatency.stop()
         this._inputFps.stop()
-        // this._inputLatency.stop()
         
         clearInterval(this._inputInterval)
 
@@ -702,11 +671,6 @@ export default class InputChannel extends BaseChannel {
     addProcessedFrame(frame) {
         frame.frameRenderedTimeMs = performance.now()
         this._frameMetadataQueue.push(frame)
-
-        // this._fpsCounter.count()
-
-        //const frameProcessedMs = (performance.now()-frame.firstFramePacketArrivalTimeMs)
-        // this._latencyCounter.count(frameProcessedMs)
     }
 
     getMetadataQueue(size=30) {
