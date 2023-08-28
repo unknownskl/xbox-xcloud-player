@@ -1,6 +1,7 @@
 console.log('Starting xCloudPlayer...')
 
 var client;
+var apiClient;
 
 var app = {
     activeSessionId: -1,
@@ -28,107 +29,162 @@ var app = {
         return new Promise((resolve, reject) => {
 
             if(type === 'xhome') {
-                fetch('/api/start/'+serverId).then(response => {
-                    response.json().then(data => {
-                        console.log('xCloudPlayer Client - /api/start - ok, got:', data)
-                        this.activeSessionId = data.sessionId
+                apiClient.startSession('home', serverId).then((configuration) => {
+                    console.log('xCloudPlayer Client - Stream started. Configuration:', configuration)
 
-                        this.isSessionsReady().then((data) => {
-                            console.log('xCloudPlayer Client - /api/start - Session is ready!', data)
+                    client.setCodecPreferences('video/H264')
+                    client.createOffer().then((offer) => {
 
-                            client.setCodecPreferences('video/H264')
+                        apiClient.sendSDPOffer(offer).then((sdpResponse) => {
+                            var sdpDetails = JSON.parse(sdpResponse.exchangeResponse)
+                            client.setRemoteOffer(sdpDetails.sdp)
 
-                            // Fetch SDP Offer
-                            client.createOffer().then((offer) => {
+                            // Ice
+                            apiClient.sendICECandidates(client.getIceCandidates()).then((iceResponse) => {
+                                
+                                var iceDetails = JSON.parse(iceResponse.exchangeResponse)
+                                console.log('xCloudPlayer Client - ICE Candidates:', iceDetails)
+                                client.setIceCandidates(iceDetails)
 
-                                console.log('xCloudPlayer Client - Got offer data:', offer)
+                                // Listen for connection change
+                                client.getEventBus().on('connectionstate', (event) => {
+                                    console.log(':: Connection state updated:', event)
+                                    const element = document.getElementById('streamStatus')
+                                    element.innerHTML = event.state
 
-                                fetch('/api/config/sdp', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        sdp: offer.sdp
-                                    })
+                                    if(event.state === 'connected'){
+                                        // We are connected
+                                        console.log(':: We are connected!')
+
+                                        this.setupUI()
+
+                                    } else if(event.state === 'closing'){
+                                        // Connection is closing
+                                        console.log(':: We are going to disconnect!')
+
+                                    } else if(event.state === 'closed'){
+                                        // Connection has been closed. We have to cleanup here
+                                        console.log(':: We are disconnected!')
+                                    }
                                 })
-
-                                this.isExchangeReady('/api/config').then((data) => {
-                                    this.isExchangeReady('/api/config/sdp').then((data) => {
-
-                                        console.log('xCloudPlayer Client - SDP Server response:', data)
-
-                                        // Do ICE Handshake
-                                        var sdpDetails = JSON.parse(data.exchangeResponse)
-                                        client.setRemoteOffer(sdpDetails.sdp)
-
-                                        // Send ice config
-                                        fetch('/api/config/ice', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify({
-                                                ice: {
-                                                    candidate: client.getIceCandidates()[0].candidate,
-                                                    sdpMLineIndex: client.getIceCandidates()[0].sdpMLineIndex,
-                                                    sdpMid: client.getIceCandidates()[0].sdpMid,
-                                                }
-                                            })
-                                        })
-
-                                        // ICE Has been set, lets do ICE
-                                        this.isExchangeReady('/api/config/ice').then((data) => {
-                                            // Got ICE Data. Lets add the candidates to webrtc client
-
-                                            var iceDetails = JSON.parse(data.exchangeResponse)
-                                            console.log('xCloudPlayer Client - ICE Candidates:', iceDetails)
-                                            client.setIceCandidates(iceDetails)
-
-                                            // Listen for connection change
-                                            client.getEventBus().on('connectionstate', (event) => {
-                                                console.log(':: Connection state updated:', event)
-                                                const element = document.getElementById('streamStatus')
-                                                element.innerHTML = event.state
-
-                                                if(event.state === 'connected'){
-                                                    // We are connected
-                                                    console.log(':: We are connected!')
-
-                                                    this.setupUI()
-
-                                                } else if(event.state === 'closing'){
-                                                    // Connection is closing
-                                                    console.log(':: We are going to disconnect!')
-
-                                                } else if(event.state === 'closed'){
-                                                    // Connection has been closed. We have to cleanup here
-                                                    console.log(':: We are disconnected!')
-                                                }
-                                            })
-                                            
-
-
-                                            
-                                        }).catch((error) => {
-                                            console.log('xCloudPlayer Client - ICE Exchange error:', error) // Change for throw?
-                                        })
-                                    
-                                    }).catch((error) => {
-                                        console.log('xCloudPlayer Client - SDP Response Offer failed:', error)
-                                    })
-                                }).catch((error) => {
-                                    console.log('xCloudPlayer Client - Configuration failed:', error)
-                                })
-
+    
+                            }).catch((error) => {
+                                console.log('xCloudPlayer Client - sendSDPOffer failed:', error)
                             })
 
-                        }).catch((error)  => {
-                            throw error;
-                            // console.log('/api/start - Could not start session. Error:', error)
+                        }).catch((error) => {
+                            console.log('xCloudPlayer Client - sendSDPOffer failed:', error)
                         })
+
+                    }).catch((error) => {
+                        console.log('xCloudPlayer Client - createOffer failed:', error)
                     })
+
+                }).catch((error) => {
+                    console.error('xCloudPlayer Client - Failed to start session')
                 })
+
+                // fetch('/api/start/'+serverId).then(response => {
+                //     response.json().then(data => {
+                //         console.log('xCloudPlayer Client - /api/start - ok, got:', data)
+                //         this.activeSessionId = data.sessionId
+
+                //         this.isSessionsReady().then((data) => {
+                //             console.log('xCloudPlayer Client - /api/start - Session is ready!', data)
+
+                //             client.setCodecPreferences('video/H264')
+
+                //             // Fetch SDP Offer
+                //             client.createOffer().then((offer) => {
+
+                //                 console.log('xCloudPlayer Client - Got offer data:', offer)
+
+                //                 fetch('/api/config/sdp', {
+                //                     method: 'POST',
+                //                     headers: {
+                //                         'Content-Type': 'application/json'
+                //                     },
+                //                     body: JSON.stringify({
+                //                         sdp: offer.sdp
+                //                     })
+                //                 })
+
+                //                 this.isExchangeReady('/api/config').then((data) => {
+                //                     this.isExchangeReady('/api/config/sdp').then((data) => {
+
+                //                         console.log('xCloudPlayer Client - SDP Server response:', data)
+
+                //                         // Do ICE Handshake
+                //                         var sdpDetails = JSON.parse(data.exchangeResponse)
+                //                         client.setRemoteOffer(sdpDetails.sdp)
+
+                //                         // Send ice config
+                //                         fetch('/api/config/ice', {
+                //                             method: 'POST',
+                //                             headers: {
+                //                                 'Content-Type': 'application/json'
+                //                             },
+                //                             body: JSON.stringify({
+                //                                 ice: {
+                //                                     candidate: client.getIceCandidates()[0].candidate,
+                //                                     sdpMLineIndex: client.getIceCandidates()[0].sdpMLineIndex,
+                //                                     sdpMid: client.getIceCandidates()[0].sdpMid,
+                //                                 }
+                //                             })
+                //                         })
+
+                //                         // ICE Has been set, lets do ICE
+                //                         this.isExchangeReady('/api/config/ice').then((data) => {
+                //                             // Got ICE Data. Lets add the candidates to webrtc client
+
+                //                             var iceDetails = JSON.parse(data.exchangeResponse)
+                //                             console.log('xCloudPlayer Client - ICE Candidates:', iceDetails)
+                //                             client.setIceCandidates(iceDetails)
+
+                //                             // Listen for connection change
+                //                             client.getEventBus().on('connectionstate', (event) => {
+                //                                 console.log(':: Connection state updated:', event)
+                //                                 const element = document.getElementById('streamStatus')
+                //                                 element.innerHTML = event.state
+
+                //                                 if(event.state === 'connected'){
+                //                                     // We are connected
+                //                                     console.log(':: We are connected!')
+
+                //                                     this.setupUI()
+
+                //                                 } else if(event.state === 'closing'){
+                //                                     // Connection is closing
+                //                                     console.log(':: We are going to disconnect!')
+
+                //                                 } else if(event.state === 'closed'){
+                //                                     // Connection has been closed. We have to cleanup here
+                //                                     console.log(':: We are disconnected!')
+                //                                 }
+                //                             })
+                                            
+
+
+                                            
+                //                         }).catch((error) => {
+                //                             console.log('xCloudPlayer Client - ICE Exchange error:', error) // Change for throw?
+                //                         })
+                                    
+                //                     }).catch((error) => {
+                //                         console.log('xCloudPlayer Client - SDP Response Offer failed:', error)
+                //                     })
+                //                 }).catch((error) => {
+                //                     console.log('xCloudPlayer Client - Configuration failed:', error)
+                //                 })
+
+                //             })
+
+                //         }).catch((error)  => {
+                //             throw error;
+                //             // console.log('/api/start - Could not start session. Error:', error)
+                //         })
+                //     })
+                // })
             } else {
                 reject({ error: 'Only xhome is supported as type to start a new session' })
             }
@@ -281,16 +337,17 @@ var app = {
 window.addEventListener('load', (event) => {
     // console.log(xCloudPlayer)
     client = new xCloudPlayer.default('videoHolder', {
-        ui_systemui: [19]
+        ui_systemui: [19],
+        ui_touchenabled: true
     })
 
-    // Retrieve consoles
-    app.getConsoles().then((consoles) => {
+    apiClient = new xCloudPlayer.xCloudPlayerBackend()
+    apiClient.getConsoles().then((consoles) => {
         var consoleDiv = document.getElementById('consolesList')
         var consolesHtml = '';
 
-        for(var device in consoles) {
-            consolesHtml += consoles[device].deviceName+' ('+consoles[device].consoleType+') - '+consoles[device].serverId+' isSameNetwork:'+!consoles[device].outOfHomeWarning+' <button>'+consoles[device].powerState+'</button> <button onclick="app.startSession(\'xhome\', \''+consoles[device].serverId+'\')">Start session</button> <br />'
+        for(var device in consoles.results) {
+            consolesHtml += consoles.results[device].deviceName+' ('+consoles.results[device].consoleType+') - '+consoles.results[device].serverId+' isSameNetwork:'+!consoles.results[device].outOfHomeWarning+' <button>'+consoles.results[device].powerState+'</button> <button onclick="app.startSession(\'xhome\', \''+consoles.results[device].serverId+'\')">Start session</button> <br />'
         }
         consoleDiv.innerHTML = consolesHtml
 

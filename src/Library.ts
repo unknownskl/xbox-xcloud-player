@@ -20,11 +20,199 @@ interface xCloudPlayerConfig {
     sound_force_mono?:boolean; // Force mono sound. Defaults to false
 }
 
+export class xCloudPlayerBackend {
+
+    _config = {
+        locale: 'en-US'
+    }
+
+    sessionId = ''
+
+    setSessionId(sessionId){
+        this.sessionId = sessionId
+    }
+
+    getConsoles(){
+        return this.readBody(fetch('/v6/servers/home'))
+    }
+
+    startSession(type:'home'|'cloud', sessionId){
+        return new Promise((resolve, reject) => {
+            
+            this.readBody(fetch('/v5/sessions/'+type+'/play', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    titleId: (type === 'cloud') ? sessionId : '',
+                    systemUpdateGroup: '',
+                    settings: {
+                        nanoVersion: 'V3;WebrtcTransport.dll',
+                        enableTextToSpeech: false,
+                        highContrast: 0,
+                        locale: this._config.locale,
+                        useIceConnection: false,
+                        timezoneOffsetMinutes: 120,
+                        sdkType: 'web',
+                        osName: 'windows',
+                    },
+                    serverId: (type === 'home') ? sessionId : '',
+                    fallbackRegionNames: [],
+                })
+            })).then((response) => {
+                console.log('Started streaming session:', response.sessionId)
+                this.setSessionId(response.sessionId)
+
+                this.waitState().then((state) => {
+                    this.readBody(fetch('/v5/sessions/home/'+ this.sessionId +'/configuration')).then((configuration) => {
+                        resolve(configuration)
+    
+                    }).catch((error) => {
+                        reject(error)
+                    })
+
+                }).catch((error) => {
+                    reject(error)
+                })
+
+
+            }).catch((error) => {
+                reject(error)
+            })
+        })
+
+    }
+
+    waitState(){
+        return new Promise((resolve, reject) => {
+            console.log('Checking state for stream: ', this)
+            this.readBody(fetch('/v5/sessions/home/'+ this.sessionId +'/state')).then((state) => {
+                switch(state.state){
+                    case 'Provisioned':
+                        resolve(state)
+                        break;
+                    case 'Provisioning':
+                        setTimeout(() => {
+                            this.waitState().then((state) => {
+                                resolve(state)
+                            }).catch((error) => {
+                                reject(error)
+                            })
+                        }, 2000)
+                        break;
+                    default:
+                        console.log('unknown state:', state)
+                        break;
+                }
+
+            }).catch((error) => {
+                reject(error)
+            })
+        })
+    }
+
+    sendSDPOffer(sdpOffer){
+        return new Promise((resolve, reject) => {
+            fetch('/v5/sessions/home/'+this.sessionId+'/sdp', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'messageType':'offer',
+                    'requestId': 1,
+                    'sdp': sdpOffer.sdp,
+                    'configuration':{
+                        'containerizeAudio':false,
+                        'chatConfiguration':{
+                            'bytesPerSample':2,
+                            'expectedClipDurationMs':20,
+                            'format':{
+                                'codec':'opus',
+                                'container':'webm',
+                            },
+                            'numChannels':1,
+                            'sampleFrequencyHz':24000,
+                        },
+                        'chat':{
+                            'minVersion':1,
+                            'maxVersion':1,
+                        },
+                        // 'chatStream':{
+                        //     'minVersion':1,
+                        //     'maxVersion':1,
+                        // },
+                        'control':{
+                            'minVersion':1,
+                            'maxVersion':3,
+                        },
+                        'input':{
+                            'minVersion':1,
+                            'maxVersion':8,
+                        },
+                        'message':{
+                            'minVersion':1,
+                            'maxVersion':1,
+                        },
+                    },
+                })
+            }).then((res) => {
+                this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
+                    resolve(sdpResponse)
+
+                }).catch((error) => {
+                    reject(error)
+                })
+            }).catch((error) => {
+                reject(error)
+            })
+        })
+    }
+
+    sendICECandidates(iceCandidates){
+        return new Promise((resolve, reject) => {
+            fetch('/v5/sessions/home/'+this.sessionId+'/ice', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    iceCandidates
+                })
+            }).then((res) => {
+                this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/ice')).then(iceResponse => {
+                    resolve(iceResponse)
+
+                }).catch((error) => {
+                    reject(error)
+                })
+            }).catch((error) => {
+                reject(error)
+            })
+        })
+    }
+
+    readBody(fetchparam):any{
+        return new Promise((resolve, reject) => {
+            fetchparam.then(response => {
+                response.json().then(data => {
+                    resolve(data)
+                }).catch((error) => {
+                    reject({ error: error })
+                })
+            })
+        })
+    }
+}
+
 export default class xCloudPlayer {
 
     _config:xCloudPlayerConfig
     _webrtcClient:RTCPeerConnection;
-
     _eventBus:EventBus
 
     _isResetting = false
