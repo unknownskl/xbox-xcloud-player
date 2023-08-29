@@ -38,7 +38,7 @@ export default class InputPacket {
     }
 
     setData(metadataQueue:Array<any>, gamepadQueue:Array<InputFrame>, pointerQueue:Array<PointerFrame>, mouseQueue:Array<MouseFrame>, keyboardQueue:Array<KeyboardFrame>){
-        let size = 14;
+        let size = 14
 
         if(metadataQueue.length > 0){
             this._reportType |= ReportTypes.Metadata
@@ -194,52 +194,52 @@ export default class InputPacket {
         }
 
         // for (; frames.length > 0;) {
-            // this._inputFps.count()
-            const shift = frames.shift()
-            if(shift !== undefined){
-                packet.setUint8(offset, shift.events.length)
-                offset++
+        // this._inputFps.count()
+        const shift = frames.shift()
+        if(shift !== undefined){
+            packet.setUint8(offset, shift.events.length)
+            offset++
 
-                const screenWidth = 1920*2
-                const screenHeight = 1080*2
+            const screenWidth = 1920*2
+            const screenHeight = 1080*2
 
-                for(const event in shift.events){
-                    var rect = shift.events[event].target.getBoundingClientRect();
+            for(const event in shift.events){
+                const rect = shift.events[event].target.getBoundingClientRect()
 
-                    let e = 0.06575749909301447 * (screenHeight / 1)
-                        , n = 0.06575749909301447 * (screenWidth / 1);
+                let e = 0.06575749909301447 * (screenHeight / 1)
+                    , n = 0.06575749909301447 * (screenWidth / 1)
 
-                    e=1, n=1
+                e=1, n=1
 
-                    if(shift.events[event].type === 'pointerup'){
-                        e = 0
-                        n = 0
-                    }
-
-                    packet.setUint16(offset, e, true)
-                    packet.setUint16(offset+2, n, true)
-                    packet.setUint8(offset+4, 255*shift.events[event].pressure)
-                    packet.setUint16(offset+5, shift.events[event].twist, true)
-                    packet.setUint32(offset+7, 0, true)
-                    let o = (shift.events[event].x - rect.left) * (screenWidth / rect.width)
-                        , l = (shift.events[event].y - rect.top) * (screenHeight / rect.height);
-
-                    if(shift.events[event].type === 'pointerup'){
-                        // Reset x and y to 0 on pointerup
-                        o = 0
-                        l = 0
-                    }
-
-                    packet.setUint32(offset+11, o, true)
-                    packet.setUint32(offset+15, l, true)
-                    packet.setUint8(offset+19, (shift.events[event].type === 'pointerdown') ? 1 :
-                        (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
-                    
-                    offset = offset+20
-
-                    // console.log('Sending event: ', shift.events[event], pointer, e, n, o, l, rect)
+                if(shift.events[event].type === 'pointerup'){
+                    e = 0
+                    n = 0
                 }
+
+                packet.setUint16(offset, e, true)
+                packet.setUint16(offset+2, n, true)
+                packet.setUint8(offset+4, 255*shift.events[event].pressure)
+                packet.setUint16(offset+5, shift.events[event].twist, true)
+                packet.setUint32(offset+7, 0, true)
+                let o = (shift.events[event].x - rect.left) * (screenWidth / rect.width)
+                    , l = (shift.events[event].y - rect.top) * (screenHeight / rect.height)
+
+                if(shift.events[event].type === 'pointerup'){
+                    // Reset x and y to 0 on pointerup
+                    o = 0
+                    l = 0
+                }
+
+                packet.setUint32(offset+11, o, true)
+                packet.setUint32(offset+15, l, true)
+                packet.setUint8(offset+19, (shift.events[event].type === 'pointerdown') ? 1 :
+                    (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
+                    
+                offset = offset+20
+
+                // console.log('Sending event: ', shift.events[event], pointer, e, n, o, l, rect)
             }
+        }
         // }
 
         return offset
@@ -310,20 +310,15 @@ export default class InputPacket {
 
         let offset = 14
 
-        if(this._metadataFrames.length > 0)
-            offset = this._writeMetadataData(packet, offset, this._metadataFrames)
+        if(this._metadataFrames.length > 0) {offset = this._writeMetadataData(packet, offset, this._metadataFrames)}
 
-        if(this._gamepadFrames.length > 0)
-            offset = this._writeGamepadData(packet, offset, this._gamepadFrames)
+        if(this._gamepadFrames.length > 0) {offset = this._writeGamepadData(packet, offset, this._gamepadFrames)}
         
-        if(this._pointerFrames.length > 0)
-            offset = this._writePointerData(packet, offset, this._pointerFrames)
+        if(this._pointerFrames.length > 0) {offset = this._writePointerData(packet, offset, this._pointerFrames)}
         
-        if(this._mouseFrames.length > 0)
-            offset = this._writeMouseData(packet, offset, this._mouseFrames)
+        if(this._mouseFrames.length > 0) {offset = this._writeMouseData(packet, offset, this._mouseFrames)}
         
-        if(this._keyboardFrames.length > 0)
-            offset = this._writeKeyboardData(packet, offset, this._keyboardFrames)
+        if(this._keyboardFrames.length > 0) {offset = this._writeKeyboardData(packet, offset, this._keyboardFrames)}
 
 
 

@@ -1,6 +1,5 @@
 import 'dotenv/config'
 import express from 'express'
-import * as https from 'https'
 import bodyParser from 'body-parser'
 import proxy from 'express-http-proxy'
 
@@ -22,19 +21,19 @@ app.get(['/', '/sw.js', '/favicon.ico'], (req, res) => {
 
 app.use(proxy('uks.gssv-play-prodxhome.xboxlive.com', {
     https: true,
-    proxyReqOptDecorator: function(proxyReqOpts, srcReq) {
+    proxyReqOptDecorator: function(proxyReqOpts) {
         //   proxyReqOpts.headers = []
 
         proxyReqOpts.headers['Authorization'] = 'Bearer '+process.env.GS_TOKEN
         proxyReqOpts.headers['Content-Type'] = 'application/json; charset=utf-8'
 
-        return proxyReqOpts;
+        return proxyReqOpts
     },
     proxyErrorHandler: function(err, res, next) {
         switch (err && err.code) {
-          case 'ECONNRESET':    { return res.status(503).send('Proxy error: ECONNRESET'); }
-          case 'ECONNREFUSED':  { return res.status(503).send('Proxy error: ECONNREFUSED'); }
-          default:              { next(err); }
+            case 'ECONNRESET': { return res.status(503).send('Proxy error: ECONNRESET') }
+            case 'ECONNREFUSED': { return res.status(503).send('Proxy error: ECONNREFUSED') }
+            default: { next(err) }
         }
-    }
-  }));
+    },
+}))

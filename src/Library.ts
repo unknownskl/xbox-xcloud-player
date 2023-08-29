@@ -19,15 +19,15 @@ interface xCloudPlayerConfig {
     input_driver?:any; // Default: GamepadDriver(), false to disable
     sound_force_mono?:boolean; // Force mono sound. Defaults to false
 
-    input_touch?:boolean
-    input_mousekeyboard?:boolean
-    input_legacykeyboard?:boolean
+    input_touch?:boolean;
+    input_mousekeyboard?:boolean;
+    input_legacykeyboard?:boolean;
 }
 
 export class xCloudPlayerBackend {
 
     _config = {
-        locale: 'en-US'
+        locale: 'en-US',
     }
 
     sessionId = ''
@@ -47,7 +47,7 @@ export class xCloudPlayerBackend {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     clientSessionId: '',
@@ -61,16 +61,16 @@ export class xCloudPlayerBackend {
                         useIceConnection: false,
                         timezoneOffsetMinutes: 120,
                         sdkType: 'web',
-                        osName: 'windows'
+                        osName: 'windows',
                     },
                     serverId: (type === 'home') ? sessionId : '',
                     fallbackRegionNames: [],
-                })
+                }),
             })).then((response) => {
                 console.log('Started streaming session:', response.sessionId)
                 this.setSessionId(response.sessionId)
 
-                this.waitState().then((state) => {
+                this.waitState().then(() => {
                     this.readBody(fetch('/v5/sessions/home/'+ this.sessionId +'/configuration')).then((configuration) => {
                         resolve(configuration)
     
@@ -96,7 +96,7 @@ export class xCloudPlayerBackend {
                 switch(state.state){
                     case 'Provisioned':
                         resolve(state)
-                        break;
+                        break
                     case 'Provisioning':
                         setTimeout(() => {
                             this.waitState().then((state) => {
@@ -105,10 +105,10 @@ export class xCloudPlayerBackend {
                                 reject(error)
                             })
                         }, 2000)
-                        break;
+                        break
                     default:
                         console.log('unknown state:', state)
-                        break;
+                        break
                 }
 
             }).catch((error) => {
@@ -123,7 +123,7 @@ export class xCloudPlayerBackend {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     'messageType':'offer',
@@ -162,8 +162,8 @@ export class xCloudPlayerBackend {
                             'maxVersion':1,
                         },
                     },
-                })
-            }).then((res) => {
+                }),
+            }).then(() => {
                 this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
                     resolve(sdpResponse)
 
@@ -182,12 +182,12 @@ export class xCloudPlayerBackend {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    iceCandidates
-                })
-            }).then((res) => {
+                    iceCandidates,
+                }),
+            }).then(() => {
                 this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/ice')).then(iceResponse => {
                     resolve(iceResponse)
 

@@ -117,8 +117,6 @@ export default class InputChannel extends BaseChannel {
         }
         
         this._inputInterval = setInterval(() => {
-            const reportType = this._reportTypes.None
-
             // Keyboard mask
             if(this._client._config.input_legacykeyboard === true && this.getGamepadQueueLength() === 0){
                 const gpState = this.getClient()._inputDriver.requestState()
@@ -142,7 +140,7 @@ export default class InputChannel extends BaseChannel {
             if(this._client._config.input_touch === true && Object.keys(this._touchEvents).length > 0){
                 for(const pointerEvent in this._touchEvents){
                     this._pointerFrames.push({
-                        events: this._touchEvents[pointerEvent].events
+                        events: this._touchEvents[pointerEvent].events,
                     })
                 }
                 this._touchEvents = {}
@@ -314,8 +312,7 @@ export default class InputChannel extends BaseChannel {
     }
 
     queueGamepadState(input:InputFrame) {
-        if(input !== null)
-            return this._gamepadFrames.push(input)
+        if(input !== null) {return this._gamepadFrames.push(input)}
     }
 
     getPointerQueue(size=2) {
@@ -359,7 +356,7 @@ export default class InputChannel extends BaseChannel {
             this._touchLastPointerId = e.pointerId
             if(this._touchEvents[e.pointerId] === undefined){
                 this._touchEvents[e.pointerId] = {
-                    events: []
+                    events: [],
                 }
             }
             this._touchEvents[e.pointerId].events.push(e)
@@ -394,7 +391,7 @@ export default class InputChannel extends BaseChannel {
             this._touchLastPointerId = e.pointerId
             if(this._touchEvents[e.pointerId] === undefined){
                 this._touchEvents[e.pointerId] = {
-                    events: []
+                    events: [],
                 }
             }
             this._touchEvents[e.pointerId].events.push(e)
