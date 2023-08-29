@@ -2,6 +2,8 @@ import FpsCounter from '../Helper/FpsCounter'
 //import LatencyCounter from '../Helper/LatencyCounter'
 import BaseChannel from './Base'
 
+import InputPacket from './Input/Packet'
+
 export interface InputFrame {
     GamepadIndex: number;
     Nexus: number;
@@ -41,6 +43,12 @@ export interface MouseFrame {
     Relative: number;
 }
 
+export interface KeyboardFrame {
+    pressed: boolean;
+    keyCode: number;
+    key: string;
+}
+
 export default class InputChannel extends BaseChannel {
 
     _inputSequenceNum = 0
@@ -64,7 +72,10 @@ export default class InputChannel extends BaseChannel {
     _pointerFrames:Array<PointerFrame> = []
     _pointerCounter = 1
     _mouseFrames:Array<MouseFrame> = []
+    _keyboardFrames:Array<KeyboardFrame> = []
     _inputInterval
+
+    _keyboardEvents:Array<any> = []
 
     _metadataFps:FpsCounter
     // _metadataLatency:LatencyCounter
@@ -96,17 +107,20 @@ export default class InputChannel extends BaseChannel {
     }
 
     start(){
-        const reportType = this._reportTypes.ClientMetadata
-        const metadataReport = this._createInputPacket(reportType, [], [], [], [])
-        // console.log('metadata report:', metadataReport)
+        const Packet = new InputPacket(this._inputSequenceNum)
+        Packet.setMetadata(2)
 
-        this.send(metadataReport)
+        this.send(Packet.toBuffer())
+
+        if(this._client._config.input_legacykeyboard === false){
+            this.getClient()._inputDriver.run()
+        }
         
         this._inputInterval = setInterval(() => {
             const reportType = this._reportTypes.None
 
             // Keyboard mask
-            if(this.getGamepadQueueLength() === 0){
+            if(this._client._config.input_legacykeyboard === true && this.getGamepadQueueLength() === 0){
                 const gpState = this.getClient()._inputDriver.requestState()
                 const kbState = this.getClient()._keyboardDriver.requestState()
                 const mergedState = this.mergeState(gpState, kbState, this._adhocState)
@@ -114,7 +128,7 @@ export default class InputChannel extends BaseChannel {
                 this.queueGamepadState(mergedState)
             }
 
-            if(this.getMouseQueueLength() === 0){
+            if(this._client._config.input_mousekeyboard === true && this.getMouseQueueLength() === 0){
                 this._mouseFrames.push({
                     X: this._mouseStateX,
                     Y: this._mouseStateY,
@@ -125,16 +139,25 @@ export default class InputChannel extends BaseChannel {
                 })
             }
 
-            // if(Object.keys(this._touchEvents).length > 0){
-            //     console.log('Sending events to queue...')
-            //     for(const pointerEvent in this._touchEvents){
-            //         console.log('queued event:', this._touchEvents[pointerEvent])
-            //         this._pointerFrames.push({
-            //             events: this._touchEvents[pointerEvent].events
-            //         })
-            //     }
-            //     this._touchEvents = {}
-            // }
+            if(this._client._config.input_touch === true && Object.keys(this._touchEvents).length > 0){
+                for(const pointerEvent in this._touchEvents){
+                    this._pointerFrames.push({
+                        events: this._touchEvents[pointerEvent].events
+                    })
+                }
+                this._touchEvents = {}
+            }
+
+            if(this._client._config.input_mousekeyboard === true && this._keyboardEvents.length > 0){
+                for(const kbEvent in this._keyboardEvents){
+                    this._keyboardFrames.push({
+                        pressed: this._keyboardEvents[kbEvent].isPressed,
+                        key: this._keyboardEvents[kbEvent].key,
+                        keyCode: this._keyboardEvents[kbEvent].keyCode,
+                    })
+                }
+                this._keyboardEvents = []
+            }
 
             
 
@@ -142,10 +165,16 @@ export default class InputChannel extends BaseChannel {
             const gamepadQueue = this.getGamepadQueue()
             const pointerQueue = this.getPointerQueue()
             const mouseQueue = this.getMouseQueue()
+            const keyboardQueue = this.getKeyboardQueue()
 
             if(metadataQueue.length !== 0 || gamepadQueue.length !== 0 || pointerQueue.length !== 0 ){
-                const inputReport = this._createInputPacket(reportType, metadataQueue, gamepadQueue, pointerQueue, mouseQueue)
-                this.send(inputReport)
+
+                this._inputSequenceNum++
+                const packet = new InputPacket(this._inputSequenceNum)
+                packet.setData(metadataQueue, gamepadQueue, pointerQueue, mouseQueue, keyboardQueue)
+                // console.log('Sending new format:', packet)
+                
+                this.send(packet.toBuffer())
             }
         }, 32)// 16 ms = 1 frame (1000/60)
     }
@@ -267,250 +296,13 @@ export default class InputChannel extends BaseChannel {
         // console.log('xCloudPlayer Channel/Input.ts - ['+this._channelName+'] onClose:', event)
     }
 
-    _createInputPacket(reportType, metadataQueue:Array<any>, gamepadQueue:Array<InputFrame>, pointerQueue:Array<PointerFrame>, mouseQueue:Array<MouseFrame>) {
+    _createInputPacket(reportType, metadataQueue:Array<any>, gamepadQueue:Array<InputFrame>, pointerQueue:Array<PointerFrame>, mouseQueue:Array<MouseFrame>, keyboardQueue:Array<KeyboardFrame>) {
         this._inputSequenceNum++
-        const packetTimeNow = performance.now()
 
-        let metadataSize = 0
-        let gamepadSize = 0
-        let pointerSize = 0
-        let mouseSize = 0
-
-        let totalSize = 14
-
-        if(metadataQueue.length > 0){
-            reportType |= this._reportTypes.Metadata // Set bitmask for metadata
-            metadataSize = 1 + ((7 * 4) * metadataQueue.length)
-            totalSize += metadataSize
-        }
-
-        if(gamepadQueue.length > 0){
-            reportType |= this._reportTypes.Gamepad // Set bitmask for gamepad data
-            gamepadSize = 1 + (23 * gamepadQueue.length)
-            totalSize += gamepadSize
-        }
-
-        if(pointerQueue.length > 0){
-            reportType |= this._reportTypes.Pointer // Set bitmask for pointer data
-            pointerSize = 1
-            for(const frame in pointerQueue){
-                pointerSize = pointerSize + 1 + (pointerQueue[frame].events.length * 20)
-            }
-            totalSize += pointerSize
-        }
-
-        if(mouseQueue.length > 0){
-            reportType |= this._reportTypes.Mouse // Set bitmask for pointer data
-            mouseSize = 1 + (18 * mouseQueue.length)
-            totalSize += mouseSize
-        }
-
-        if(reportType === this._reportTypes.ClientMetadata){
-            totalSize++
-        }
-
-        const metadataAlloc = new Uint8Array(totalSize)
-        const metadataReport = new DataView(metadataAlloc.buffer)
-        metadataReport.setUint16(0, reportType, true)
-        metadataReport.setUint32(2, this._inputSequenceNum, true)
-        metadataReport.setFloat64(6, performance.now(), true)
-
-        let offset = 14
-
-        if(metadataQueue.length > 0){
-            metadataReport.setUint8(offset, metadataQueue.length)
-            offset++
-
-            for (; metadataQueue.length > 0;) {
-                this._metadataFps.count()
-                const frame = metadataQueue.shift()
-    
-                const firstFramePacketArrivalTimeMs = frame.firstFramePacketArrivalTimeMs
-                const frameSubmittedTimeMs = frame.frameSubmittedTimeMs
-                const frameDecodedTimeMs = frame.frameDecodedTimeMs
-                const frameRenderedTimeMs = frame.frameRenderedTimeMs
-                const framePacketTime = packetTimeNow
-                const frameDateNow = performance.now()
-    
-                metadataReport.setUint32(offset, frame.serverDataKey, true)
-                metadataReport.setUint32(offset+4, firstFramePacketArrivalTimeMs, true)
-                metadataReport.setUint32(offset+8, frameSubmittedTimeMs, true)
-                metadataReport.setUint32(offset+12, frameDecodedTimeMs, true)
-                metadataReport.setUint32(offset+16, frameRenderedTimeMs, true)
-                metadataReport.setUint32(offset+20, framePacketTime, true)
-                metadataReport.setUint32(offset+24, frameDateNow, true)
-    
-                offset += 28
-    
-                // // Measure latency
-                // const metadataDelay = (performance.now()-frame.frameRenderedTimeMs)
-                // this.#metadataLatency.push(metadataDelay)
-                // if(metadataDelay > this.#maxMetadataLatency || this.#maxMetadataLatency ===  undefined){
-                //     this.#maxMetadataLatency = metadataDelay
-    
-                // } else if(metadataDelay < this.#minMetadataLatency || this.#minMetadataLatency ===  undefined){
-                //     this.#minMetadataLatency = metadataDelay
-                // }
-            }
-        }
-
-        if(gamepadQueue.length > 0){
-            metadataReport.setUint8(offset, gamepadQueue.length)
-            offset++
-
-            for (; gamepadQueue.length > 0;) {
-                this._inputFps.count()
-                const shift = gamepadQueue.shift()
-                if(shift !== undefined){
-
-                    const input:InputFrame = shift
-
-                    metadataReport.setUint8(offset, input.GamepadIndex)
-                    offset++
-
-                    let buttonMask = 0
-                    if(input.Nexus > 0){ buttonMask |= 2 }
-                    if(input.Menu > 0){ buttonMask |= 4 }
-                    if(input.View > 0){ buttonMask |= 8 }
-                    if(input.A > 0){ buttonMask |= 16 }
-                    if(input.B > 0){ buttonMask |= 32 }
-                    if(input.X > 0){ buttonMask |= 64 }
-                    if(input.Y > 0){ buttonMask |= 128 }
-                    if(input.DPadUp > 0){ buttonMask |= 256 }
-                    if(input.DPadDown > 0){ buttonMask |= 512 }
-                    if(input.DPadLeft > 0){ buttonMask |= 1024 }
-                    if(input.DPadRight > 0){ buttonMask |= 2048 }
-                    if(input.LeftShoulder > 0){ buttonMask |= 4096 }
-                    if(input.RightShoulder > 0){ buttonMask |= 8192 }
-                    if(input.LeftThumb > 0){ buttonMask |= 16384 }
-                    if(input.RightThumb > 0){ buttonMask |= 32768 }
+        const Packet = new InputPacket(this._inputSequenceNum)
+        Packet.setData(metadataQueue, gamepadQueue, pointerQueue, mouseQueue, keyboardQueue)
         
-                    metadataReport.setUint16(offset, buttonMask, true)
-                    metadataReport.setInt16(offset+2, this.normalizeAxisValue(input.LeftThumbXAxis), true) // LeftThumbXAxis
-                    metadataReport.setInt16(offset+4, this.normalizeAxisValue(-input.LeftThumbYAxis), true) // LeftThumbYAxis
-                    metadataReport.setInt16(offset+6, this.normalizeAxisValue(input.RightThumbXAxis), true) // RightThumbXAxis
-                    metadataReport.setInt16(offset+8, this.normalizeAxisValue(-input.RightThumbYAxis), true) // RightThumbYAxis
-                    metadataReport.setUint16(offset+10, this.normalizeTriggerValue(input.LeftTrigger), true) // LeftTrigger
-                    metadataReport.setUint16(offset+12, this.normalizeTriggerValue(input.RightTrigger), true) // RightTrigger
-
-                    metadataReport.setUint32(offset+14, 0, true) // PhysicalPhysicality
-                    metadataReport.setUint32(offset+18, 0, true) // VirtualPhysicality
-                    offset += 22
-                }
-            }
-        }
-
-        // if(pointerQueue.length > 0){
-        //     console.log('DEBUG generatePointerFrame():')
-        //     metadataReport.setUint8(offset, pointerQueue.length)
-        //     offset++
-        //     console.log('append8:', pointerQueue.length)
-
-
-        //     for (; pointerQueue.length > 0;) {
-        //         // this._inputFps.count()
-        //         const shift = pointerQueue.shift()
-        //         if(shift !== undefined){
-        //             const pointer:PointerFrame = shift
-
-        //             metadataReport.setUint8(offset, pointer.events.length)
-        //             offset++
-        //             console.log('append8:', pointer.events.length)
-
-        //             for(const event in shift.events){
-        //                 var rect = shift.events[event].target.getBoundingClientRect();
-        //                 console.log(rect)
-
-        //                 let e = 0.06575749909301447 * 1080 / 1
-        //                     , n = 0.06575749909301447 * 1920 / 1;
-
-        //                 // console.log('DEBUG 1:', shift.events[event].height, 1080, 1, e)
-        //                 // console.log('DEBUG 2:', shift.events[event].width, 1920, 1, n)
-
-        //                 if(shift.events[event].type === 'pointerup'){
-        //                     e = 0
-        //                     n = 0
-        //                 }
-
-        //                 metadataReport.setUint16(offset, e)
-        //                 metadataReport.setUint16(offset+2, n)
-        //                 // metadataReport.setUint16(offset, shift.events[event].height)
-        //                 // metadataReport.setUint16(offset+2, shift.events[event].width)
-        //                 metadataReport.setUint8(offset+4, 255*shift.events[event].pressure)
-        //                 metadataReport.setUint16(offset+5, shift.events[event].twist)
-        //                 metadataReport.setUint32(offset+7, 0)
-        //                 let o = (shift.events[event].clientX) * 1920 / rect.width
-        //                     , l = (shift.events[event].clientY) * 1080 / rect.height;
-
-        //                 console.log('append16:', e)
-        //                 console.log('append16:', n)
-        //                 console.log('append8:', 255*shift.events[event].pressure)
-        //                 console.log('append16:', shift.events[event].twist)
-        //                 console.log('append32:', 0)
-
-        //                 // console.log('DEBUG 3:', shift.events[event].clientX, 1920, rect.width, o)
-        //                 // console.log('DEBUG 4:', shift.events[event].clientY, 1080, rect.height, l)
-
-        //                 if(shift.events[event].type === 'pointerup'){
-        //                     o = 0
-        //                     l = 0
-        //                 }
-
-        //                 metadataReport.setUint32(offset+11, Math.round(o))
-        //                 metadataReport.setUint32(offset+15, Math.round(l))
-        //                 // metadataReport.setUint32(offset+11, shift.events[event].x)
-        //                 // metadataReport.setUint32(offset+15, shift.events[event].y)
-        //                 metadataReport.setUint8(offset+19, (shift.events[event].type === 'pointerdown') ? 1 :
-        //                     (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
-                        
-        //                 console.log('append32:', o)
-        //                 console.log('append32:', l)
-        //                 console.log('append8:', shift.events[event].type)
-                        
-        //                 offset = offset+20
-
-        //                 console.log('Sending event: ', shift.events[event], pointer, e, n, o, l)
-        //             }
-        //         }
-        //     }
-
-        //     console.log('Data:', metadataReport)
-        // }
-
-        // MouseFrame
-
-        if(mouseQueue.length > 0){
-            metadataReport.setUint8(offset, mouseQueue.length)
-            offset++
-
-            for (; mouseQueue.length > 0;) {
-                this._inputFps.count()
-                const shift = mouseQueue.shift()
-                if(shift !== undefined){
-                    const input:MouseFrame = shift
-
-                    metadataReport.setUint32(offset, input.X, true)
-                    metadataReport.setUint32(offset+4, input.Y, true)
-                    metadataReport.setUint32(offset+8, input.WheelX, true)
-                    metadataReport.setUint32(offset+12, input.WheelY, true)
-
-                    metadataReport.setUint8(offset+16, input.Buttons)
-                    metadataReport.setUint8(offset+17, input.Relative)
-                    offset += 18
-                }
-            }
-        }
-
-        // KeyboardFrame
-
-        // SendorFrame
-
-        if(reportType === this._reportTypes.ClientMetadata){
-            metadataReport.setUint8(offset, 0) // Max Touchpoints
-            offset++
-        }
-
-        return metadataReport
+        return Packet.toBuffer()
     }
 
     getGamepadQueue(size=30) {
@@ -522,10 +314,11 @@ export default class InputChannel extends BaseChannel {
     }
 
     queueGamepadState(input:InputFrame) {
-        return this._gamepadFrames.push(input)
+        if(input !== null)
+            return this._gamepadFrames.push(input)
     }
 
-    getPointerQueue(size=30) {
+    getPointerQueue(size=2) {
         return this._pointerFrames.splice(0, (size-1))
     }
 
@@ -541,16 +334,16 @@ export default class InputChannel extends BaseChannel {
         return this._mouseFrames.length
     }
 
+    getKeyboardQueue(size=30) {
+        return this._keyboardFrames.splice(0, (size-1))
+    }
+
+    getKeyboardQueueLength() {
+        return this._keyboardFrames.length
+    }
+
     onPointerMove(e){
         e.preventDefault()
-
-        // if (e.pointerType === 'touch'){
-        //     this._mouseActive = false
-        //     this._touchActive = true
-        // } else if (e.pointerType === 'mouse'){
-        this._mouseActive = true
-        this._touchActive = false
-        // }
 
         if(this._mouseActive === true){
             const rect = e.target.getBoundingClientRect()
@@ -562,15 +355,15 @@ export default class InputChannel extends BaseChannel {
             this._mouseStateButtons = e.buttons
         }
 
-        // if(this._touchActive === true){
-        //     this._touchLastPointerId = e.pointerId
-        //     if(this._touchEvents[e.pointerId] === undefined){
-        //         this._touchEvents[e.pointerId] = {
-        //             events: []
-        //         }
-        //     }
-        //     this._touchEvents[e.pointerId].events.push(e)
-        // }
+        if(this._touchActive === true){
+            this._touchLastPointerId = e.pointerId
+            if(this._touchEvents[e.pointerId] === undefined){
+                this._touchEvents[e.pointerId] = {
+                    events: []
+                }
+            }
+            this._touchEvents[e.pointerId].events.push(e)
+        }
     }
 
     _touchEvents = {}
@@ -579,6 +372,14 @@ export default class InputChannel extends BaseChannel {
     onPointerClick(e){
         e.preventDefault()
 
+        if (e.pointerType === 'touch'){
+            this._mouseActive = false
+            this._touchActive = true
+        } else if (e.pointerType === 'mouse'){
+            this._mouseActive = true
+            this._touchActive = false
+        }
+
         if(this._mouseActive === true){
             const rect = e.target.getBoundingClientRect()
             const x = e.clientX - rect.left
@@ -589,15 +390,15 @@ export default class InputChannel extends BaseChannel {
             this._mouseStateButtons = e.buttons
         }
 
-        // if(this._touchActive === true){
-        //     this._touchLastPointerId = e.pointerId
-        //     if(this._touchEvents[e.pointerId] === undefined){
-        //         this._touchEvents[e.pointerId] = {
-        //             events: []
-        //         }
-        //     }
-        //     this._touchEvents[e.pointerId].events.push(e)
-        // }
+        if(this._touchActive === true){
+            this._touchLastPointerId = e.pointerId
+            if(this._touchEvents[e.pointerId] === undefined){
+                this._touchEvents[e.pointerId] = {
+                    events: []
+                }
+            }
+            this._touchEvents[e.pointerId].events.push(e)
+        }
     }
 
     onPointerScroll(e){
@@ -612,6 +413,17 @@ export default class InputChannel extends BaseChannel {
     _mouseStateButtons = 0
     _mouseStateX = 0
     _mouseStateY = 0
+
+
+    onKeyDown(event){
+        event.isPressed = true
+        this._keyboardEvents.push(event)
+    }
+
+    onKeyUp(event){
+        event.isPressed = false
+        this._keyboardEvents.push(event)
+    }
 
     convertAbsoluteMousePositionImpl(e, t, i, n) {
         let s = i

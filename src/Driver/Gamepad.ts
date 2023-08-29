@@ -23,6 +23,12 @@ export default class GamepadDriver {
         // console.log('xCloudPlayer Driver/Gamepad.ts - Stop collecting events:', this._gamepads)
     }
 
+    run(){
+        this._application?.getChannelProcessor('input').queueGamepadState(this.requestState())
+
+        requestAnimationFrame(() => { this.run() })
+    }
+
     requestState() : InputFrame | null {
         const gamepads = navigator.getGamepads()
         let foundActive = false

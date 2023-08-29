@@ -18,6 +18,10 @@ interface xCloudPlayerConfig {
     ui_touchenabled?:boolean;
     input_driver?:any; // Default: GamepadDriver(), false to disable
     sound_force_mono?:boolean; // Force mono sound. Defaults to false
+
+    input_touch?:boolean
+    input_mousekeyboard?:boolean
+    input_legacykeyboard?:boolean
 }
 
 export class xCloudPlayerBackend {
@@ -46,6 +50,7 @@ export class xCloudPlayerBackend {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    clientSessionId: '',
                     titleId: (type === 'cloud') ? sessionId : '',
                     systemUpdateGroup: '',
                     settings: {
@@ -56,7 +61,7 @@ export class xCloudPlayerBackend {
                         useIceConnection: false,
                         timezoneOffsetMinutes: 120,
                         sdkType: 'web',
-                        osName: 'windows',
+                        osName: 'windows'
                     },
                     serverId: (type === 'home') ? sessionId : '',
                     fallbackRegionNames: [],
@@ -87,7 +92,6 @@ export class xCloudPlayerBackend {
 
     waitState(){
         return new Promise((resolve, reject) => {
-            console.log('Checking state for stream: ', this)
             this.readBody(fetch('/v5/sessions/home/'+ this.sessionId +'/state')).then((state) => {
                 switch(state.state){
                     case 'Provisioned':
@@ -269,7 +273,11 @@ export default class xCloudPlayer {
     constructor(elementId:string, config:xCloudPlayerConfig = {}) {
         console.log('xCloudPlayer loaded!')
 
-        this._config = config
+        this._config = Object.assign({
+            input_touch: false,
+            input_mousekeyboard: false,
+            input_legacykeyboard: true,
+        }, config)
 
         this._eventBus = new EventBus()
         this._elementHolder = elementId
