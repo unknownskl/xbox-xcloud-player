@@ -346,26 +346,26 @@ export default class InputChannel extends BaseChannel {
 
     requestPointerLockWithUnadjustedMovement(element) {
         const promise = element.requestPointerLock({
-          unadjustedMovement: true,
-        });
+            unadjustedMovement: true,
+        })
 
         if ('keyboard' in navigator && 'lock' in (navigator.keyboard as any)) {
             document.body.requestFullscreen().then(() => {
-                (navigator as any).keyboard.lock();
-            });
+                (navigator as any).keyboard.lock()
+            })
         }
       
         return promise.then(() => {
-            console.log("pointer is locked")
+            console.log('pointer is locked')
             this._mouseLocked = true
 
         }).catch((error) => {
-            if (error.name === "NotSupportedError") {
+            if (error.name === 'NotSupportedError') {
 
                 this._mouseLocked = true
-                return element.requestPointerLock();
+                return element.requestPointerLock()
             }
-        });
+        })
     }
 
     _touchEvents = {}
@@ -393,13 +393,13 @@ export default class InputChannel extends BaseChannel {
                 }
             }, false)
             document.addEventListener('systemkeyboardlockchanged', event => {
-                // console.log(event)
+                console.log(event)
                 // // if (event.systemKeyboardLockEnabled) {
                 // //   console.log('System keyboard lock enabled.')
                 // // } else {
                 // //   console.log('System keyboard lock disabled.')
                 // // }
-            }, false);
+            }, false)
         } else if(this._mouseActive === true && this._mouseLocked === true){
             this._mouseStateX = e.movementX
             this._mouseStateY = e.movementY

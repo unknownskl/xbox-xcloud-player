@@ -1,13 +1,13 @@
 {
   "name": "xbox-xcloud-player",
-  "version": "0.2.0-beta12",
+  "version": "0.2.0-beta13",
   "description": "",
   "main": "dist/Library.js",
   "scripts": {
     "start": "rm -rf dist && tsc && webpack && node dist/Server.js",
     "build": "rm -rf dist && tsc && webpack",
     "watch": "npm run build && nodemon",
-    "lint": "eslint src/",
+    "lint": "eslint src/ --fix",
     "webpack": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
