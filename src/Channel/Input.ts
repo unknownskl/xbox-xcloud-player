@@ -126,17 +126,6 @@ export default class InputChannel extends BaseChannel {
                 this.queueGamepadState(mergedState)
             }
 
-            if(this._client._config.input_mousekeyboard === true && this.getMouseQueueLength() === 0){
-                this._mouseFrames.push({
-                    X: this._mouseStateX,
-                    Y: this._mouseStateY,
-                    WheelX: 0,
-                    WheelY: 0,
-                    Buttons: this._mouseStateButtons,
-                    Relative: 1, // 0 = Relative, 1 = Absolute
-                })
-            }
-
             if(this._client._config.input_touch === true && Object.keys(this._touchEvents).length > 0){
                 for(const pointerEvent in this._touchEvents){
                     this._pointerFrames.push({
@@ -145,19 +134,6 @@ export default class InputChannel extends BaseChannel {
                 }
                 this._touchEvents = {}
             }
-
-            if(this._client._config.input_mousekeyboard === true && this._keyboardEvents.length > 0){
-                for(const kbEvent in this._keyboardEvents){
-                    this._keyboardFrames.push({
-                        pressed: this._keyboardEvents[kbEvent].isPressed,
-                        key: this._keyboardEvents[kbEvent].key,
-                        keyCode: this._keyboardEvents[kbEvent].keyCode,
-                    })
-                }
-                this._keyboardEvents = []
-            }
-
-            
 
             const metadataQueue = this.getMetadataQueue()
             const gamepadQueue = this.getGamepadQueue()
@@ -174,7 +150,7 @@ export default class InputChannel extends BaseChannel {
                 
                 this.send(packet.toBuffer())
             }
-        }, 32)// 16 ms = 1 frame (1000/60)
+        }, 16)// 16 ms = 1 frame (1000/60)
     }
 
     mergeState(gpState:InputFrame, kbState:InputFrame, adHoc:InputFrame):InputFrame{
@@ -331,7 +307,7 @@ export default class InputChannel extends BaseChannel {
         return this._mouseFrames.length
     }
 
-    getKeyboardQueue(size=30) {
+    getKeyboardQueue(size=2) {
         return this._keyboardFrames.splice(0, (size-1))
     }
 
@@ -342,14 +318,19 @@ export default class InputChannel extends BaseChannel {
     onPointerMove(e){
         e.preventDefault()
 
-        if(this._mouseActive === true){
-            const rect = e.target.getBoundingClientRect()
-            const x = e.clientX - rect.left
-            const y = e.clientY - rect.top
-            const [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, rect.width, rect.height)
-            this._mouseStateX = cx
-            this._mouseStateY = cy
+        if(this._mouseActive === true && this._mouseLocked === true){
+            this._mouseStateX = e.movementX
+            this._mouseStateY = e.movementY
             this._mouseStateButtons = e.buttons
+
+            this._mouseFrames.push({
+                X: this._mouseStateX*10,
+                Y: this._mouseStateY*10,
+                WheelX: 0,
+                WheelY: 0,
+                Buttons: this._mouseStateButtons,
+                Relative: 0, // 0 = Relative, 1 = Absolute
+            })
         }
 
         if(this._touchActive === true){
@@ -361,6 +342,30 @@ export default class InputChannel extends BaseChannel {
             }
             this._touchEvents[e.pointerId].events.push(e)
         }
+    }
+
+    requestPointerLockWithUnadjustedMovement(element) {
+        const promise = element.requestPointerLock({
+          unadjustedMovement: true,
+        });
+
+        if ('keyboard' in navigator && 'lock' in (navigator.keyboard as any)) {
+            document.body.requestFullscreen().then(() => {
+                (navigator as any).keyboard.lock();
+            });
+        }
+      
+        return promise.then(() => {
+            console.log("pointer is locked")
+            this._mouseLocked = true
+
+        }).catch((error) => {
+            if (error.name === "NotSupportedError") {
+
+                this._mouseLocked = true
+                return element.requestPointerLock();
+            }
+        });
     }
 
     _touchEvents = {}
@@ -377,14 +382,37 @@ export default class InputChannel extends BaseChannel {
             this._touchActive = false
         }
 
-        if(this._mouseActive === true){
-            const rect = e.target.getBoundingClientRect()
-            const x = e.clientX - rect.left
-            const y = e.clientY - rect.top
-            const [cx, cy] = this.convertAbsoluteMousePositionImpl(x, y, rect.width, rect.height)
-            this._mouseStateX = cx
-            this._mouseStateY = cy
+        if(this._client._config.input_mousekeyboard === true && this._mouseActive === true && this._mouseLocked === false){
+
+            this.requestPointerLockWithUnadjustedMovement(e.target)
+            document.addEventListener('pointerlockchange', () => {
+                if(document.pointerLockElement !== null){
+                    this._mouseLocked = true
+                } else {
+                    this._mouseLocked = false
+                }
+            }, false)
+            document.addEventListener('systemkeyboardlockchanged', event => {
+                // console.log(event)
+                // // if (event.systemKeyboardLockEnabled) {
+                // //   console.log('System keyboard lock enabled.')
+                // // } else {
+                // //   console.log('System keyboard lock disabled.')
+                // // }
+            }, false);
+        } else if(this._mouseActive === true && this._mouseLocked === true){
+            this._mouseStateX = e.movementX
+            this._mouseStateY = e.movementY
             this._mouseStateButtons = e.buttons
+
+            this._mouseFrames.push({
+                X: this._mouseStateX*10,
+                Y: this._mouseStateY*10,
+                WheelX: 0,
+                WheelY: 0,
+                Buttons: this._mouseStateButtons,
+                Relative: 0, // 0 = Relative, 1 = Absolute
+            })
         }
 
         if(this._touchActive === true){
@@ -405,6 +433,7 @@ export default class InputChannel extends BaseChannel {
     }
 
     _mouseActive = false
+    _mouseLocked = false
     _touchActive = false
 
     _mouseStateButtons = 0
@@ -413,14 +442,52 @@ export default class InputChannel extends BaseChannel {
 
 
     onKeyDown(event){
-        event.isPressed = true
-        this._keyboardEvents.push(event)
+        if(this._mouseActive === true && this._mouseLocked === true){
+            if(this._keyboardButtonsState[event.keyCode] !== true){
+                this._keyboardButtonsState[event.keyCode] = true
+
+                // console.log('keyDown', event.keyCode)
+
+                this._keyboardFrames.push({
+                    pressed: true,
+                    key: event.key,
+                    keyCode: event.keyCode,
+                })
+
+                setTimeout(() => {
+                    this._keyboardFrames.push({
+                        pressed: true,
+                        key: event.key,
+                        keyCode: event.keyCode,
+                    })
+                }, 16)
+            }
+        }
     }
 
     onKeyUp(event){
-        event.isPressed = false
-        this._keyboardEvents.push(event)
+        if(this._mouseActive === true && this._mouseLocked === true){
+            this._keyboardButtonsState[event.keyCode] = false
+
+            // console.log('keyUp', event.keyCode)
+
+            this._keyboardFrames.push({
+                pressed: false,
+                key: event.key,
+                keyCode: event.keyCode,
+            })
+
+            setTimeout(() => {
+                this._keyboardFrames.push({
+                    pressed: false,
+                    key: event.key,
+                    keyCode: event.keyCode,
+                })
+            }, 16)
+        }
     }
+
+    _keyboardButtonsState = {}
 
     convertAbsoluteMousePositionImpl(e, t, i, n) {
         let s = i
