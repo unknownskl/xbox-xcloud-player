@@ -195,23 +195,27 @@ export default class InputChannel extends BaseChannel {
 
         let i = 0
         const reportType = dataView.getUint8(i)
-        i++
+        const unk1 = dataView.getUint8(i+1)
+        i += 2
+
 
         if(reportType === this._reportTypes.Vibration){
             dataView.getUint8(i) // rumbleType: 0 = FourMotorRumble
+            const gamepadIndex = dataView.getUint8(i+1) // Gamepadindex?
+            // console.log('gamepad: ', gamepadIndex, unk1)
             i += 2 // Read one unknown byte extra
 
             const leftMotorPercent = dataView.getUint8(i) / 100
             const rightMotorPercent = dataView.getUint8(i+1) / 100
             const leftTriggerMotorPercent = dataView.getUint8(i+2) / 100
             const rightTriggerMotorPercent = dataView.getUint8(i+3) / 100
-            const durationMs = dataView.getUint16(i+4, !0)
-            const delayMs = dataView.getUint16(i+6, !0)
+            const durationMs = dataView.getUint16(i+4, true)
+            const delayMs = dataView.getUint16(i+6, true)
             const repeat = dataView.getUint8(i+8)
             i += 9
 
             // Check if we have an active gamepad and rumble enabled
-            const gamepad = navigator.getGamepads()[0]
+            const gamepad = (navigator.getGamepads()[0] as any)
             if(gamepad !== null && this._rumbleEnabled === true){
 
                 const rumbleData = {
@@ -227,10 +231,10 @@ export default class InputChannel extends BaseChannel {
                 if(this._rumbleInterval !== undefined){
                     clearInterval(this._rumbleInterval)
                 }
+                
+                if(gamepad.vibrationActuator !== undefined) {
 
-                if((gamepad as any).vibrationActuator !== undefined) {
-
-                    if((gamepad as any).vibrationActuator.type === 'dual-rumble') {
+                    if(gamepad.vibrationActuator.type === 'dual-rumble') {
                         const intensityRumble = rightMotorPercent < .6 ? (.6 - rightMotorPercent) / 2 : 0
                         const intensityRumbleTriggers = (leftTriggerMotorPercent + rightTriggerMotorPercent) / 4
                         const endIntensity = Math.min(intensityRumble, intensityRumbleTriggers)
@@ -242,7 +246,7 @@ export default class InputChannel extends BaseChannel {
                         rumbleData.rightTrigger = 0
                     }
 
-                    (gamepad as any).vibrationActuator.playEffect((gamepad as any).vibrationActuator.type, rumbleData)
+                    gamepad.vibrationActuator?.playEffect(gamepad.vibrationActuator.type, rumbleData)
 
                     if(repeat > 0) {
                         let repeatCount = repeat
@@ -252,8 +256,8 @@ export default class InputChannel extends BaseChannel {
                                 clearInterval(this._rumbleInterval)
                             }
 
-                            if((gamepad as any).vibrationActuator !== undefined) {
-                                (gamepad as any).vibrationActuator.playEffect((gamepad as any).vibrationActuator.type, rumbleData)
+                            if(gamepad.vibrationActuator !== undefined) {
+                                gamepad.vibrationActuator?.playEffect(gamepad.vibrationActuator.type, rumbleData)
                             }
                             repeatCount--
                         }, delayMs + durationMs)
