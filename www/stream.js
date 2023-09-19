@@ -168,7 +168,8 @@ window.addEventListener('load', (event) => {
     // console.log(xCloudPlayer)
     client = new xCloudPlayer.default('videoHolder', {
         ui_systemui: [],
-        ui_touchenabled: true
+        ui_touchenabled: true,
+        input_legacykeyboard: false
     })
 
     apiClient = new xCloudPlayer.xCloudPlayerBackend()
@@ -186,5 +187,15 @@ window.addEventListener('load', (event) => {
         consoleDiv.innerHTML = JSON.stringify(error)
     })
 
+    client.setSdpHandler((client, offer) => {
+        console.log('handle sdp negotiation:', client, offer)
+
+        apiClient.sendSDPChatOffer(offer).then((sdpResponse) => {
+            var sdpDetails = JSON.parse(sdpResponse.exchangeResponse)
+            client.setRemoteOffer(sdpDetails.sdp)
+        }).catch((error) => {
+            console.log('SDP Error:', error)
+        })
+    })
 
 })

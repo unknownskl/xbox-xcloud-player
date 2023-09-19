@@ -1,8 +1,7 @@
 import BaseChannel from './Base'
 
 export default class ChatChannel extends BaseChannel {
-    _mediaRecorder
-
+    isCapturing = false
     isPaused = true
 
     onOpen(event) {
@@ -29,44 +28,51 @@ export default class ChatChannel extends BaseChannel {
     startMic() {
         console.log('xCloudPlayer Channel/Chat.ts - Enabling Microphone')
 
-        if(this._mediaRecorder === undefined){
+        if(this.isCapturing === false){
+            console.log('Start chat...')
+            
+            navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    sampleRate: 24e3,
+                }
+            }).then((stream) => {
+                this.isCapturing = true
 
-            navigator.mediaDevices.getUserMedia({audio: {
-                channelCount: 1,
-                sampleRate: 24e3,
-                sampleSize: 8 * 2,
-            }}).then((stream) => {
-
-                this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' })
-                this._mediaRecorder.start(20)
-
-                this._mediaRecorder.ondataavailable = (event) => {
-                    if(this._state === 'connected' && this.isPaused === false){
-                        event.data.arrayBuffer().then((data) => {
-                            // console.log('sending mic data:', data)
-                            this.send(data)
-                        })
-                    }
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    console.log(`Using Audio device: ${audioTracks[0].label}`);
+                } else {
+                    console.log(`No Audio device:`, audioTracks);
                 }
 
-            }).catch((err) => {
-                console.log('xCloudPlayer Channel/Chat.ts - Error opening microphone:', err)
+                stream.getTracks().forEach(track => {
+                    this._client._webrtcClient.addTrack(track, stream)
+                })
+
+                this._client.sdpNegotiationChat()
+
+            }).catch(e => {
+                alert(`getUserMedia() error: ${e.name}`)
+                this.isCapturing = false
             })
         }
 
         this.isPaused = false
     }
 
-    pauseMic(){
-        this.isPaused = true
-    }
-
-    unpauseMic(){
-        this.isPaused = false
-    }
-
     stopMic() {
         console.log('xCloudPlayer Channel/Chat.ts - Disabling Microphone')
+        const senders = this._client._webrtcClient.getSenders()
+        for(const sender in senders){
+            if(senders[sender].track !== null){
+                if(senders[sender].track?.kind === 'audio'){
+                    this._client._webrtcClient.removeTrack(senders[sender])
+                }
+            }
+        }
+        
+        this.isCapturing = false
         this.isPaused = true
     }
 }

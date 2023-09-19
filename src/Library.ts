@@ -145,10 +145,10 @@ export class xCloudPlayerBackend {
                             'minVersion':1,
                             'maxVersion':1,
                         },
-                        // 'chatStream':{
-                        //     'minVersion':1,
-                        //     'maxVersion':1,
-                        // },
+                        'chatStream':{
+                            'minVersion':1,
+                            'maxVersion':1,
+                        },
                         'control':{
                             'minVersion':1,
                             'maxVersion':3,
@@ -163,8 +163,65 @@ export class xCloudPlayerBackend {
                         },
                     },
                 }),
-            }).then(() => {
+            }).then((res) => {
                 this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
+                    if(sdpResponse === 'retry'){
+                        const checkInterval = setInterval(() => {
+                            this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
+                                if(sdpResponse !== 'retry'){
+                                    resolve(sdpResponse)
+                                    clearInterval(checkInterval)
+                                }
+            
+                            }).catch((error) => {
+                                reject(error)
+                                clearInterval(checkInterval)
+                            })
+                        }, 1000)
+                    }
+                    resolve(sdpResponse)
+
+                }).catch((error) => {
+                    reject(error)
+                })
+            }).catch((error) => {
+                reject(error)
+            })
+        })
+    }
+
+    sendSDPChatOffer(sdpOffer){
+        return new Promise((resolve, reject) => {
+            fetch('/v5/sessions/home/'+this.sessionId+'/sdp', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'messageType':'offer',
+                    'requestId': 2,
+                    'sdp': sdpOffer.sdp,
+                    'configuration':{
+                        'isMediaStreamsChatRenegotiation': true,
+                    },
+                }),
+            }).then((res) => {
+                this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
+                    if(sdpResponse === 'retry'){
+                        const checkInterval = setInterval(() => {
+                            this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
+                                if(sdpResponse !== 'retry'){
+                                    resolve(sdpResponse)
+                                    clearInterval(checkInterval)
+                                }
+            
+                            }).catch((error) => {
+                                reject(error)
+                                clearInterval(checkInterval)
+                            })
+                        }, 1000)
+                    }
                     resolve(sdpResponse)
 
                 }).catch((error) => {
@@ -203,11 +260,15 @@ export class xCloudPlayerBackend {
     readBody(fetchparam):any{
         return new Promise((resolve, reject) => {
             fetchparam.then(response => {
-                response.json().then(data => {
-                    resolve(data)
-                }).catch((error) => {
-                    reject({ error: error })
-                })
+                if(response.status === 204){
+                    resolve('retry')
+                } else {
+                    response.json().then(data => {
+                        resolve(data)
+                    }).catch((error) => {
+                        reject({ error: error })
+                    })
+                }
             })
         })
     }
@@ -357,6 +418,18 @@ export default class xCloudPlayer {
                 resolve(offer)
             })
         })
+    }
+
+    _sdpHandler
+
+    sdpNegotiationChat(){
+        this.createOffer().then((offer) => {
+            this._sdpHandler(this, offer)
+        })
+    }
+
+    setSdpHandler(listener){
+        this._sdpHandler = listener
     }
 
     setAudioBitrate(bitrate_kbps:number){

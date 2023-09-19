@@ -535,8 +535,8 @@ export default class InputChannel extends BaseChannel {
         return n > t ? t : n < a ? a : this._convertToInt16(n)
     }
 
-    pressButton(index:number, input:InputFrame){
-        this._adhocState = input
+    pressButton(index:number, button:string){
+        this._client._inputDriver.pressButton(index, button)
     }
 
     destroy() {
