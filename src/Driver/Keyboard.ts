@@ -53,7 +53,6 @@ export default class KeyboardDriver {
     } as InputFrame
 
     _downFunc = (e: KeyboardEvent) => { this.onKeyChange(e, true) }
-
     _upFunc = (e: KeyboardEvent) => { this.onKeyChange(e, false) }
 
     start() {
@@ -67,7 +66,6 @@ export default class KeyboardDriver {
     }
 
     onKeyDown(e) { this.onKeyChange(e, true) }
-
     onKeyUp(e) { this.onKeyChange(e, false) }
 
     onKeyChange(e: KeyboardEvent, down: boolean) {
@@ -125,6 +123,13 @@ export default class KeyboardDriver {
 
     requestState(): InputFrame {
         return this._keyboardState
+    }
+
+    pressButton(button:string) {
+        this._keyboardState[button] = true
+        setTimeout(() => {
+            this._keyboardState[button] = false
+        }, 60)
     }
 
 }

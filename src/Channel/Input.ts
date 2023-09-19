@@ -536,7 +536,11 @@ export default class InputChannel extends BaseChannel {
     }
 
     pressButton(index:number, button:string){
-        this._client._inputDriver.pressButton(index, button)
+        if(this._client._config.input_legacykeyboard === true){
+            this._client._keyboardDriver.pressButton(button)
+        } else {
+            this._client._inputDriver.pressButton(index, button)
+        }
     }
 
     destroy() {

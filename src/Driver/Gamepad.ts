@@ -57,7 +57,7 @@ export default class GamepadDriver {
         setTimeout(() => {
             this._shadowGamepad[index][button] = 0
             this._application?.getChannelProcessor('input').queueGamepadState(this._shadowGamepad[index])
-        }, 150)
+        }, 60)
     }
 
     run(){
