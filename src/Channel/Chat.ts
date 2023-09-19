@@ -35,15 +35,15 @@ export default class ChatChannel extends BaseChannel {
                 audio: {
                     channelCount: 1,
                     sampleRate: 24e3,
-                }
+                },
             }).then((stream) => {
                 this.isCapturing = true
 
-                const audioTracks = stream.getAudioTracks();
+                const audioTracks = stream.getAudioTracks()
                 if (audioTracks.length > 0) {
-                    console.log(`Using Audio device: ${audioTracks[0].label}`);
+                    console.log(`Using Audio device: ${audioTracks[0].label}`)
                 } else {
-                    console.log(`No Audio device:`, audioTracks);
+                    console.log('No Audio device:', audioTracks)
                 }
 
                 stream.getTracks().forEach(track => {

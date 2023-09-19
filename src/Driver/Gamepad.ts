@@ -32,7 +32,7 @@ export default class GamepadDriver {
             LeftThumbYAxis: 0.0,
             RightThumbXAxis: 0.0,
             RightThumbYAxis: 0.0,
-        }
+        },
     }
 
     // constructor() {
