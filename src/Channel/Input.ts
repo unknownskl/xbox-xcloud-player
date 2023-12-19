@@ -232,8 +232,7 @@ export default class InputChannel extends BaseChannel {
                     clearInterval(this._rumbleInterval)
                 }
                 
-                if(gamepad.vibrationActuator !== undefined) {
-
+                if(gamepad.vibrationActuator !== null) {
                     if(gamepad.vibrationActuator.type === 'dual-rumble') {
                         const intensityRumble = rightMotorPercent < .6 ? (.6 - rightMotorPercent) / 2 : 0
                         const intensityRumbleTriggers = (leftTriggerMotorPercent + rightTriggerMotorPercent) / 4
