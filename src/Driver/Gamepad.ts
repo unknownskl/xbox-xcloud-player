@@ -43,6 +43,8 @@ export default class GamepadDriver {
     }
 
     start() {
+        this._activeGamepads = { 0: false, 1: false, 2: false, 3: false}
+        
         // console.log('xCloudPlayer Driver/Gamepad.ts - Start collecting events:', this._gamepads)
         this._activeGamepadsInterval = setInterval(() => {
             const gamepads = navigator.getGamepads()
