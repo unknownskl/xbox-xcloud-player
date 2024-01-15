@@ -51,6 +51,10 @@ export default class GamepadDriver {
 
             for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
 
+                // Check if the control channel is open
+                if(this._application?.getChannelProcessor('control') === undefined)
+                    return
+
                 if(gamepads[gamepad] === null && this._activeGamepads[gamepad] === true) {
                     this._application?.getChannelProcessor('control').sendGamepadRemoved(gamepad)
                     this._activeGamepads[gamepad] = false
