@@ -83,7 +83,7 @@ export default class InputChannel extends BaseChannel {
     _inputFps:FpsCounter
     // _inputLatency:LatencyCounter
 
-    _rumbleInterval
+    _rumbleInterval = {0: undefined, 1: undefined, 2: undefined, 3: undefined }
     _rumbleEnabled = true
     _adhocState
 
@@ -215,7 +215,7 @@ export default class InputChannel extends BaseChannel {
             i += 9
 
             // Check if we have an active gamepad and rumble enabled
-            const gamepad = (navigator.getGamepads()[0] as any)
+            const gamepad = (navigator.getGamepads()[gamepadIndex] as any)
             if(gamepad !== null && this._rumbleEnabled === true){
 
                 const rumbleData = {
@@ -228,8 +228,8 @@ export default class InputChannel extends BaseChannel {
                     rightTrigger: rightTriggerMotorPercent,
                 }
 
-                if(this._rumbleInterval !== undefined){
-                    clearInterval(this._rumbleInterval)
+                if(this._rumbleInterval[gamepadIndex] !== undefined){
+                    clearInterval(this._rumbleInterval[gamepadIndex])
                 }
                 
                 if(gamepad.vibrationActuator !== undefined) {
@@ -251,9 +251,9 @@ export default class InputChannel extends BaseChannel {
                     if(repeat > 0) {
                         let repeatCount = repeat
 
-                        this._rumbleInterval = setInterval(() => {
+                        this._rumbleInterval[gamepadIndex] = setInterval(() => {
                             if(repeatCount <= 0){
-                                clearInterval(this._rumbleInterval)
+                                clearInterval(this._rumbleInterval[gamepadIndex])
                             }
 
                             if(gamepad.vibrationActuator !== undefined) {
@@ -293,6 +293,12 @@ export default class InputChannel extends BaseChannel {
 
     queueGamepadState(input:InputFrame) {
         if(input !== null) {return this._gamepadFrames.push(input)}
+    }
+
+    queueGamepadStates(inputs:Array<InputFrame>) {
+        for(const input in inputs){
+            this.queueGamepadState(inputs[input])
+        }
     }
 
     getPointerQueue(size=2) {

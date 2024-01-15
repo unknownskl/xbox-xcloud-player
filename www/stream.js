@@ -168,7 +168,7 @@ window.addEventListener('load', (event) => {
     // console.log(xCloudPlayer)
     client = new xCloudPlayer.default('videoHolder', {
         ui_systemui: [],
-        ui_touchenabled: true,
+        ui_touchenabled: false,
         input_legacykeyboard: false
     })
 

@@ -14,11 +14,22 @@ export default class ControlChannel extends BaseChannel {
         })
 
         this.send(authRequest)
-        
+    }
+
+    sendGamepadAdded(gamepadIndex) {
         const gamepadRequest = JSON.stringify({
             'message': 'gamepadChanged',
-            'gamepadIndex': 0,
+            'gamepadIndex': gamepadIndex,
             'wasAdded': true,
+        })
+        this.send(gamepadRequest)
+    }
+
+    sendGamepadRemoved(gamepadIndex) {
+        const gamepadRequest = JSON.stringify({
+            'message': 'gamepadChanged',
+            'gamepadIndex': gamepadIndex,
+            'wasAdded': false,
         })
         this.send(gamepadRequest)
     }
