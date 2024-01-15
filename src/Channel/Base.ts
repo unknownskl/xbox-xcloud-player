@@ -54,7 +54,7 @@ export default class BaseChannel {
         // Encode to ArrayBuffer if not ArrayBuffer
         
         if(channel.readyState === 'open') {
-            if(this._channelName !== 'input') {
+            if(this._channelName !== 'input' && this._channelName !== 'chat') {
                 console.log('xCloudPlayer Channel/Base.ts - ['+this._channelName+'] Sending message:', data)
             }
 

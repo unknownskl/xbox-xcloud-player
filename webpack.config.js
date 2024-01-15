@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   entry: {
     xCloudPlayer: './src/Library.ts',
-    opusWorker: './src/Worker/Opus.js',
+    // opusWorker: './src/Worker/Opus.js',
   },
   module: {
     rules: [
@@ -11,10 +11,6 @@ module.exports = {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
-      },
-      {
-        test: /\.wasm?$/,
-        use: 'wasm-loader'
       },
     ],
   },

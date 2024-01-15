@@ -12,16 +12,17 @@ export default class AudioComponent {
         this._client = client
     }
 
-    create() {
+    create(srcObject) {
         console.log('xCloudPlayer Component/Audio.ts - Create media element')
 
         const audioHolder = document.getElementById(this._client._elementHolder)
         if(audioHolder !== null){
-            const audioSrc = this.createMediaSource()
             const audioRender = document.createElement('audio')
             audioRender.id = this.getElementId()
-            audioRender.src = audioSrc
-            audioRender.play()
+            audioRender.srcObject = srcObject
+            // audioRender.play()
+
+            audioRender.autoplay = true
 
             this._audioRender = audioRender
             
@@ -53,18 +54,9 @@ export default class AudioComponent {
             if (this._isSafari()){
                 codec = 'audio/mp4' // @TODO: Fix audio issues on Safari
             }
-            // alert('codec: '+codec)
         
             const audioSourceBuffer = mediaSource.addSourceBuffer(codec)
             audioSourceBuffer.mode = 'sequence'
-
-            // audioSourceBuffer.addEventListener('updateend', (event) => {
-            //     // console.log('xCloudPlayer Component/Audio.ts - Updateend audio...', event);
-            // })
-
-            // audioSourceBuffer.addEventListener('update', (event) => {
-            //     // console.log('xCloudPlayer Component/Audio.ts - Updateend audio...', event);
-            // })
 
             audioSourceBuffer.addEventListener('error', (event) => {
                 console.log('xCloudPlayer Component/Audio.ts - Error audio...', event)
@@ -79,8 +71,6 @@ export default class AudioComponent {
     }
 
     destroy() {
-        // this._audioRender.pause()
-
         delete this._mediaSource
         delete this._audioRender
         delete this._audioSource

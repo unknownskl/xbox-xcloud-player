@@ -1,0 +1,13 @@
+{
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "ignore": [],
+    "exec": "npm run start",
+    "signal": "SIGTERM",
+    "env": {
+      "NODE_OPTIONS": "--trace-warnings",
+      "DEBUG": "xCloudPlayer"
+    }
+  }
