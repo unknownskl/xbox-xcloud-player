@@ -413,9 +413,6 @@ export default class xCloudPlayer {
     createOffer(){
         return new Promise((resolve) => {
 
-            this._inputDriver.start()
-            this._keyboardDriver.start()
-
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
             if(this._codecPreference !== ''){

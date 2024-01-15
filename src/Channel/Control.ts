@@ -14,6 +14,9 @@ export default class ControlChannel extends BaseChannel {
         })
 
         this.send(authRequest)
+
+        this._client._inputDriver.start()
+        this._client._keyboardDriver.start()
     }
 
     sendGamepadAdded(gamepadIndex) {
@@ -44,6 +47,9 @@ export default class ControlChannel extends BaseChannel {
     onClose(event) {
         super.onClose(event)
         // console.log('xCloudPlayer Channel/Control.ts - ['+this._channelName+'] onClose:', event)
+
+        this._client._inputDriver.stop()
+        this._client._keyboardDriver.stop()
     }
 
     requestKeyframeRequest() {
