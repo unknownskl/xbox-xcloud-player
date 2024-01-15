@@ -1,15 +1,15 @@
 {
   "name": "xbox-xcloud-player",
-  "version": "0.2.0-beta16",
+  "version": "0.2.0",
   "description": "",
   "main": "dist/Library.js",
   "scripts": {
-    "start": "rm -rf dist && tsc && webpack && node dist/Server.js",
-    "build": "rm -rf dist && tsc && webpack",
-    "watch": "npm run build && nodemon",
+    "start": "npm run build && node dist/Server.js",
+    "build": "rimraf dist && tsc && webpack",
+    "watch": "nodemon",
     "lint": "eslint src/ --fix",
-    "webpack": "webpack",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "auth": "rimraf .xbox.tokens.json && xbox-auth"
   },
   "repository": {
     "type": "git",
@@ -32,10 +32,12 @@
     "express": "^4.17.1",
     "express-http-proxy": "^1.6.3",
     "nodemon": "^3.0.1",
+    "rimraf": "^5.0.5",
     "ts-loader": "^9.2.5",
     "typescript": "^4.4.3",
     "webpack": "^5.52.1",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^5.0.1",
+    "xal-node": "^0.2.0"
   },
   "dependencies": {
     "dotenv": "^16.3.1"

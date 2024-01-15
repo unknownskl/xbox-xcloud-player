@@ -42,12 +42,48 @@ export class xCloudPlayerBackend {
 
     startSession(type:'home'|'cloud', sessionId){
         return new Promise((resolve, reject) => {
+
+            const deviceInfo = JSON.stringify({
+                "appInfo": {
+                    "env": {
+                        "clientAppId": "Microsoft.GamingApp",
+                        "clientAppType": "native",
+                        "clientAppVersion": "2203.1001.4.0",
+                        "clientSdkVersion": "8.5.2",
+                        "httpEnvironment": "prod",
+                        "sdkInstallId": ""
+                    }
+                },
+                "dev": {
+                    "hw": {
+                        "make": "Microsoft",
+                        "model": "Surface Pro",
+                        "sdktype": "native"
+                    },
+                    "os": {
+                        "name": "Windows 11",
+                        "ver": "22631.2715",
+                        "platform": "desktop"
+                    },
+                    "displayInfo": {
+                        "dimensions": {
+                            "widthInPixels": 1920,
+                            "heightInPixels": 1080
+                        },
+                        "pixelDensity": {
+                            "dpiX": 1,
+                            "dpiY": 1
+                        }
+                    }
+                }
+            })
             
             this.readBody(fetch('/v5/sessions/'+type+'/play', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-MS-Device-Info': deviceInfo,
                 },
                 body: JSON.stringify({
                     clientSessionId: '',
@@ -126,42 +162,36 @@ export class xCloudPlayerBackend {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    'messageType':'offer',
-                    'requestId': 1,
-                    'sdp': sdpOffer.sdp,
-                    'configuration':{
-                        'containerizeAudio':false,
-                        'chatConfiguration':{
-                            'bytesPerSample':2,
-                            'expectedClipDurationMs':20,
-                            'format':{
-                                'codec':'opus',
-                                'container':'webm',
-                            },
-                            'numChannels':1,
-                            'sampleFrequencyHz':24000,
-                        },
-                        'chat':{
-                            'minVersion':1,
-                            'maxVersion':1,
-                        },
-                        'chatStream':{
-                            'minVersion':1,
-                            'maxVersion':1,
-                        },
-                        'control':{
-                            'minVersion':1,
-                            'maxVersion':3,
-                        },
-                        'input':{
-                            'minVersion':1,
-                            'maxVersion':8,
-                        },
-                        'message':{
-                            'minVersion':1,
-                            'maxVersion':1,
-                        },
-                    },
+                    "messageType":"offer",
+                    "sdp": sdpOffer.sdp,
+                    "configuration":{
+                        "chatConfiguration":{
+                          "bytesPerSample":2,
+                          "expectedClipDurationMs":20,
+                          "format":{
+                             "codec":"opus",
+                             "container":"webm"
+                          },
+                          "numChannels":1,
+                          "sampleFrequencyHz":24000
+                       },
+                       "chat":{
+                          "minVersion":1,
+                          "maxVersion":1
+                       },
+                       "control":{
+                          "minVersion":1,
+                          "maxVersion":3
+                       },
+                       "input":{
+                          "minVersion":1,
+                          "maxVersion":8
+                       },
+                       "message":{
+                          "minVersion":1,
+                          "maxVersion":1
+                       },
+                    }
                 }),
             }).then((res) => {
                 this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
