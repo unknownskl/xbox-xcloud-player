@@ -33,13 +33,13 @@ jobs:
 
     - name: NPM publish beta package
       if: ${{ contains(steps.tag_name.outputs.SOURCE_TAG, 'beta') }}
-      uses: JS-DevTools/npm-publish@v1
+      uses: JS-DevTools/npm-publish@v3
       with:
         token: ${{ secrets.NPM_TOKEN }}
         tag: beta
 
     - name: NPM publish package
       if: ${{ !contains(steps.tag_name.outputs.SOURCE_TAG, 'beta') }}
-      uses: JS-DevTools/npm-publish@v1
+      uses: JS-DevTools/npm-publish@v3
       with:
         token: ${{ secrets.NPM_TOKEN }}
