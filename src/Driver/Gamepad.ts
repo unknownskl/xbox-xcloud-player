@@ -51,6 +51,10 @@ export default class GamepadDriver {
 
             for (let gamepad = 0; gamepad < gamepads.length; gamepad++) {
 
+                // Skip gamepad 0 as we always keep this one connected
+                if(gamepad == 0)
+                    return
+
                 // Check if the control channel is open
                 if(this._application?.getChannelProcessor('control') === undefined)
                     return
