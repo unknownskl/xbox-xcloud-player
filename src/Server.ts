@@ -41,7 +41,7 @@ app.use(proxy('uks.gssv-play-prodxhome.xboxlive.com', {
                         console.log('response', response)
                         Manager.token = response.gsToken
                         process.env.GS_TOKEN = response.gsToken
-                    }).catch((error) => {
+                    }).catch(() => {
                         console.log('Failed to authenticate with xHome. Please re-run \'npm run auth\' to refresh your tokens.')
                         process.exit()
                     })
@@ -75,8 +75,8 @@ class xHomeTokenManager {
 
             // Get xHomeStreaming Token
             const data = JSON.stringify({
-                "token": streamingToken,
-                "offeringId": "xhome"
+                'token': streamingToken,
+                'offeringId': 'xhome',
             })
         
             const options = {
@@ -108,7 +108,7 @@ class xHomeTokenManager {
                     'x-gssv-client': 'XboxComBrowser',
                     ...headers,
                 },
-                ...options
+                ...options,
             }
             const req = https.request(reqOptions, (res) => {
                 let responseData = ''
@@ -118,7 +118,7 @@ class xHomeTokenManager {
                 })
         
                 res.on('close', () => {
-                    if(res.statusCode == 200){
+                    if(res.statusCode === 200){
                         const response = JSON.parse(responseData.toString())
         
                         resolve(response)
@@ -126,7 +126,7 @@ class xHomeTokenManager {
                         console.log('authentication', __filename+'[request()] Request error ['+res.statusCode+']', responseData.toString())
                         reject({
                             status: res.statusCode,
-                            body: responseData.toString()
+                            body: responseData.toString(),
                         })
                     }
                 })
@@ -134,7 +134,7 @@ class xHomeTokenManager {
             
             req.on('error', (error) => {
                 reject({
-                    error: error
+                    error: error,
                 })
             })
 

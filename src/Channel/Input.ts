@@ -195,7 +195,7 @@ export default class InputChannel extends BaseChannel {
 
         let i = 0
         const reportType = dataView.getUint8(i)
-        const unk1 = dataView.getUint8(i+1)
+        // const unk1 = dataView.getUint8(i+1)
         i += 2
 
 

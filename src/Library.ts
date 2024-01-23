@@ -44,38 +44,38 @@ export class xCloudPlayerBackend {
         return new Promise((resolve, reject) => {
 
             const deviceInfo = JSON.stringify({
-                "appInfo": {
-                    "env": {
-                        "clientAppId": "Microsoft.GamingApp",
-                        "clientAppType": "native",
-                        "clientAppVersion": "2203.1001.4.0",
-                        "clientSdkVersion": "8.5.2",
-                        "httpEnvironment": "prod",
-                        "sdkInstallId": ""
-                    }
+                'appInfo': {
+                    'env': {
+                        'clientAppId': 'Microsoft.GamingApp',
+                        'clientAppType': 'native',
+                        'clientAppVersion': '2203.1001.4.0',
+                        'clientSdkVersion': '8.5.2',
+                        'httpEnvironment': 'prod',
+                        'sdkInstallId': '',
+                    },
                 },
-                "dev": {
-                    "hw": {
-                        "make": "Microsoft",
-                        "model": "Surface Pro",
-                        "sdktype": "native"
+                'dev': {
+                    'hw': {
+                        'make': 'Microsoft',
+                        'model': 'Surface Pro',
+                        'sdktype': 'native',
                     },
-                    "os": {
-                        "name": "Windows 11",
-                        "ver": "22631.2715",
-                        "platform": "desktop"
+                    'os': {
+                        'name': 'Windows 11',
+                        'ver': '22631.2715',
+                        'platform': 'desktop',
                     },
-                    "displayInfo": {
-                        "dimensions": {
-                            "widthInPixels": 1920,
-                            "heightInPixels": 1080
+                    'displayInfo': {
+                        'dimensions': {
+                            'widthInPixels': 1920,
+                            'heightInPixels': 1080,
                         },
-                        "pixelDensity": {
-                            "dpiX": 1,
-                            "dpiY": 1
-                        }
-                    }
-                }
+                        'pixelDensity': {
+                            'dpiX': 1,
+                            'dpiY': 1,
+                        },
+                    },
+                },
             })
             
             this.readBody(fetch('/v5/sessions/'+type+'/play', {
@@ -162,38 +162,38 @@ export class xCloudPlayerBackend {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    "messageType":"offer",
-                    "sdp": sdpOffer.sdp,
-                    "configuration":{
-                        "chatConfiguration":{
-                          "bytesPerSample":2,
-                          "expectedClipDurationMs":20,
-                          "format":{
-                             "codec":"opus",
-                             "container":"webm"
-                          },
-                          "numChannels":1,
-                          "sampleFrequencyHz":24000
-                       },
-                       "chat":{
-                          "minVersion":1,
-                          "maxVersion":1
-                       },
-                       "control":{
-                          "minVersion":1,
-                          "maxVersion":3
-                       },
-                       "input":{
-                          "minVersion":1,
-                          "maxVersion":8
-                       },
-                       "message":{
-                          "minVersion":1,
-                          "maxVersion":1
-                       },
-                    }
+                    'messageType':'offer',
+                    'sdp': sdpOffer.sdp,
+                    'configuration':{
+                        'chatConfiguration':{
+                            'bytesPerSample':2,
+                            'expectedClipDurationMs':20,
+                            'format':{
+                                'codec':'opus',
+                                'container':'webm',
+                            },
+                            'numChannels':1,
+                            'sampleFrequencyHz':24000,
+                        },
+                        'chat':{
+                            'minVersion':1,
+                            'maxVersion':1,
+                        },
+                        'control':{
+                            'minVersion':1,
+                            'maxVersion':3,
+                        },
+                        'input':{
+                            'minVersion':1,
+                            'maxVersion':8,
+                        },
+                        'message':{
+                            'minVersion':1,
+                            'maxVersion':1,
+                        },
+                    },
                 }),
-            }).then((res) => {
+            }).then(() => {
                 this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
                     if(sdpResponse === 'retry'){
                         const checkInterval = setInterval(() => {
@@ -236,7 +236,7 @@ export class xCloudPlayerBackend {
                         'isMediaStreamsChatRenegotiation': true,
                     },
                 }),
-            }).then((res) => {
+            }).then(() => {
                 this.readBody(fetch('/v5/sessions/home/'+this.sessionId+'/sdp')).then(sdpResponse => {
                     if(sdpResponse === 'retry'){
                         const checkInterval = setInterval(() => {
