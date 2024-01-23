@@ -30,7 +30,7 @@
     "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.24.1",
     "express": "^4.17.1",
-    "express-http-proxy": "^1.6.3",
+    "express-http-proxy": "^2.0.0",
     "nodemon": "^3.0.1",
     "rimraf": "^5.0.5",
     "ts-loader": "^9.2.5",
