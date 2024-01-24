@@ -13,7 +13,7 @@ var app = {
                 apiClient.startSession('home', serverId).then((configuration) => {
                     console.log('xCloudPlayer Client - Stream started. Configuration:', configuration)
 
-                    client.setCodecPreferences('video/H264')
+                    client.setCodecPreferences('video/H264', { profiles: ['4d'] }) // 4d = high, 42e = mid, 420 = low
                     client.createOffer().then((offer) => {
 
                         apiClient.sendSDPOffer(offer).then((sdpResponse) => {

@@ -358,6 +358,7 @@ export default class xCloudPlayer {
     _audioComponent
 
     _codecPreference = ''
+    _codecProfiles:Array<any> = []
     _maxVideoBitrate = 0
     _maxAudioBitrate = 0
 
@@ -417,7 +418,7 @@ export default class xCloudPlayer {
 
             if(this._codecPreference !== ''){
                 console.log('xCloudPlayer Library.ts - createOffer() Set codec preference mimetype to:', this._codecPreference)
-                this._setCodec(this._codecPreference)
+                this._setCodec(this._codecPreference, this._codecProfiles)
             }
 
             this._webrtcClient.createOffer({
@@ -502,11 +503,13 @@ export default class xCloudPlayer {
         return newLines.join('\n')
     }
 
-    setCodecPreferences(mimeType:string){
+    setCodecPreferences(mimeType:string, options?:{ profiles: Array<any> }){
         this._codecPreference = mimeType
+        if(options)
+            this._codecProfiles = options.profiles
     }
 
-    _setCodec(mimeType:string){
+    _setCodec(mimeType:string, codecProfiles:Array<any>){
         const tcvr = this._webrtcClient.getTransceivers()[1]
         const capabilities = RTCRtpReceiver.getCapabilities('video')
         if(capabilities === null){
@@ -518,8 +521,18 @@ export default class xCloudPlayer {
             
             for(let i = 0; i < codecs.length; i++){
                 if(codecs[i].mimeType === mimeType){
-                    console.log('xCloudPlayer Library.ts - Adding codec as preference:', codecs[i])
-                    prefCodecs.push(codecs[i])
+
+                    if(codecProfiles.length > 0){
+                        for(let j = 0; j < codecProfiles.length; j++){
+                            if(codecs[i].sdpFmtpLine?.indexOf('profile-level-id='+codecProfiles[j]) !== -1){
+                                console.log('xCloudPlayer Library.ts - Adding codec as preference:', codecs[i], codecProfiles[j])
+                                prefCodecs.push(codecs[i])
+                            }
+                        }
+                    } else {
+                        console.log('xCloudPlayer Library.ts - Adding codec as preference:', codecs[i])
+                        prefCodecs.push(codecs[i])
+                    }
                 }
             }
 
