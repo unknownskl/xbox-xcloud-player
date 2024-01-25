@@ -566,8 +566,11 @@ export default class xCloudPlayer {
             this._isResetting = true
             this._webrtcClient.close()
 
-            this._audioComponent.destroy()
-            this._videoComponent.destroy()
+            if(this._audioComponent)
+                this._audioComponent.destroy()
+
+            if(this._videoComponent)
+                this._videoComponent.destroy()
             
             for(const name in this._webrtcChannelProcessors){
                 this._webrtcChannelProcessors[name].destroy()
@@ -591,8 +594,11 @@ export default class xCloudPlayer {
             this._isResetting = true
             this._webrtcClient.close()
 
-            this._audioComponent.destroy()
-            this._videoComponent.destroy()
+            if(this._audioComponent)
+                this._audioComponent.destroy()
+
+            if(this._videoComponent)
+                this._videoComponent.destroy()
             
             for(const name in this._webrtcChannelProcessors){
                 this._webrtcChannelProcessors[name].destroy()
