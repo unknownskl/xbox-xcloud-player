@@ -117,7 +117,11 @@ export default class VideoComponent {
     }
 
     destroy() {
-        this._videoRender.remove()
+        if(this._videoRender){
+            this._videoRender.pause()
+            this._videoRender.remove()
+        }
+
         this._videoFps.stop()
 
         delete this._mediaSource
