@@ -565,6 +565,9 @@ export default class xCloudPlayer {
         if(!this._isResetting){
             this._isResetting = true
             this._webrtcClient.close()
+
+            this._audioComponent.destroy()
+            this._videoComponent.destroy()
             
             for(const name in this._webrtcChannelProcessors){
                 this._webrtcChannelProcessors[name].destroy()
@@ -580,6 +583,23 @@ export default class xCloudPlayer {
 
             this._gatherIce()
             this._isResetting = false
+        }
+    }
+
+    close(){
+        if(!this._isResetting){
+            this._isResetting = true
+            this._webrtcClient.close()
+
+            this._audioComponent.destroy()
+            this._videoComponent.destroy()
+            
+            for(const name in this._webrtcChannelProcessors){
+                this._webrtcChannelProcessors[name].destroy()
+            }
+
+            this._inputDriver.stop()
+            this._keyboardDriver.stop()
         }
     }
 

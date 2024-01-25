@@ -71,6 +71,8 @@ export default class AudioComponent {
     }
 
     destroy() {
+        this._audioRender.remove()
+
         delete this._mediaSource
         delete this._audioRender
         delete this._audioSource
