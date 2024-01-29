@@ -1,9 +1,10 @@
 import xCloudPlayer from '../Library'
 import { InputFrame } from '../Channel/Input'
+import Driver from './Driver'
 
 const KEYCODE_KEY_N = 'n'
 
-export default class GamepadDriver {
+export default class GamepadDriver implements Driver {
 
     _application: xCloudPlayer | null = null
 
