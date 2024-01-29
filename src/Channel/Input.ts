@@ -121,7 +121,7 @@ export default class InputChannel extends BaseChannel {
             if(this._client._config.input_legacykeyboard === true && this.getGamepadQueueLength() === 0){
                 const gpState = this.getClient()._inputDriver.requestState()
                 const kbState = this.getClient()._keyboardDriver.requestState()
-                const mergedState = this.mergeState(gpState, kbState, this._adhocState)
+                const mergedState = this.mergeState(gpState[0], kbState, this._adhocState)
                 this._adhocState = null
                 this.queueGamepadState(mergedState)
             }
