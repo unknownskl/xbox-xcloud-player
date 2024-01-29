@@ -117,13 +117,14 @@ export default class InputChannel extends BaseChannel {
         }
         
         this._inputInterval = setInterval(() => {
-            // Keyboard mask
+            // Keyboard mask for legacy input
             if(this._client._config.input_legacykeyboard === true && this.getGamepadQueueLength() === 0){
-                const gpState = this.getClient()._inputDriver.requestState()
+                const gpState = this.getClient()._inputDriver.requestStates()
                 const kbState = this.getClient()._keyboardDriver.requestState()
                 const mergedState = this.mergeState(gpState[0], kbState, this._adhocState)
                 this._adhocState = null
                 this.queueGamepadState(mergedState)
+                this._inputFps.count()
             }
 
             if(this._client._config.input_touch === true && Object.keys(this._touchEvents).length > 0){
@@ -147,6 +148,7 @@ export default class InputChannel extends BaseChannel {
                 const packet = new InputPacket(this._inputSequenceNum)
                 packet.setData(metadataQueue, gamepadQueue, pointerQueue, mouseQueue, keyboardQueue)
                 // console.log('Sending new format:', packet)
+                this._metadataFps.count()
                 
                 this.send(packet.toBuffer())
             }

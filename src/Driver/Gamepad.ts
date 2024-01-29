@@ -1,6 +1,8 @@
 import xCloudPlayer from '../Library'
 import { InputFrame } from '../Channel/Input'
 
+const KEYCODE_KEY_N = 'n'
+
 export default class GamepadDriver {
 
     _application: xCloudPlayer | null = null
@@ -34,6 +36,8 @@ export default class GamepadDriver {
 
     _activeGamepads = { 0: false, 1: false, 2: false, 3: false}
     _activeGamepadsInterval
+
+    _nexusOverrideN = false
 
     // constructor() {
     // }
@@ -70,11 +74,28 @@ export default class GamepadDriver {
                 }
             }
         }, 500)
+
+        window.addEventListener('keydown', this._downFunc)
+        window.addEventListener('keyup', this._upFunc)
     }
 
     stop() {
         // console.log('xCloudPlayer Driver/Gamepad.ts - Stop collecting events:', this._gamepads)
         clearInterval(this._activeGamepadsInterval)
+
+        window.removeEventListener('keydown', this._downFunc)
+        window.removeEventListener('keyup', this._upFunc)
+    }
+
+    _downFunc = (e: KeyboardEvent) => { this.onKeyChange(e, true) }
+    _upFunc = (e: KeyboardEvent) => { this.onKeyChange(e, false) }
+
+    onKeyChange(e: KeyboardEvent, down: boolean) {
+        switch (e.key) {
+            case KEYCODE_KEY_N:
+                this._nexusOverrideN = down
+                break
+        }
     }
 
     pressButton(index:number, button:string){
@@ -87,13 +108,24 @@ export default class GamepadDriver {
         }, 60)
     }
 
+    // Only ran when new gamepad driver is selected
     run(){
-        this._application?.getChannelProcessor('input').queueGamepadStates(this.requestState())
+        const gpState = this.requestStates()
 
-        requestAnimationFrame(() => { this.run() })
+        if(gpState[0] !== undefined) {
+            if(this._nexusOverrideN === true){
+                gpState[0].Nexus = 1
+            }
+        }
+
+        this._application?.getChannelProcessor('input')._inputFps.count()
+        this._application?.getChannelProcessor('input').queueGamepadStates(gpState)
+
+        // requestAnimationFrame(() => { this.run() })
+        setTimeout(() => { this.run() }, 1000 / 60)
     }
 
-    requestState():Array<InputFrame> {
+    requestStates():Array<InputFrame> {
         const gamepads = navigator.getGamepads()
         // let foundActive = false
         const states:Array<InputFrame> = []

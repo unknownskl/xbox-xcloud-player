@@ -1,27 +1,27 @@
 import { InputFrame } from '../Channel/Input'
 
-const KEYCODE_ARROW_LEFT = 37
-const KEYCODE_ARROW_UP = 38
-const KEYCODE_ARROW_RIGHT = 39
-const KEYCODE_ARROW_DOWN = 40
+const KEYCODE_ARROW_LEFT = 'ArrowLeft'
+const KEYCODE_ARROW_UP = 'ArrowUp'
+const KEYCODE_ARROW_RIGHT = 'ArrowRight'
+const KEYCODE_ARROW_DOWN = 'ArrowDown'
 
-const KEYCODE_KEY_A = 65
-const KEYCODE_ENTER = 13
+const KEYCODE_KEY_A = 'a'
+const KEYCODE_ENTER = 'Enter'
 
-const KEYCODE_KEY_B = 66
-const KEYCODE_BACKSPACE = 8
+const KEYCODE_KEY_B = 'b'
+const KEYCODE_BACKSPACE = 'Backspace'
 
-const KEYCODE_KEY_X = 88
-const KEYCODE_KEY_Y = 89
-const KEYCODE_KEY_N = 78
-const KEYCODE_KEY_LEFT_BRACKET = 219
-const KEYCODE_KEY_RIGHT_BRACKET = 221
+const KEYCODE_KEY_X = 'x'
+const KEYCODE_KEY_Y = 'y'
+const KEYCODE_KEY_N = 'n'
+const KEYCODE_KEY_LEFT_BRACKET = '['
+const KEYCODE_KEY_RIGHT_BRACKET = ']'
 
-const KEYCODE_KEY_V = 86
-const KEYCODE_KEY_M = 77
+const KEYCODE_KEY_V = 'v'
+const KEYCODE_KEY_M = 'm'
 
-const KEYCODE_MINUS = 189
-const KEYCODE_EQUALS = 187
+const KEYCODE_MINUS = '-'
+const KEYCODE_EQUALS = '='
 
 
 export default class KeyboardDriver {
@@ -70,7 +70,7 @@ export default class KeyboardDriver {
 
     onKeyChange(e: KeyboardEvent, down: boolean) {
         const val = down ? 1 : 0
-        switch (e.keyCode) {
+        switch (e.key) {
             case KEYCODE_ARROW_LEFT:
                 this._keyboardState.DPadLeft = val
                 break
