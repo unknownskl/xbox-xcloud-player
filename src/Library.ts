@@ -307,7 +307,7 @@ export class xCloudPlayerBackend {
 export default class xCloudPlayer {
 
     _config:xCloudPlayerConfig
-    _webrtcClient:RTCPeerConnection;
+    _webrtcClient:RTCPeerConnection| undefined
     _eventBus:EventBus
 
     _isResetting = false
@@ -352,7 +352,7 @@ export default class xCloudPlayer {
     _elementHolderRandom:number
 
     _inputDriver:any = undefined
-    _keyboardDriver:KeyboardDriver
+    _keyboardDriver:any = undefined
 
     _videoComponent
     _audioComponent
@@ -374,7 +374,9 @@ export default class xCloudPlayer {
         this._eventBus = new EventBus()
         this._elementHolder = elementId
         this._elementHolderRandom = (Math.floor(Math.random() * 100) + 1)
+    }
 
+    bind(){
         this._webrtcClient = new RTCPeerConnection(this._webrtcConfiguration)
         this._openDataChannels()
 
@@ -412,7 +414,11 @@ export default class xCloudPlayer {
     }
 
     createOffer(){
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            if(this._webrtcClient === undefined){
+                reject('webRTC client not started yet. Run .bind() first.')
+                return;
+            }
 
             this.getEventBus().emit('connectionstate', { state: 'new'})
 
@@ -442,7 +448,7 @@ export default class xCloudPlayer {
                     offer.sdp = offer.sdp?.replace('useinbandfec=1', 'useinbandfec=1; stereo=1')
                 }
 
-                this._webrtcClient.setLocalDescription(offer)
+                this._webrtcClient?.setLocalDescription(offer)
                 resolve(offer)
             })
         })
@@ -510,7 +516,7 @@ export default class xCloudPlayer {
     }
 
     _setCodec(mimeType:string, codecProfiles:Array<any>){
-        const tcvr = this._webrtcClient.getTransceivers()[1]
+        const tcvr = this._webrtcClient?.getTransceivers()[1]
         const capabilities = RTCRtpReceiver.getCapabilities('video')
         if(capabilities === null){
             console.log('xCloudPlayer Library.ts - _setCodec() Failed to get video codecs')
@@ -540,8 +546,8 @@ export default class xCloudPlayer {
                 console.log('xCloudPlayer Library.ts - _setCodec() No video codec matches with mimetype:', mimeType)
             }
 
-            if(tcvr.setCodecPreferences !== undefined){
-                tcvr.setCodecPreferences(prefCodecs)
+            if(tcvr?.setCodecPreferences !== undefined){
+                tcvr?.setCodecPreferences(prefCodecs)
             } else {
                 console.log('xCloudPlayer Library.ts - _setCodec() Browser does not support setCodecPreferences()')
             }
@@ -550,7 +556,7 @@ export default class xCloudPlayer {
 
     setRemoteOffer(sdpdata:string){
         try {
-            this._webrtcClient.setRemoteDescription({
+            this._webrtcClient?.setRemoteDescription({
                 type: 'answer',
                 sdp: sdpdata,
             })
@@ -564,7 +570,7 @@ export default class xCloudPlayer {
     reset(){
         if(!this._isResetting){
             this._isResetting = true
-            this._webrtcClient.close()
+            this._webrtcClient?.close()
 
             if(this._audioComponent)
                 this._audioComponent.destroy()
@@ -592,7 +598,7 @@ export default class xCloudPlayer {
     close(){
         if(!this._isResetting){
             this._isResetting = true
-            this._webrtcClient.close()
+            this._webrtcClient?.close()
 
             if(this._audioComponent)
                 this._audioComponent.destroy()
@@ -619,7 +625,7 @@ export default class xCloudPlayer {
                 iceDetails[candidate].candidate = ''
             }
 
-            this._webrtcClient.addIceCandidate({
+            this._webrtcClient?.addIceCandidate({
                 candidate: iceDetails[candidate].candidate,
                 sdpMid: iceDetails[candidate].sdpMid,
                 sdpMLineIndex: iceDetails[candidate].sdpMLineIndex,
@@ -640,7 +646,7 @@ export default class xCloudPlayer {
     _openDataChannel(name:string, config){
         console.log('xCloudPlayer Library.ts - Creating data channel:', name, config)
 
-        this._webrtcDataChannels[name] = this._webrtcClient.createDataChannel(name, config)
+        this._webrtcDataChannels[name] = this._webrtcClient?.createDataChannel(name, config)
 
         switch(name) {
             case 'input':
@@ -715,7 +721,7 @@ export default class xCloudPlayer {
     }
 
     _gatherIce(){
-        this._webrtcClient.addEventListener('icecandidate', event => {
+        this._webrtcClient?.addEventListener('icecandidate', event => {
             if (event.candidate) {
                 console.log('xCloudPlayer Library.ts - ICE candidate found:', event.candidate)
                 this._iceCandidates.push(event.candidate)

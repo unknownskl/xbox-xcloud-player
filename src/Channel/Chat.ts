@@ -47,7 +47,7 @@ export default class ChatChannel extends BaseChannel {
                 }
 
                 stream.getTracks().forEach(track => {
-                    this._client._webrtcClient.addTrack(track, stream)
+                    this._client._webrtcClient?.addTrack(track, stream)
                 })
 
                 this._client.sdpNegotiationChat()
@@ -63,11 +63,11 @@ export default class ChatChannel extends BaseChannel {
 
     stopMic() {
         console.log('xCloudPlayer Channel/Chat.ts - Disabling Microphone')
-        const senders = this._client._webrtcClient.getSenders()
+        const senders = this._client._webrtcClient?.getSenders()
         for(const sender in senders){
             if(senders[sender].track !== null){
                 if(senders[sender].track?.kind === 'audio'){
-                    this._client._webrtcClient.removeTrack(senders[sender])
+                    this._client._webrtcClient?.removeTrack(senders[sender])
                 }
             }
         }

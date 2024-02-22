@@ -13,7 +13,7 @@ var app = {
                 apiClient.startSession('home', serverId).then((configuration) => {
                     console.log('xCloudPlayer Client - Stream started. Configuration:', configuration)
 
-                    client.setCodecPreferences('video/H264', { profiles: ['4d'] }) // 4d = high, 42e = mid, 420 = low
+                    // client.setCodecPreferences('video/H264', { profiles: ['4d'] }) // 4d = high, 42e = mid, 420 = low
                     client.createOffer().then((offer) => {
 
                         apiClient.sendSDPOffer(offer).then((sdpResponse) => {
@@ -171,6 +171,7 @@ window.addEventListener('load', (event) => {
         ui_touchenabled: false,
         input_legacykeyboard: false
     })
+    client.bind()
 
     apiClient = new xCloudPlayer.xCloudPlayerBackend()
     apiClient.getConsoles().then((consoles) => {
@@ -178,7 +179,7 @@ window.addEventListener('load', (event) => {
         var consolesHtml = '';
 
         for(var device in consoles.results) {
-            consolesHtml += consoles.results[device].deviceName+' ('+consoles.results[device].consoleType+') - '+consoles.results[device].serverId+' isSameNetwork:'+!consoles.results[device].outOfHomeWarning+' <button>'+consoles.results[device].powerState+'</button> <button onclick="app.startSession(\'xhome\', \''+consoles.results[device].serverId+'\')">Start session</button> <br />'
+            consolesHtml += consoles.results[device].deviceName+' ('+consoles.results[device].consoleType+') - '+consoles.results[device].serverId+' isSameNetwork:'+!consoles.results[device].outOfHomeWarning+' <button style="padding: 20px;">'+consoles.results[device].powerState+'</button> <button style="padding: 20px;" onclick="app.startSession(\'xhome\', \''+consoles.results[device].serverId+'\')">Start session</button> <br />'
         }
         consoleDiv.innerHTML = consolesHtml
 
