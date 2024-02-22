@@ -9,6 +9,7 @@ describe('Library', () => {
         const logSpy = jest.spyOn(console, 'log');
         // jest.spyOn(global.console, 'log').mockImplementation(() => jest.fn());
         const instance = new xCloudPlayer('MockId', {});
+        instance.bind()
 
         expect((global as any).RTCPeerConnection).toBeCalledTimes(1);
         expect(logSpy).toHaveBeenCalledWith('xCloudPlayer loaded!');
@@ -17,6 +18,7 @@ describe('Library', () => {
     it('initial states should be set correctly', () => {
 
         const instance = new xCloudPlayer('MockId', {});
+        instance.bind()
 
         // console.warn(instance)
 

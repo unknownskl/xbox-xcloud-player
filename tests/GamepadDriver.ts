@@ -7,6 +7,7 @@ mockRTCPeerConnection();
 describe('GamepadDriver', () => {
     it('should load without errors', () => {
         const player = new xCloudPlayer('MockId', {})
+        player.bind()
         const driver = new GamepadDriver()
 
         driver.setApplication(player)
@@ -16,6 +17,7 @@ describe('GamepadDriver', () => {
 
     it('should queue gamepad states when pressing a button', (done) => {
         const player = new xCloudPlayer('MockId', {})
+        player.bind()
         const driver = new GamepadDriver()
 
         driver.setApplication(player)
