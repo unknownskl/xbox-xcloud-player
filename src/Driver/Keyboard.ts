@@ -1,4 +1,4 @@
-import { InputFrame } from '../Channel/Input'
+import {InputFrame} from '../Channel/Input'
 
 const KEYCODE_ARROW_LEFT = 'ArrowLeft'
 const KEYCODE_ARROW_UP = 'ArrowUp'
@@ -24,7 +24,61 @@ const KEYCODE_MINUS = '-'
 const KEYCODE_EQUALS = '='
 
 
+export type MouseKeyboardMapping = {
+    [keyCode: string]: (keyof InputFrame) | undefined;
+};
+
+export class MouseKeyboardConfig {
+    _keymapping: MouseKeyboardMapping
+
+    constructor(args: {keymapping?: MouseKeyboardMapping}) {
+        if(args.keymapping === undefined) {
+            this._keymapping = MouseKeyboardConfig.defaultMapping()
+        } else {
+            this._keymapping = args.keymapping
+        }
+    }
+
+    private static defaultMapping(): MouseKeyboardMapping {
+        return {
+            [KEYCODE_ARROW_LEFT]: 'DPadLeft',
+            [KEYCODE_ARROW_UP]: 'DPadUp',
+            [KEYCODE_ARROW_RIGHT]: 'DPadRight',
+            [KEYCODE_ARROW_DOWN]: 'DPadDown',
+
+            [KEYCODE_ENTER]: 'A',
+            [KEYCODE_KEY_A]: 'A',
+
+            [KEYCODE_BACKSPACE]: 'B',
+            [KEYCODE_KEY_B]: 'B',
+
+            [KEYCODE_KEY_X]: 'X',
+            [KEYCODE_KEY_Y]: 'Y',
+
+            [KEYCODE_KEY_LEFT_BRACKET]: 'LeftShoulder',
+            [KEYCODE_KEY_RIGHT_BRACKET]: 'RightShoulder',
+
+            [KEYCODE_MINUS]: 'LeftTrigger',
+            [KEYCODE_EQUALS]: 'RightTrigger',
+
+            [KEYCODE_KEY_V]: 'View',
+            [KEYCODE_KEY_M]: 'Menu',
+            [KEYCODE_KEY_N]: 'Nexus',
+        }
+    }
+
+    static default(): MouseKeyboardConfig {
+        return new MouseKeyboardConfig({})
+    }
+}
+
 export default class KeyboardDriver {
+    _mouseKeyboardConfig: MouseKeyboardConfig
+    constructor(mouseKeyboardConfig: MouseKeyboardConfig) {
+        this._mouseKeyboardConfig = mouseKeyboardConfig
+        console.log('MouseConfig /// ', this._mouseKeyboardConfig)
+    }
+
 
     _keyboardState = {
         GamepadIndex: 0,
@@ -69,66 +123,26 @@ export default class KeyboardDriver {
     onKeyUp(e) { this.onKeyChange(e, false) }
 
     onKeyChange(e: KeyboardEvent, down: boolean) {
+        console.log("Key ", e.key)
         const val = down ? 1 : 0
-        switch (e.key) {
-            case KEYCODE_ARROW_LEFT:
-                this._keyboardState.DPadLeft = val
-                break
-            case KEYCODE_ARROW_UP:
-                this._keyboardState.DPadUp = val
-                break
-            case KEYCODE_ARROW_RIGHT:
-                this._keyboardState.DPadRight = val
-                break
-            case KEYCODE_ARROW_DOWN:
-                this._keyboardState.DPadDown = val
-                break
-            case KEYCODE_ENTER:
-            case KEYCODE_KEY_A:
-                this._keyboardState.A = val
-                break
-            case KEYCODE_BACKSPACE:
-            case KEYCODE_KEY_B:
-                this._keyboardState.B = val
-                break
-            case KEYCODE_KEY_X:
-                this._keyboardState.X = val
-                break
-            case KEYCODE_KEY_Y:
-                this._keyboardState.Y = val
-                break
-            case KEYCODE_KEY_LEFT_BRACKET:
-                this._keyboardState.LeftShoulder = val
-                break
-            case KEYCODE_KEY_RIGHT_BRACKET:
-                this._keyboardState.RightShoulder = val
-                break
-            case KEYCODE_KEY_V:
-                this._keyboardState.View = val
-                break
-            case KEYCODE_KEY_M:
-                this._keyboardState.Menu = val
-                break
-            case KEYCODE_KEY_N:
-                this._keyboardState.Nexus = val
-                break
-            case KEYCODE_MINUS:
-                this._keyboardState.LeftTrigger = val
-                break
-            case KEYCODE_EQUALS:
-                this._keyboardState.RightTrigger = val
-                break
+
+        const mappedButton = this._mouseKeyboardConfig._keymapping[e.key]
+
+        if(mappedButton === undefined) {
+            return
         }
+
+        this._keyboardState[mappedButton] = val
     }
 
     requestState(): InputFrame {
         return this._keyboardState
     }
 
-    pressButton(button:string) {
-        this._keyboardState[button] = true
+    pressButton(button: keyof InputFrame) {
+        this._keyboardState[button] = 1
         setTimeout(() => {
-            this._keyboardState[button] = false
+            this._keyboardState[button] = 0
         }, 60)
     }
 
