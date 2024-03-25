@@ -2,8 +2,6 @@ import 'dotenv/config'
 import express from 'express'
 import bodyParser from 'body-parser'
 import proxy from 'express-http-proxy'
-import https from 'https'
-import fs from 'fs'
 import { TokenStore, Xal } from 'xal-node'
 
 const app = express()
