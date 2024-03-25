@@ -7,9 +7,10 @@
     "start": "npm run build && node dist/Server.js",
     "build": "rimraf dist && tsc && webpack",
     "watch": "nodemon",
-    "lint": "eslint src/ --fix",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "test": "jest",
-    "auth": "rimraf .xbox.tokens.json && xbox-auth"
+    "auth": "rimraf .xbox.tokens.json && echo '\"\"' > .xbox.tokens.json && xbox-auth auth"
   },
   "repository": {
     "type": "git",
@@ -27,7 +28,7 @@
     "@types/jest": "^29.5.11",
     "@types/node": "^20.11.5",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.24.1",
     "express": "^4.17.1",
@@ -41,7 +42,7 @@
     "typescript": "^5.3.3",
     "webpack": "^5.52.1",
     "webpack-cli": "^5.0.1",
-    "xal-node": "^0.2.0"
+    "xal-node": "^1.0.1"
   },
   "dependencies": {
     "dotenv": "^16.3.1"

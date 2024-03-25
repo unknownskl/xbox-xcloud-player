@@ -4,6 +4,7 @@ import bodyParser from 'body-parser'
 import proxy from 'express-http-proxy'
 import https from 'https'
 import fs from 'fs'
+import { TokenStore, Xal } from 'xal-node'
 
 const app = express()
 const port = 3000
@@ -26,26 +27,14 @@ app.use(proxy('uks.gssv-play-prodxhome.xboxlive.com', {
     proxyReqOptDecorator: function(proxyReqOpts) {
         //   proxyReqOpts.headers = []
 
-        if(Manager.token !== '') {
+        if(Manager._tokenxHome !== '') {
             // Use xal-auth token
-            process.env.GS_TOKEN = Manager.token
+            process.env.GS_TOKEN = Manager._tokenxHome
         } else {
             if(process.env.GS_TOKEN === undefined || process.env.GS_TOKEN === ''){
                 console.log('GS_TOKEN is empty, falling back on xal-authentication...')
-    
-                if(! fs.existsSync('./.xbox.tokens.json')){
-                    console.log('.xbox.tokens.json not found. Please set the GS_TOKEN environment variable or run \'npm run auth\' to login')
-                    process.exit()
-                } else {
-                    Manager.requestxHomeToken(JSON.parse(fs.readFileSync('./.xbox.tokens.json').toString()).xsts_token.Token).then((response:any) => {
-                        console.log('response', response)
-                        Manager.token = response.gsToken
-                        process.env.GS_TOKEN = response.gsToken
-                    }).catch(() => {
-                        console.log('Failed to authenticate with xHome. Please re-run \'npm run auth\' to refresh your tokens.')
-                        process.exit()
-                    })
-                }
+                console.log('Failed to authenticate with xHome. Please re-run \'npm run auth\' to refresh your tokens.')
+                process.exit()
             }
         }
         
@@ -67,80 +56,32 @@ app.use(proxy('uks.gssv-play-prodxhome.xboxlive.com', {
 
 ///
 class xHomeTokenManager {
-    token = ''
+    _tokenstore:TokenStore
+    _xal:Xal
 
-    requestxHomeToken(streamingToken){
-        return new Promise((resolve, reject) => {
-            // this._application.log('authentication', __filename+'[requestxHomeToken()] Requesting xHome streaming tokens')
+    _tokenxHome:string = ''
+    _tokenxCloud:string = ''
 
-            // Get xHomeStreaming Token
-            const data = JSON.stringify({
-                'token': streamingToken,
-                'offeringId': 'xhome',
-            })
-        
-            const options = {
-                hostname: 'xhome.gssv-play-prod.xboxlive.com',
-                method: 'POST',
-                path: '/v2/login/user',
-            }
+    constructor(){
+        this._tokenstore = new TokenStore()
+        this._tokenstore.load('.xbox.tokens.json')
+        this._xal = new Xal(this._tokenstore)
+    }
 
-            this.request(options, data).then((response:any) => {
-                resolve(response)
-            }).catch((error) => {
-                console.log('authentication', __filename+'[requestxHomeToken()] xHome token retrieval error:', error)
-                reject(error)
-            })
+    loadTokens(){
+        this.requestxHomeToken().then((tokens) => {
+            this._tokenxHome = tokens.xHomeToken.data.gsToken
+            this._tokenxCloud = tokens.xCloudToken.data.gsToken
+
+        }).catch(() => {
+            console.log('Failed to authenticate with xHome. Please re-run \'npm run auth\' to refresh your tokens.')
+            process.exit()
         })
     }
 
-    request(options, data, headers = {}) {
-
-        return new Promise((resolve, reject) => {
-            const reqOptions = {
-                hostname: '',
-                port: 443,
-                path: '',
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': data.length,
-                    'x-gssv-client': 'XboxComBrowser',
-                    ...headers,
-                },
-                ...options,
-            }
-            const req = https.request(reqOptions, (res) => {
-                let responseData = ''
-                
-                res.on('data', (data) => {
-                    responseData += data
-                })
-        
-                res.on('close', () => {
-                    if(res.statusCode === 200){
-                        const response = JSON.parse(responseData.toString())
-        
-                        resolve(response)
-                    } else {
-                        console.log('authentication', __filename+'[request()] Request error ['+res.statusCode+']', responseData.toString())
-                        reject({
-                            status: res.statusCode,
-                            body: responseData.toString(),
-                        })
-                    }
-                })
-            })
-            
-            req.on('error', (error) => {
-                reject({
-                    error: error,
-                })
-            })
-
-            req.write(data)
-            req.end()
-        })
+    requestxHomeToken(){
+        return this._xal.getStreamingToken(this._tokenstore)
     }
 }
 const Manager = new xHomeTokenManager()
+Manager.loadTokens()
