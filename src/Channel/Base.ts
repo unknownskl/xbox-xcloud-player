@@ -2,9 +2,9 @@ import xCloudPlayer from '../Library'
 
 export default class BaseChannel {
 
-    _client:xCloudPlayer;
-    _channelName:string;
-    _state:'new'|'connected'|'closing'|'closed';
+    _client:xCloudPlayer
+    _channelName:string
+    _state:'new'|'connected'|'closing'|'closed'
 
     _events = {
         'state': [],

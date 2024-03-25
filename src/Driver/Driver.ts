@@ -8,6 +8,6 @@ export default interface Driver {
 
     pressButton(index: number, button: string): void;
 
-    requestStates(): Array<InputFrame>
-    mapStateLabels(buttons: Array<boolean>, axes:Array<any>): InputFrame
+    requestStates(): Array<InputFrame>;
+    mapStateLabels(buttons: Array<boolean>, axes:Array<any>): InputFrame;
 } 

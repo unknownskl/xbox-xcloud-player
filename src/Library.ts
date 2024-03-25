@@ -417,7 +417,7 @@ export default class xCloudPlayer {
         return new Promise((resolve, reject) => {
             if(this._webrtcClient === undefined){
                 reject('webRTC client not started yet. Run .bind() first.')
-                return;
+                return
             }
 
             this.getEventBus().emit('connectionstate', { state: 'new'})
@@ -511,8 +511,7 @@ export default class xCloudPlayer {
 
     setCodecPreferences(mimeType:string, options?:{ profiles: Array<any> }){
         this._codecPreference = mimeType
-        if(options)
-            this._codecProfiles = options.profiles
+        if(options) {this._codecProfiles = options.profiles}
     }
 
     _setCodec(mimeType:string, codecProfiles:Array<any>){
@@ -572,11 +571,9 @@ export default class xCloudPlayer {
             this._isResetting = true
             this._webrtcClient?.close()
 
-            if(this._audioComponent)
-                this._audioComponent.destroy()
+            if(this._audioComponent) {this._audioComponent.destroy()}
 
-            if(this._videoComponent)
-                this._videoComponent.destroy()
+            if(this._videoComponent) {this._videoComponent.destroy()}
             
             for(const name in this._webrtcChannelProcessors){
                 this._webrtcChannelProcessors[name].destroy()
@@ -600,11 +597,9 @@ export default class xCloudPlayer {
             this._isResetting = true
             this._webrtcClient?.close()
 
-            if(this._audioComponent)
-                this._audioComponent.destroy()
+            if(this._audioComponent) {this._audioComponent.destroy()}
 
-            if(this._videoComponent)
-                this._videoComponent.destroy()
+            if(this._videoComponent) {this._videoComponent.destroy()}
             
             for(const name in this._webrtcChannelProcessors){
                 this._webrtcChannelProcessors[name].destroy()
