@@ -10,7 +10,7 @@ import AudioComponent from './Component/Audio'
 import EventBus from './Helper/EventBus'
 
 import GamepadDriver from './Driver/Gamepad'
-import KeyboardDriver from './Driver/Keyboard'
+import KeyboardDriver, {MouseKeyboardConfig} from './Driver/Keyboard'
 
 interface xCloudPlayerConfig {
     ui_systemui?:Array<number>; // Default: [10,19,31,27,32,33]
@@ -22,6 +22,7 @@ interface xCloudPlayerConfig {
     input_touch?:boolean;
     input_mousekeyboard?:boolean;
     input_legacykeyboard?:boolean;
+    input_mousekeyboard_config?:MouseKeyboardConfig; // Default: MouseKeyboardConfig.default();
 }
 
 export class xCloudPlayerBackend {
@@ -388,7 +389,7 @@ export default class xCloudPlayer {
         }
 
         this._inputDriver.setApplication(this)
-        this._keyboardDriver = new KeyboardDriver()
+        this._keyboardDriver = new KeyboardDriver(this._config.input_mousekeyboard_config ?? MouseKeyboardConfig.default())
         this._gatherIce()
 
         this._webrtcClient.ontrack = (event) => {
