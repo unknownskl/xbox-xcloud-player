@@ -123,7 +123,6 @@ export default class KeyboardDriver {
     onKeyUp(e) { this.onKeyChange(e, false) }
 
     onKeyChange(e: KeyboardEvent, down: boolean) {
-        console.log("Key ", e.key)
         const val = down ? 1 : 0
 
         const mappedButton = this._mouseKeyboardConfig._keymapping[e.key]

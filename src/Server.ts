@@ -70,6 +70,7 @@ class xHomeTokenManager {
         this.requestxHomeToken().then((tokens) => {
             this._tokenxHome = tokens.xHomeToken.data.gsToken
             this._tokenxCloud = tokens.xCloudToken.data.gsToken
+            console.log('Streaming tokens received. Ready to proxy requests.')
 
         }).catch(() => {
             console.log('Failed to authenticate with xHome. Please re-run \'npm run auth\' to refresh your tokens.')
