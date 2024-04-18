@@ -20,7 +20,7 @@
         "resolveJsonModule": true
     },
     "include": [
-        "src/**/*"
+        "src/**/*.ts"
     ],
     "exclude": [
         "**/*.spec.ts"
