@@ -9,6 +9,7 @@ const app = express()
 const port = 3000
 
 app.use(bodyParser.json())
+app.disable('x-powered-by')
 
 app.use(express.static('www'))
 app.use('/dist', express.static('dist'))
