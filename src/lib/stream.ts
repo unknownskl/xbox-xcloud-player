@@ -144,7 +144,7 @@ export default class Stream {
 
     sendIceCandidates(candidates:Array<any>){
         return new Promise((resolve, reject) => {
-            this._apiClient.post(this.getSessionPath()+'/ice', JSON.stringify({ candidates: candidates }), { 'Content-Type': 'application/json', 'Accept': 'application/json' }).then((iceResponse) => {
+            this._apiClient.post(this.getSessionPath()+'/ice', JSON.stringify({ candidates: candidates }), { 'Content-Type': 'application/json', 'Accept': 'application/json' }).then(() => {
                 this.waitForIceResponse().then((iceResponse) => {
                     resolve(iceResponse)
 

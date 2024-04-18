@@ -26,13 +26,12 @@ export default class Ice {
         }
 
         for(const candidate in candidates){
-            if(candidates[candidate].candidate === 'a=end-of-candidates')
-                continue;
+            if(candidates[candidate].candidate === 'a=end-of-candidates') {continue}
 
             this._peerConnection.addIceCandidate({
                 candidate: candidates[candidate].candidate,
                 sdpMid: candidates[candidate].sdpMid,
-                sdpMLineIndex: candidates[candidate].sdpMLineIndex
+                sdpMLineIndex: candidates[candidate].sdpMLineIndex,
             })
         }
     }

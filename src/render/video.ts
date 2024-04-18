@@ -23,7 +23,7 @@ export default class VideoComponent {
 
     destroy(){
         const streamHolder = document.getElementById(this._player._elementId)
-        var element = streamHolder?.querySelector('video')
+        const element = streamHolder?.querySelector('video')
 
         if(element){
             element.remove()

@@ -51,12 +51,14 @@ export default class Sdp {
         // console.log('setRemoteSDP:', sdp)
         // console.log('Server codecs:', this.getServerCodecs())
 
-        for(const transceiver in this._peerConnection.getTransceivers()){
-            // console.log('Transceiver:', this._peerConnection.getTransceivers()[transceiver])
+        // for(const transceiver in this._peerConnection.getTransceivers()){
+        //     // console.log('Transceiver:', this._peerConnection.getTransceivers()[transceiver])
 
-            if(this._peerConnection.getTransceivers()[transceiver].receiver.track.kind === 'video'){
-                // We got the video transceiver.
-            }
-        }
+        //     if(this._peerConnection.getTransceivers()[transceiver].receiver.track.kind === 'video'){
+        //         // We got the video transceiver.
+        //     }
+        // }
+
+        return sdp
     }
 }

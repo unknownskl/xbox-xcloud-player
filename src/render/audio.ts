@@ -18,7 +18,7 @@ export default class AudioComponent {
 
     destroy(){
         const streamHolder = document.getElementById(this._player._elementId)
-        var element = streamHolder?.querySelector('audio')
+        const element = streamHolder?.querySelector('audio')
 
         if(element){
             element.remove()
