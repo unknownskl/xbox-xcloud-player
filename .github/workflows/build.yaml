@@ -45,5 +45,5 @@ jobs:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           with:
             args: >
-              -Dsonar.organization=unknownskl
+              -Dsonar.organization=unknownskl-github
               -Dsonar.projectKey=unknownskl_xbox-xcloud-player
