@@ -9,7 +9,7 @@
     "watch": "nodemon",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "test": "jest",
+    "test": "jest --coverage",
     "auth": "rimraf .xbox.tokens.json && xbox-auth auth"
   },
   "repository": {
