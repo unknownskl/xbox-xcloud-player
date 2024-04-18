@@ -46,4 +46,4 @@ jobs:
           with:
             args: >
               -Dsonar.organization=unknownskl
-              -Dsonar.projectKey=xbox-xcloud-player
+              -Dsonar.projectKey=unknownskl_xbox-xcloud-player
