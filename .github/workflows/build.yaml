@@ -20,6 +20,9 @@ jobs:
         - name: Install dependencies
           run: npm ci
 
+        - name: debug
+          run: ls -la
+
         - name: Lint code
           run: npm run lint
 
