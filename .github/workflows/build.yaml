@@ -1,4 +1,11 @@
-on: ['push', 'pull_request']
+name: Sonarcloud Scan
+on:
+    push:
+      branches:
+        - main
+        - '*'
+    pull_request:
+      types: [opened, synchronize, reopened]
 
 jobs:
     build:
@@ -31,3 +38,8 @@ jobs:
 
         - name: Run tests
           run: npm test
+
+        - name: SonarCloud Scan
+          uses: SonarSource/sonarcloud-github-action@master
+          env: 
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
