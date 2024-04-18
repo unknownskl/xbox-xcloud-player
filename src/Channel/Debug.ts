@@ -1,19 +1,15 @@
-import BaseChannel from './Base'
+import Channel from '../lib/channel'
 
-export default class DebugChannel extends BaseChannel {
-
-    onOpen(event) {
-        super.onOpen(event)
-
-        // console.log('xCloudPlayer Channel/Debug.ts - ['+this._channelName+'] onOpen:', event)
-    }
-    
-    onMessage(event) {
-        console.log('xCloudPlayer Channel/Debug.ts - ['+this._channelName+'] onMessage:', event)
+export default class DebugChannel extends Channel {
+    getChannelName() {
+        return 'debug'
     }
 
-    onClose(event) {
-        super.onClose(event)
-        // console.log('xCloudPlayer Channel/Debug.ts - ['+this._channelName+'] onClose:', event)
+    getChannelConfig() {
+        return { }
+    }
+
+    destroy() {
+        // console.log('DebugChannel destroy() called')
     }
 }
