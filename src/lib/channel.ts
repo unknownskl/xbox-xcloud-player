@@ -27,14 +27,37 @@ export default class Channel {
     }
 
     // Default channel functions
-    onOpen() {
-        console.log(this.getChannelName(), 'Opening channel...')
+    onOpen(event:Event) {
+        console.log(this.getChannelName(), 'Opening channel:', event)
     }
 
-    onMessage() { }
-    onClosing() { }
-    onClose() { }
-    onError() { }
+    onMessage(event:MessageEvent) {
+        console.log(this.getChannelName(), 'Message channel:', event)
+    }
+
+    onClosing(event:Event) {
+        console.log(this.getChannelName(), 'Closing channel:', event)
+    }
+
+    onClose(event:Event) {
+        console.log(this.getChannelName(), 'Closed channel:', event)
+    }
+
+    onError(event:Event) {
+        console.log(this.getChannelName(), 'Error channel:', event)
+    }
+
+    send(data:any) {
+        if(typeof data === 'string'){
+            data = (new TextEncoder).encode(data)
+        }
+        
+        return this._dataChannel.send(data)
+    }
+
+    getPlayer(){
+        return this._player
+    }
 
     // Channel destroy function
     destroy() {}

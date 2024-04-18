@@ -14,4 +14,13 @@ export default class ControlChannel extends Channel {
     destroy() {
         // console.log('DebugChannel destroy() called')
     }
+
+    sendAuthorization(){
+        const authRequest = JSON.stringify({
+            'message':'authorizationRequest',
+            'accessKey':'4BDB3609-C1F1-4195-9B37-FEFF45DA8B8E',
+        })
+
+        this.send(authRequest)
+    }
 }

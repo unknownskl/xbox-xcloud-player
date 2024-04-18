@@ -6,7 +6,6 @@ import MessageChannel from './channel/message'
 
 import Ice from './lib/ice'
 import Sdp from './lib/sdp'
-import Teredo from './lib/teredo'
 
 import VideoComponent from './render/video'
 import AudioComponent from './render/audio'
@@ -102,28 +101,6 @@ export default class xCloudPlayer {
 
     setRemoteIceCandidates(candidates:Array<any>) {
         // @TODO: Sort ipv4 and ipv6, and use best route as preference (ipv6 only etc)
-
-        // Convert Teredo to external ip
-        for(const candidate in candidates){
-            const candidateAddress = candidates[candidate].candidate.split(' ')
-                        
-            if(candidateAddress.length > 4 && candidateAddress[4].substr(0, 4) === '2001'){
-                const teredo = new Teredo(candidateAddress[4])
-
-                candidates.push({
-                    candidate: 'a=candidate:10 1 UDP 1 '+teredo.getIpv4Address()+' 9002 typ host ',
-                    messageType: 'iceCandidate',
-                    sdpMLineIndex: candidates[candidate].sdpMLineIndex,
-                    sdpMid: candidates[candidate].sdpMid,
-                })
-                candidates.push({
-                    candidate: 'a=candidate:11 1 UDP 1 '+teredo.getIpv4Address()+' '+teredo.getIpv4Port()+' typ host ',
-                    messageType: 'iceCandidate',
-                    sdpMLineIndex: candidates[candidate].sdpMLineIndex,
-                    sdpMid: candidates[candidate].sdpMid,
-                })
-            }
-        }
 
         this._iceHelper.setRemoteCandidates(candidates)
     }

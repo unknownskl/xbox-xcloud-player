@@ -1,4 +1,5 @@
 import xCloudPlayer from '../player'
+import Teredo from '../lib/teredo'
 
 export default class Ice {
     private _peerConnection:RTCPeerConnection
@@ -27,6 +28,23 @@ export default class Ice {
 
         for(const candidate in candidates){
             if(candidates[candidate].candidate === 'a=end-of-candidates') {continue}
+
+            const candidateAddress = candidates[candidate].candidate.split(' ')
+                        
+            if(candidateAddress.length > 4 && candidateAddress[4].substr(0, 4) === '2001'){
+                const teredo = new Teredo(candidateAddress[4])
+
+                this._peerConnection.addIceCandidate({
+                    candidate: 'a=candidate:10 1 UDP 1 '+teredo.getIpv4Address()+' 9002 typ host ',
+                    sdpMLineIndex: candidates[candidate].sdpMLineIndex,
+                    sdpMid: candidates[candidate].sdpMid,
+                })
+                this._peerConnection.addIceCandidate({
+                    candidate: 'a=candidate:11 1 UDP 1 '+teredo.getIpv4Address()+' '+teredo.getIpv4Port()+' typ host ',
+                    sdpMLineIndex: candidates[candidate].sdpMLineIndex,
+                    sdpMid: candidates[candidate].sdpMid,
+                })
+            }
 
             this._peerConnection.addIceCandidate({
                 candidate: candidates[candidate].candidate,
