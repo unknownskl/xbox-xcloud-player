@@ -1,5 +1,5 @@
 import Channel from '../lib/channel'
-import InputPacket, { MetadataFrame, ReportTypes, InputFrame as GamepadFrame, MouseFrame, KeyboardFrame } from './input/packet'
+import InputPacket, { MetadataFrame, ReportTypes, InputFrame as GamepadFrame, MouseFrame, KeyboardFrame, PointerFrame } from './input/packet'
 import InputQueue from './input/queue'
 
 export default class InputChannel extends Channel {
@@ -59,6 +59,10 @@ export default class InputChannel extends Channel {
 
     queueKeyboardFrame(data:KeyboardFrame){
         this._inputQueue.queueKeyboardFrame(data)
+    }
+
+    queuePointerFrame(data:PointerFrame){
+        this._inputQueue.queuePointerFrame(data)
     }
 
     destroy() {

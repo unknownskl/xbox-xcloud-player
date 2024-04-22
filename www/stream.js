@@ -156,9 +156,34 @@ class VirtualMKB {
     }
 }
 
+class VirtualTouch {
+    attach(index = 0) {
+        console.log('[VirtualTouch] Attaching Touch on index:', index)
+        this._touch = new xCloudPlayer.default.Touch(index)
+
+        if(app._player){
+            this._touch.attach(app._player)
+            this._isAttached = true
+        } else {
+            console.log('[VirtualTouch] Failed to attach Touch to Player istance:', app._player)
+            return
+        }
+    }
+
+    detach() {
+        if(this._isAttached === false){
+            console.log('[VirtualTouch] Virtual Touch is not attached')
+            return
+        }
+        this._touch.detach()
+        this._isAttached = false
+    }
+}
+
 const vGamepad1 = new VirtualGamepad()
 const vGamepad2 = new VirtualGamepad()
 const vMkb = new VirtualMKB()
+const vTouch = new VirtualTouch()
 
 const app = new StreamApp()
 

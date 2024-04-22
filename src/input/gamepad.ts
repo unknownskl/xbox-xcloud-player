@@ -16,7 +16,7 @@ export default class Gamepad {
 
     detach(){
         if(this._player === undefined){
-            console.log('Gamepad is not attached. this._player is:', this._player)
+            console.log('Player is not attached. this._player is:', this._player)
             return
         }
         this._player._channels.control.sendGamepadState(this._index, false)
@@ -25,7 +25,7 @@ export default class Gamepad {
 
     sendButtonState(button, value){
         if(this._player === undefined){
-            console.log('Gamepad is not attached. this._player is:', this._player)
+            console.log('Player is not attached. this._player is:', this._player)
             return
         }
 
@@ -33,8 +33,6 @@ export default class Gamepad {
             console.log('Invalid button:', button)
             return
         } else {
-
-            console.log('Sending gamepad input:', button, value)
 
             const buttonPreset = this.getDefaultFamepadFrame()
             buttonPreset.GamepadIndex = this._index

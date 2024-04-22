@@ -25,7 +25,7 @@ export default class MouseKeyboard {
 
     detach(){
         if(this._player === undefined){
-            console.log('Gamepad is not attached. this._player is:', this._player)
+            console.log('Player is not attached. this._player is:', this._player)
             return
         }
         this._player._channels.control.sendGamepadState(this._index, false)

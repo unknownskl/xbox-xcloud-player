@@ -36,6 +36,11 @@ export default class InputQueue {
         this.checkQueueAndSend()
     }
 
+    queuePointerFrame(data:PointerFrame) {
+        this._pointerQueue.push(data)
+        this.checkQueueAndSend()
+    }
+
     checkQueueAndSend() {
         if(this._metadataQueue.length > 10){
             this.sendQueue()
@@ -47,6 +52,9 @@ export default class InputQueue {
             this.sendQueue()
         }  
         if(this._keyboardQueue.length > 0){
+            this.sendQueue()
+        }  
+        if(this._pointerQueue.length > 0){
             this.sendQueue()
         }        
     }
