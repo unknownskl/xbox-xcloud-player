@@ -44,7 +44,7 @@ export default class Touch {
 
         if(this._pointerEvents[event.pointerId] === undefined){
             this._pointerEvents[event.pointerId] = {
-                events: [event]
+                events: [event],
             }
         }
 
