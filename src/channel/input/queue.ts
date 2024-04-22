@@ -26,11 +26,27 @@ export default class InputQueue {
         this.checkQueueAndSend()
     }
 
+    queueMouseFrame(data:MouseFrame) {
+        this._mouseQueue.push(data)
+        this.checkQueueAndSend()
+    }
+
+    queueKeyboardFrame(data:KeyboardFrame) {
+        this._keyboardQueue.push(data)
+        this.checkQueueAndSend()
+    }
+
     checkQueueAndSend() {
         if(this._metadataQueue.length > 10){
             this.sendQueue()
         }  
         if(this._gamepadQueue.length > 0){
+            this.sendQueue()
+        }  
+        if(this._mouseQueue.length > 0){
+            this.sendQueue()
+        }  
+        if(this._keyboardQueue.length > 0){
             this.sendQueue()
         }        
     }

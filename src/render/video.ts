@@ -42,6 +42,10 @@ export default class VideoComponent {
         })
     }
 
+    getElement(){
+        return this._element
+    }
+
     destroy(){
         const streamHolder = document.getElementById(this._player._elementId)
         const element = streamHolder?.querySelector('video')

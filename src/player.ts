@@ -106,6 +106,14 @@ export default class xCloudPlayer {
         this._iceHelper.setRemoteCandidates(candidates)
     }
 
+    getVideoElement() {
+        if(this._videoComponent){
+            return this._videoComponent.getElement()
+        } else {
+            return undefined
+        }
+    }
+
     destroy() {
         if(this._isDestoyed === false){
             this._peerConnection.close()

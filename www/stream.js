@@ -132,8 +132,33 @@ class VirtualGamepad {
     }
 }
 
+class VirtualMKB {
+    attach(index = 0) {
+        console.log('[VirtualMKB] Attaching MKB on index:', index)
+        this._mkb = new xCloudPlayer.default.MouseKeyboard(index)
+
+        if(app._player){
+            this._mkb.attach(app._player)
+            this._isAttached = true
+        } else {
+            console.log('[VirtualMKB] Failed to attach MKB to Player istance:', app._player)
+            return
+        }
+    }
+
+    detach() {
+        if(this._isAttached === false){
+            console.log('[VirtualMKB] Virtual MKB is not attached')
+            return
+        }
+        this._mkb.detach()
+        this._isAttached = false
+    }
+}
+
 const vGamepad1 = new VirtualGamepad()
 const vGamepad2 = new VirtualGamepad()
+const vMkb = new VirtualMKB()
 
 const app = new StreamApp()
 

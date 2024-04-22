@@ -232,7 +232,7 @@ export default class InputPacket {
                 packet.setUint16(offset+10, this._normalizeTriggerValue(input.LeftTrigger), true) // LeftTrigger
                 packet.setUint16(offset+12, this._normalizeTriggerValue(input.RightTrigger), true) // RightTrigger
 
-                packet.setUint32(offset+14, 0, true) // PhysicalPhysicality
+                packet.setUint32(offset+14, 1, true) // PhysicalPhysicality
                 packet.setUint32(offset+18, 0, false) // VirtualPhysicality
                 offset += 22
             }

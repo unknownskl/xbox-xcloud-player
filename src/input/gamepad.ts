@@ -1,4 +1,4 @@
-import xCloudPlayer from './player'
+import xCloudPlayer from '../player'
 
 export default class Gamepad {
     private _player: xCloudPlayer | undefined
