@@ -9,6 +9,7 @@ export default class AudioComponent {
         const audioElement = document.createElement('audio')
         audioElement.srcObject = stream
         audioElement.autoplay = true
+        audioElement.muted = false
 
         const element = document.getElementById(this._player._elementId)
         if(element === null) {return}

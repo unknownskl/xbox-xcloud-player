@@ -6,7 +6,7 @@ class StreamApp {
     _player
 
     constructor() {
-        this._apiClient = new xCloudPlayer.default.ApiClient({ host: 'http://127.0.0.1:3000' })
+        this._apiClient = new xCloudPlayer.default.ApiClient({ host: 'http://'+window.location.hostname+':'+window.location.port })
         this._apiClient.getConsoles().then((consoles) => {
             var consoleDiv = document.getElementById('consolesList')
             var consolesHtml = '';
@@ -14,9 +14,9 @@ class StreamApp {
             for(var device in consoles.results) {
                 // consolesHtml += consoles.results[device].deviceName+' ('+consoles.results[device].consoleType+') - '+consoles.results[device].serverId+' isSameNetwork:'+!consoles.results[device].outOfHomeWarning+' <button style="padding: 20px;">'+consoles.results[device].powerState+'</button> <button style="padding: 20px;" onclick="app.startSession(\'xhome\', \''+consoles.results[device].serverId+'\')">Start session</button> <br />'
                 consolesHtml += '<li>'
-                consolesHtml += '   '+consoles.results[device].deviceName
-                consolesHtml += '   ('+consoles.results[device].consoleType+') - '+consoles.results[device].serverId+' - '+consoles.results[device].powerState
-                consolesHtml += '   <button style="padding: 20px;" onclick="app.start(\'home\', \''+consoles.results[device].serverId+'\')">Start session</button>'
+                consolesHtml += '   '+consoles.results[device].deviceName+'('+consoles.results[device].consoleType+') <br />'
+                consolesHtml += '   '+consoles.results[device].serverId+' - '+consoles.results[device].powerState + '<br />'
+                consolesHtml += '   <button style="margin: 10px; padding: 5px;" onclick="app.start(\'home\', \''+consoles.results[device].serverId+'\')">Start session</button>'
                 consolesHtml += '</li>'
             }
             consoleDiv.innerHTML = consolesHtml
@@ -93,8 +93,53 @@ class StreamApp {
     }
 }
 
+class VirtualGamepad {
+
+    _isAttached = false
+
+    attach(index = 0) {
+        console.log('[VirtualGamepad] Attaching virtual gamepad on index:', index)
+        this._gamepad = new xCloudPlayer.default.Gamepad(index)
+
+        if(app._player){
+            this._gamepad.attach(app._player)
+            this._isAttached = true
+        } else {
+            console.log('[VirtualGamepad] Failed to attach gamepad to Player istance:', app._player)
+            return
+        }
+    }
+
+    detach() {
+        if(this._isAttached === false){
+            console.log('[VirtualGamepad] Virtual Gamepad is not attached')
+            return
+        }
+        this._gamepad.detach()
+        this._isAttached = false
+    }
+
+    sendGamepadButtonPress(button) {
+        this._gamepad.sendButtonState(button, 1)
+
+        setTimeout(() => {
+            this._gamepad.sendButtonState(button, 0)
+        }, 50)
+    }
+
+    sendGamepadButtonState(button, value) {
+        this._gamepad.sendButtonState(button, value)
+    }
+}
+
+const vGamepad1 = new VirtualGamepad()
+const vGamepad2 = new VirtualGamepad()
+
 const app = new StreamApp()
 
+window.addEventListener('load', (event) => {
+
+})
 
 
 

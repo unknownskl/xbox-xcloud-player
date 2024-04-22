@@ -12,6 +12,7 @@ export default class MessageHandler {
     }
 
     handle(data) {
+        console.log('[MessageHandler] Handling:', data)
         switch(data.target){
             case '/streaming/sessionLifetimeManagement/serverInitiatedDisconnect':
                 this.completeTransaction(data.id, '')

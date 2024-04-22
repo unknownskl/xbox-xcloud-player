@@ -38,7 +38,8 @@ export default class xCloudPlayer {
         this._config = options
 
         this._peerConnection.addTransceiver('audio', { direction: 'sendrecv' })
-        this._peerConnection.addTransceiver('video', { direction: 'recvonly' })
+        const videoTransceiver = this._peerConnection.addTransceiver('video', { direction: 'recvonly' })
+        videoTransceiver.setCodecPreferences(this._sdpHelper.getDefaultCodecPreferences())
 
         this._peerConnection.ontrack = (event) => {
 

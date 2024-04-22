@@ -37,12 +37,12 @@ export default class MessageChannel extends Channel {
                 this._handshakeCompleted = true
                 // Start control & input channels
                 this.getPlayer()._channels.control.sendAuthorization()
+                this.getPlayer()._channels.input.start()
                 this.sendConfig()
                 break
 
             case 'TransactionStart':
             case 'Message':
-                console.log('[MessageChannel] Starting transaction:', data)
                 new MessageHandler(this, data)
                 break
 
@@ -80,8 +80,8 @@ export default class MessageChannel extends Channel {
         const orientationConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/orientationchanged', { 'orientation': 0 }))
         this.send(orientationConfig)
 
-        // const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': false }))
-        // this.send(touchConfig)
+        const touchConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/touchinputenabledchanged', { 'touchInputEnabled': false }))
+        this.send(touchConfig)
 
         const deviceConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/clientdevicecapabilities', {}))
         this.send(deviceConfig)

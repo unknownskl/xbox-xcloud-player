@@ -1,6 +1,8 @@
 export default class VideoComponent {
     private _player:any
 
+    private _element:HTMLVideoElement | undefined
+
     constructor(player:any){
         this._player = player
     }
@@ -10,15 +12,34 @@ export default class VideoComponent {
         videoElement.srcObject = stream
         videoElement.autoplay = true
         videoElement.muted = true
+        videoElement.playsInline = true
         videoElement.style.width = '100%'
         videoElement.style.height = '100%'
         videoElement.style.objectFit = 'contain'
         videoElement.style.backgroundColor = 'black'
+        videoElement.style.touchAction = 'none'
 
         const element = document.getElementById(this._player._elementId)
         if(element === null) {return}
 
-        element.appendChild(videoElement)
+        this._element = videoElement
+        element.appendChild(this._element)
+
+        this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
+    }
+
+    processVideoMetadata(timestamp, data:VideoFrameCallbackMetadata) {
+        if(this._element === undefined) {return}
+
+        this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
+
+        this._player._channels.input.queueMetadataFrame({
+            serverDataKey: data.rtpTimestamp,
+            firstFramePacketArrivalTimeMs: data.receiveTime,
+            frameSubmittedTimeMs: data.receiveTime,
+            frameDecodedTimeMs: data.expectedDisplayTime,
+            frameRenderedTimeMs: data.expectedDisplayTime,
+        })
     }
 
     destroy(){
