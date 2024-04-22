@@ -130,6 +130,11 @@ export const mockRTCPeerConnection = () => {
         },
         addTransceiver: (type, listener) => {
             // console.log('peerConnection.addTransceiver: ', type);
+            return {
+                setCodecPreferences: (codecs) => {
+                    // console.log('peerConnection.close');
+                }
+            }
         },
         getTransceivers() {
             return [

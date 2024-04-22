@@ -71,8 +71,6 @@ export default class Sdp {
         const t3:Array<any> = []
 
         for(const codec in capabilities) {
-            console.log('codec:', capabilities[codec].mimeType, capabilities[codec].sdpFmtpLine)
-
             if(capabilities[codec].mimeType.includes('H264')) {
                 if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=4d')) {
                     t1.push(capabilities[codec])
@@ -86,13 +84,12 @@ export default class Sdp {
                 t3.push(capabilities[codec])
             } else if(capabilities[codec].mimeType.includes('VP9')) {
                 t3.push(capabilities[codec])
+            } else if(capabilities[codec].mimeType.includes('VP8')) {
+                t3.push(capabilities[codec])
             }
-            // if(capabilities[codec].mimeType.includes('VP9')) {t2.push(capabilities[codec].mimeType)}
-            // if(capabilities[codec].mimeType.includes('VP8')) {t3.push(capabilities[codec].mimeType)}
         }
 
         const codecOrder = [...t1, ...t2, ...t3]
-        console.log('Final codec order:', codecOrder)
 
         return codecOrder
     }
