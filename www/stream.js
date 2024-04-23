@@ -99,7 +99,7 @@ class VirtualGamepad {
 
     attach(index = 0) {
         console.log('[VirtualGamepad] Attaching virtual gamepad on index:', index)
-        this._gamepad = new xCloudPlayer.default.Gamepad(index)
+        this._gamepad = new xCloudPlayer.default.Gamepad(index, { enable_keyboard: true})
 
         if(app._player){
             this._gamepad.attach(app._player)
