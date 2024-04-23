@@ -293,11 +293,8 @@ export default class InputPacket {
                     (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
                     
                 offset = offset+20
-
-                // console.log('Sending event: ', shift.events[event], pointer, e, n, o, l, rect)
             }
         }
-        // }
 
         return offset
     }

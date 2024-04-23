@@ -7,6 +7,8 @@ export default class Touch {
     private _pointerEvents = {}
     private _lastPointerId = -1
 
+    private _mouseDown = false
+
     constructor(index:number){
         this._index = index
     }
@@ -36,28 +38,28 @@ export default class Touch {
 
     loadEventListeners(videoElement:HTMLVideoElement){
         videoElement.addEventListener('pointermove', (e) => this.onPointer(e), { passive: false })
-        videoElement.addEventListener('pointerdown', (e) => { this.onPointer(e); e.preventDefault()}, { passive: false })
-        videoElement.addEventListener('pointerup', (e) => { this.onPointer(e); e.preventDefault()}, { passive: false })
+        videoElement.addEventListener('pointerdown', (e) => { this.onPointer(e); e.preventDefault() }, { passive: false })
+        videoElement.addEventListener('pointerup', (e) => { this.onPointer(e); e.preventDefault() }, { passive: false })
     }
 
     onPointer(event:PointerEvent) {
+        this._lastPointerId = event.pointerId
 
-        if(this._pointerEvents[event.pointerId] === undefined){
-            this._pointerEvents[event.pointerId] = {
+        if(event.pointerType === 'mouse' && event.type === 'pointerdown'){
+            this._mouseDown = true
+        }
+
+        if(event.pointerType === 'mouse' && event.type === 'pointerup'){
+            this._mouseDown = false
+        }
+
+        if(event.pointerType === 'mouse' && event.type === 'pointermove' && this._mouseDown === false){
+            // ignore events if the pointer type is mouse and is not pressed.
+        } else {
+            this._player?._channels.input.queuePointerFrame({
                 events: [event],
-            }
+            })
         }
-
-        this._pointerEvents[event.pointerId].events.push(event)
-
-        if(this._lastPointerId !== event.pointerId){
-            if(this._lastPointerId >= 0){
-                this._player?._channels.input.queuePointerFrame(this._pointerEvents[this._lastPointerId])
-                delete this._pointerEvents[this._lastPointerId]
-            }
-            this._lastPointerId = event.pointerId
-        }
-        // this._player?._channels.input.queuePointerFrame(event)
     }
 
 }

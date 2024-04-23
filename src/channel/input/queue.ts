@@ -37,7 +37,11 @@ export default class InputQueue {
     }
 
     queuePointerFrame(data:PointerFrame) {
-        this._pointerQueue.push(data)
+        if(this._pointerQueue.length > 0){
+            this._pointerQueue[0].events = this._pointerQueue[0].events.concat(data.events)
+        } else {
+            this._pointerQueue.push(data)
+        }
         this.checkQueueAndSend()
     }
 
