@@ -1,17 +1,17 @@
 import xCloudPlayer from '../player'
 
 export interface GamepadOptions {
-    enable_keyboard?: boolean
+    enable_keyboard?: boolean;
     keyboard_mapping?: {
-        [key:string]: string
-    }
+        [key:string]: string;
+    };
 }
 
 export interface GamepadOptionsDefaults {
-    enable_keyboard: boolean
+    enable_keyboard: boolean;
     keyboard_mapping: {
-        [key:string]: string
-    }
+        [key:string]: string;
+    };
 }
 
 export default class Gamepad {
@@ -38,7 +38,7 @@ export default class Gamepad {
             'Menu': 'm',
             'View': 'v',
             'Nexus': 'n',
-        }
+        },
     }
 
     constructor(index:number, options:GamepadOptions = {}){
@@ -46,7 +46,7 @@ export default class Gamepad {
 
         this._options = {
             ...this._options,
-            ...options
+            ...options,
         }
     }
 
@@ -94,7 +94,7 @@ export default class Gamepad {
     }
 
     onKeyDown(event:KeyboardEvent){
-        for(let button in this._options.keyboard_mapping){
+        for(const button in this._options.keyboard_mapping){
             if(this._options.keyboard_mapping[button] === event.key){
                 this.sendButtonState(button, 1)
             }
@@ -102,7 +102,7 @@ export default class Gamepad {
     }
 
     onKeyUp(event:KeyboardEvent){
-        for(let button in this._options.keyboard_mapping){
+        for(const button in this._options.keyboard_mapping){
             if(this._options.keyboard_mapping[button] === event.key){
                 this.sendButtonState(button, 0)
             }
