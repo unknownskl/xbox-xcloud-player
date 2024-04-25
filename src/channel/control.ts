@@ -1,7 +1,23 @@
+import Gamepad from '../input/gamepad'
+import MouseKeyboard from '../input/mousekeyboard'
+import Touch from '../input/touch'
 import Channel from '../lib/channel'
+
+interface GamepadHandlers {
+    0: undefined|Gamepad|MouseKeyboard|Touch
+    1: undefined|Gamepad|MouseKeyboard|Touch
+    2: undefined|Gamepad|MouseKeyboard|Touch
+    3: undefined|Gamepad|MouseKeyboard|Touch
+}
 
 export default class ControlChannel extends Channel {
     _keyframeInterval
+    _gamepadHandlers:GamepadHandlers = {
+        0: undefined,
+        1: undefined,
+        2: undefined,
+        3: undefined,
+    }
 
     getChannelName() {
         return 'control'
@@ -18,6 +34,11 @@ export default class ControlChannel extends Channel {
     destroy() {
         // console.log('DebugChannel destroy() called')
         clearInterval(this._keyframeInterval)
+
+        this._gamepadHandlers[0]?.detach()
+        this._gamepadHandlers[1]?.detach()
+        this._gamepadHandlers[2]?.detach()
+        this._gamepadHandlers[3]?.detach()
     }
 
     sendAuthorization(){
@@ -31,13 +52,17 @@ export default class ControlChannel extends Channel {
         this.sendGamepadState(0, true)
         this.sendGamepadState(0, false)
 
-        this._keyframeInterval = setInterval(() => {
-            console.log('Requesting KeyFrame...')
-            this.requestKeyframeRequest()
-        }, 3000)
+        if(this.getPlayer()._config.keyframe_interval > 0)
+            this._keyframeInterval = setInterval(() => {
+                this.requestKeyframeRequest()
+            }, this.getPlayer()._config.keyframe_interval*1000)
     }
 
-    sendGamepadState(gamepadIndex, wasAdded = true) {
+    sendGamepadState(gamepadIndex, wasAdded = true, handler:undefined|Gamepad|MouseKeyboard|Touch = undefined) {
+        if(handler !== undefined){
+            this._gamepadHandlers[gamepadIndex] = handler
+        }
+
         const gamepadRequest = JSON.stringify({
             'message': 'gamepadChanged',
             'gamepadIndex': gamepadIndex,

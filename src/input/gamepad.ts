@@ -41,6 +41,11 @@ export default class Gamepad {
         },
     }
 
+    private _listener = {
+        keyDown: this.onKeyDown.bind(this),
+        keyUp: this.onKeyUp.bind(this),
+    }
+
     constructor(index:number, options:GamepadOptions = {}){
         this._index = index
 
@@ -56,8 +61,8 @@ export default class Gamepad {
         this._player._channels.control.sendGamepadState(this._index, true)
 
         if(this._options.enable_keyboard === true){
-            window.addEventListener('keydown', event => this.onKeyDown(event))
-            window.addEventListener('keyup', event => this.onKeyUp(event))
+            window.addEventListener('keydown', this._listener.keyDown)
+            window.addEventListener('keyup', this._listener.keyUp)
         }
     }
 
@@ -69,8 +74,8 @@ export default class Gamepad {
         this._player._channels.control.sendGamepadState(this._index, false)
 
         if(this._options.enable_keyboard === true){
-            window.removeEventListener('keydown', event => this.onKeyDown(event))
-            window.removeEventListener('keyup', event => this.onKeyUp(event))
+            window.removeEventListener('keydown', this._listener.keyDown)
+            window.removeEventListener('keyup', this._listener.keyUp)
         }
     }
 
@@ -99,6 +104,7 @@ export default class Gamepad {
                 this.sendButtonState(button, 1)
             }
         }
+        event.preventDefault()
     }
 
     onKeyUp(event:KeyboardEvent){
@@ -107,6 +113,7 @@ export default class Gamepad {
                 this.sendButtonState(button, 0)
             }
         }
+        event.preventDefault()
     }
 
     getDefaultFamepadFrame(){

@@ -9,6 +9,10 @@ export default class Touch {
 
     private _mouseDown = false
 
+    private _listener = {
+        onPointer: this.onPointer.bind(this),
+    }
+
     constructor(index:number){
         this._index = index
     }
@@ -23,7 +27,9 @@ export default class Touch {
             console.log('VideoComponent is not attached. this._player._videoComponent is:', this._player.getVideoElement())
             return
         } else {
-            this.loadEventListeners(this._player.getVideoElement() as HTMLVideoElement)
+            this._player.getVideoElement()?.addEventListener('pointermove', this._listener.onPointer, { passive: false })
+            this._player.getVideoElement()?.addEventListener('pointerdown', this._listener.onPointer, { passive: false })
+            this._player.getVideoElement()?.addEventListener('pointerup', this._listener.onPointer, { passive: false })
         }
 
     }
@@ -34,12 +40,10 @@ export default class Touch {
             return
         }
         this._player._channels.control.sendGamepadState(this._index, false)
-    }
 
-    loadEventListeners(videoElement:HTMLVideoElement){
-        videoElement.addEventListener('pointermove', (e) => this.onPointer(e), { passive: false })
-        videoElement.addEventListener('pointerdown', (e) => { this.onPointer(e); e.preventDefault() }, { passive: false })
-        videoElement.addEventListener('pointerup', (e) => { this.onPointer(e); e.preventDefault() }, { passive: false })
+        this._player.getVideoElement()?.removeEventListener('pointermove', this._listener.onPointer)
+        this._player.getVideoElement()?.removeEventListener('pointerdown', this._listener.onPointer)
+        this._player.getVideoElement()?.removeEventListener('pointerup', this._listener.onPointer)
     }
 
     onPointer(event:PointerEvent) {
@@ -60,6 +64,7 @@ export default class Touch {
                 events: [event],
             })
         }
+        event.preventDefault()
     }
 
 }

@@ -1,9 +1,11 @@
 import xCloudPlayer from '../player'
 
 export default class Sdp {
+    private _player: xCloudPlayer
     private _peerConnection:RTCPeerConnection
 
     constructor(player:xCloudPlayer) {
+        this._player = player
         this._peerConnection = player._peerConnection
     }
 
@@ -26,39 +28,28 @@ export default class Sdp {
     // }
 
     setLocalSDP(sdp:RTCSessionDescriptionInit) {
-        // @TODO Implememnt bitrate limiter and audio channel settings
+        console.log('[SDP] setLocalSDP() Setting local SDP:', sdp)
 
-        // Set bitrate
-        // if(this._maxVideoBitrate > 0){
-        //     console.log('xCloudPlayer Library.ts - createOffer() Set max video bitrate to:', this._maxVideoBitrate, 'kbps')
-        //     offer.sdp = this._setBitrate(offer.sdp, 'video', this._maxVideoBitrate)
-        // }
+        if(this._player._config.video_bitrate > 0){
+            console.log('[SDP] Set max video bitrate to:', this._player._config.video_bitrate, 'kbps')
+            sdp.sdp = this._setBitrate(sdp.sdp, 'video', this._player._config.video_bitrate)
+        }
 
-        // if(this._maxAudioBitrate > 0){
-        //     console.log('xCloudPlayer Library.ts - createOffer() Set max audio bitrate to:', this._maxVideoBitrate, 'kbps')
-        //     offer.sdp = this._setBitrate(offer.sdp, 'audio', this._maxAudioBitrate)
-        // }
+        if(this._player._config.audio_bitrate > 0){
+            console.log('[SDP] Set max audio bitrate to:', this._player._config.audio_bitrate, 'kbps')
+            sdp.sdp = this._setBitrate(sdp.sdp, 'audio', this._player._config.audio_bitrate)
+        }
 
-        // if((this._config.sound_force_mono || false) !== true){
-        //     console.log('xCloudPlayer Library.ts - createOffer() Set audio to stereo')
-        //     offer.sdp = offer.sdp?.replace('useinbandfec=1', 'useinbandfec=1; stereo=1')
-        // }
+        if(this._player._config.audio_mono !== true){
+            console.log('[SDP] setLocalSDP() Set audio to stereo')
+            sdp.sdp = sdp.sdp?.replace('useinbandfec=1', 'useinbandfec=1; stereo=1')
+        }
 
         return sdp
     }
 
     setRemoteSDP(sdp:string) {
-        // console.log('setRemoteSDP:', sdp)
-        // console.log('Server codecs:', this.getServerCodecs())
-
-        // for(const transceiver in this._peerConnection.getTransceivers()){
-        //     // console.log('Transceiver:', this._peerConnection.getTransceivers()[transceiver])
-
-        //     if(this._peerConnection.getTransceivers()[transceiver].receiver.track.kind === 'video'){
-        //         // We got the video transceiver.
-        //     }
-        // }
-
+        console.log('[SDP] setRemoteSDP() Setting remote SDP:', sdp)
         return sdp
     }
 
@@ -69,6 +60,7 @@ export default class Sdp {
         const t1:Array<any> = []
         const t2:Array<any> = []
         const t3:Array<any> = []
+        const t4:Array<any> = []
 
         for(const codec in capabilities) {
             if(capabilities[codec].mimeType.includes('H264')) {
@@ -87,10 +79,44 @@ export default class Sdp {
             } else if(capabilities[codec].mimeType.includes('VP8')) {
                 t3.push(capabilities[codec])
             }
+            // else {
+            //     t4.push(capabilities[codec])
+            // }
         }
 
-        const codecOrder = [...t1, ...t2, ...t3]
+        const codecOrder = [...t1, ...t2, ...t3, ...t4]
 
         return codecOrder
+    }
+
+    _setBitrate(sdp, media, bitrate) {
+        const lines = sdp.split('\n')
+        let line = -1
+        for(let i=0; i < lines.length; i++) {
+            if(lines[i].indexOf('m='+media) === 0) {
+                line = i
+                break
+            }
+        }
+        if (line === -1) {
+            console.debug('Could not find the m line for', media)
+            return sdp
+        }
+        line++
+
+        while(lines[line].indexOf('i=') === 0 || lines[line].indexOf('c=') === 0) {
+            line++
+        }
+       
+        if (lines[line].indexOf('b') === 0) {
+            lines[line] = 'b=AS:'+bitrate
+            return lines.join('\n')
+        }
+        
+        let newLines = lines.slice(0, line)
+        newLines.push('b=AS:'+bitrate)
+        newLines = newLines.concat(lines.slice(line, lines.length))
+
+        return newLines.join('\n')
     }
 }

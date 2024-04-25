@@ -48,19 +48,21 @@ export default class InputQueue {
     checkQueueAndSend() {
         if(this._metadataQueue.length > 10){
             this.sendQueue()
-        }  
-        if(this._gamepadQueue.length > 0){
-            this.sendQueue()
-        }  
-        if(this._mouseQueue.length > 0){
-            this.sendQueue()
-        }  
-        if(this._keyboardQueue.length > 0){
-            this.sendQueue()
-        }  
-        if(this._pointerQueue.length > 0){
-            this.sendQueue()
-        }        
+
+        } else if(this._metadataQueue.length > 0){
+            if(this._gamepadQueue.length > 0){
+                this.sendQueue()
+            }
+            if(this._mouseQueue.length > 0){
+                this.sendQueue()
+            }
+            if(this._keyboardQueue.length > 0){
+                this.sendQueue()
+            }
+            if(this._pointerQueue.length > 0){
+                this.sendQueue()
+            }
+        }
     }
 
     sendQueue() {

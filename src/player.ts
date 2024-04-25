@@ -11,8 +11,12 @@ import VideoComponent from './render/video'
 import AudioComponent from './render/audio'
 
 export interface xCloudPlayerConfig {
-
+    audio_mono?: boolean
+    audio_bitrate?: number
+    video_bitrate?: number
+    keyframe_interval?: number
 }
+export interface xCloudPlayerConfigProperties extends Required<xCloudPlayerConfig> {}
 
 export default class xCloudPlayer {
     _peerConnection = new RTCPeerConnection({})
@@ -23,7 +27,12 @@ export default class xCloudPlayer {
         message: new MessageChannel(this),
     }
 
-    _config = {}
+    _config:xCloudPlayerConfigProperties = {
+        audio_mono: false,
+        audio_bitrate: 0,
+        video_bitrate: 0,
+        keyframe_interval: 5,
+    }
 
     private _elementId: string
     private _isDestoyed = false
@@ -35,7 +44,10 @@ export default class xCloudPlayer {
 
     constructor(elementId:string, options:xCloudPlayerConfig = {}) {
         this._elementId = elementId
-        this._config = options
+        this._config = {
+            ...this._config,
+            ...options,
+        }
 
         this._peerConnection.addTransceiver('audio', { direction: 'sendrecv' })
         const videoTransceiver = this._peerConnection.addTransceiver('video', { direction: 'recvonly' })
@@ -61,15 +73,6 @@ export default class xCloudPlayer {
 
     createOffer() {
         return new Promise((resolve, reject) => {
-            // if(this._codecPreference !== ''){
-            //     console.log('xCloudPlayer Library.ts - createOffer() Set codec preference mimetype to:', this._codecPreference)
-            //     this._setCodec(this._codecPreference, this._codecProfiles)
-            // }
-
-            // @TODO: Implement codec preferences and auto-sorting of best to use codecs / profiles
-
-            // console.log('Available codecs on cient:', this._sdpHelper.getAvailableCodecs())
-
             this._peerConnection.createOffer({
                 offerToReceiveAudio: true,
                 offerToReceiveVideo: true,
@@ -77,7 +80,7 @@ export default class xCloudPlayer {
                 const playerOffer = this._sdpHelper.setLocalSDP(offer)
                 this._peerConnection.setLocalDescription(playerOffer)
 
-                resolve(offer)
+                resolve(playerOffer)
             }).catch((error) => {
                 reject(error)
             })
@@ -85,11 +88,11 @@ export default class xCloudPlayer {
     }
 
     setRemoteOffer(sdpRemote:string){
-        this._sdpHelper.setRemoteSDP(sdpRemote)
+        const finalSdp = this._sdpHelper.setRemoteSDP(sdpRemote)
         try {
             this._peerConnection.setRemoteDescription({
                 type: 'answer',
-                sdp: sdpRemote,
+                sdp: finalSdp,
             })
         } catch(e){
             console.log('xCloudPlayer Library.ts - setRemoteOffer() Remote SDP is not valid:', sdpRemote)
