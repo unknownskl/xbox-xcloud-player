@@ -4,10 +4,10 @@ import Touch from '../input/touch'
 import Channel from '../lib/channel'
 
 interface GamepadHandlers {
-    0: undefined|Gamepad|MouseKeyboard|Touch
-    1: undefined|Gamepad|MouseKeyboard|Touch
-    2: undefined|Gamepad|MouseKeyboard|Touch
-    3: undefined|Gamepad|MouseKeyboard|Touch
+    0: undefined|Gamepad|MouseKeyboard|Touch;
+    1: undefined|Gamepad|MouseKeyboard|Touch;
+    2: undefined|Gamepad|MouseKeyboard|Touch;
+    3: undefined|Gamepad|MouseKeyboard|Touch;
 }
 
 export default class ControlChannel extends Channel {
@@ -52,10 +52,11 @@ export default class ControlChannel extends Channel {
         this.sendGamepadState(0, true)
         this.sendGamepadState(0, false)
 
-        if(this.getPlayer()._config.keyframe_interval > 0)
+        if(this.getPlayer()._config.keyframe_interval > 0) {
             this._keyframeInterval = setInterval(() => {
                 this.requestKeyframeRequest()
             }, this.getPlayer()._config.keyframe_interval*1000)
+        }
     }
 
     sendGamepadState(gamepadIndex, wasAdded = true, handler:undefined|Gamepad|MouseKeyboard|Touch = undefined) {

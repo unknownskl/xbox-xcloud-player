@@ -11,10 +11,10 @@ import VideoComponent from './render/video'
 import AudioComponent from './render/audio'
 
 export interface xCloudPlayerConfig {
-    audio_mono?: boolean
-    audio_bitrate?: number
-    video_bitrate?: number
-    keyframe_interval?: number
+    audio_mono?: boolean;
+    audio_bitrate?: number;
+    video_bitrate?: number;
+    keyframe_interval?: number;
 }
 export interface xCloudPlayerConfigProperties extends Required<xCloudPlayerConfig> {}
 
