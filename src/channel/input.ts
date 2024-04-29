@@ -2,15 +2,17 @@ import Channel from '../lib/channel'
 import InputPacket, { MetadataFrame, ReportTypes, InputFrame as GamepadFrame, MouseFrame, KeyboardFrame, PointerFrame } from './input/packet'
 import InputQueue from './input/queue'
 
+import Gamepad from '../input/gamepad'
+
 export interface VibrationFrame {
-    gamepadIndex: number
-    leftMotorPercent: number
-    rightMotorPercent: number
-    leftTriggerMotorPercent: number
-    rightTriggerMotorPercent: number
-    durationMs: number
-    delayMs: number
-    repeat: number
+    gamepadIndex: number;
+    leftMotorPercent: number;
+    rightMotorPercent: number;
+    leftTriggerMotorPercent: number;
+    rightTriggerMotorPercent: number;
+    durationMs: number;
+    delayMs: number;
+    repeat: number;
 }
 
 export default class InputChannel extends Channel {
@@ -36,12 +38,13 @@ export default class InputChannel extends Channel {
         this.send(Packet.toBuffer())
 
         console.log('[InputChannel] Sent metadata:', Packet, Packet.toBuffer())
+
+        setTimeout(this.gamepadStateLoop.bind(this), 16)
     }
 
     onMessage(event: MessageEvent<any>) {
         const dataView = new DataView(event.data)
         const reportType = dataView.getUint8(0)
-        // const i = 2
 
         console.log('[InputChannel] received:', dataView)
 
@@ -85,12 +88,33 @@ export default class InputChannel extends Channel {
 
     }
 
+    gamepadStateLoop(){
+
+        const gamepadHandlers = this.getPlayer()._channels.control.getGamepadHandlers()
+        console.log('[InputChannel] gamepadHandlers:', gamepadHandlers)
+        const gamepadFrames:Array<GamepadFrame> = []
+        for(const gamepad in gamepadHandlers){
+            if(gamepadHandlers[gamepad] instanceof Gamepad){
+                const frame = (gamepadHandlers[gamepad] as Gamepad).getGamepadState()
+                if(frame !== undefined){
+                    gamepadFrames.push(frame)
+                }
+            }
+        }
+
+        if(gamepadFrames.length > 0){
+            this.queueGamepadFrames(gamepadFrames)
+        }
+
+        setTimeout(this.gamepadStateLoop.bind(this), 16)
+    }
+
     queueMetadataFrame(data:MetadataFrame){
         return this._inputQueue.queueMetadataFrame(data)
     }
 
-    queueGamepadFrame(data:GamepadFrame){
-        this._inputQueue.queueGamepadFrame(data)
+    queueGamepadFrames(frames:Array<GamepadFrame>){
+        this._inputQueue.queueGamepadFrames(frames)
     }
 
     queueMouseFrame(data:MouseFrame){

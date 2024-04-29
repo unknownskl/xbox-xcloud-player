@@ -60,8 +60,13 @@ export default class ControlChannel extends Channel {
     }
 
     sendGamepadState(gamepadIndex, wasAdded = true, handler:undefined|Gamepad|MouseKeyboard|Touch = undefined) {
-        if(handler !== undefined){
-            this._gamepadHandlers[gamepadIndex] = handler
+       
+        if(wasAdded === true){
+            if(handler !== undefined){
+                this._gamepadHandlers[gamepadIndex] = handler
+            }
+        } else {
+            this._gamepadHandlers[gamepadIndex] = undefined
         }
 
         const gamepadRequest = JSON.stringify({

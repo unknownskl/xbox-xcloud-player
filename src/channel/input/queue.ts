@@ -26,6 +26,13 @@ export default class InputQueue {
         this.checkQueueAndSend()
     }
 
+    queueGamepadFrames(frames:Array<GamepadFrame>) {
+        for(const frame in frames){
+            this._gamepadQueue.push(frames[frame])
+        }
+        this.checkQueueAndSend()
+    }
+
     queueMouseFrame(data:MouseFrame) {
         this._mouseQueue.push(data)
         this.checkQueueAndSend()
