@@ -54,7 +54,7 @@ export default class ControlChannel extends Channel {
 
         if(this.getPlayer()._config.keyframe_interval > 0) {
             this._keyframeInterval = setInterval(() => {
-                this.requestKeyframeRequest()
+                this.requestKeyframeRequest(true)
             }, this.getPlayer()._config.keyframe_interval*1000)
         }
     }
@@ -80,5 +80,22 @@ export default class ControlChannel extends Channel {
         })
 
         this.send(keyframeRequest)
+    }
+
+    getGamepadHandlers(){
+        return this._gamepadHandlers
+    }
+
+    getGamepadHandler(index):Gamepad|undefined{
+        for(const gamepad in this.getPlayer()._channels.control.getGamepadHandlers()){
+            if(
+                this.getPlayer()._channels.control.getGamepadHandlers()[gamepad] instanceof Gamepad &&
+                (this.getPlayer()._channels.control.getGamepadHandlers()[gamepad] as Gamepad).getPhysicalGamepadId() === index
+            ) {
+                return this.getPlayer()._channels.control.getGamepadHandlers()[gamepad]
+            }
+        }
+
+        return undefined
     }
 }

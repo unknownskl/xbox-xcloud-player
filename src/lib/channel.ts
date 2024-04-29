@@ -48,6 +48,11 @@ export default class Channel {
     }
 
     send(data:any) {
+        if(this._dataChannel.readyState !== 'open'){
+            console.log('['+this.getChannelName()+'] Tried to send data while channel is not open. readyState is:', this._dataChannel.readyState)
+            return
+        }
+
         if(typeof data === 'string'){
             data = (new TextEncoder).encode(data)
         }

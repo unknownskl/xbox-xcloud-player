@@ -20,7 +20,7 @@ export default class Touch {
     attach(xCloudPlayer:xCloudPlayer){
         this._player = xCloudPlayer
 
-        this._player._channels.control.sendGamepadState(this._index, true)
+        this._player._channels.control.sendGamepadState(this._index, true, this)
 
         // Mod the video UI to capture MKB input
         if(this._player.getVideoElement() === undefined){

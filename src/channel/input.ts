@@ -2,6 +2,17 @@ import Channel from '../lib/channel'
 import InputPacket, { MetadataFrame, ReportTypes, InputFrame as GamepadFrame, MouseFrame, KeyboardFrame, PointerFrame } from './input/packet'
 import InputQueue from './input/queue'
 
+export interface VibrationFrame {
+    gamepadIndex: number
+    leftMotorPercent: number
+    rightMotorPercent: number
+    leftTriggerMotorPercent: number
+    rightTriggerMotorPercent: number
+    durationMs: number
+    delayMs: number
+    repeat: number
+}
+
 export default class InputChannel extends Channel {
     private _serverVideoWidth = 0
     private _serverVideoHeight = 0
@@ -36,6 +47,35 @@ export default class InputChannel extends Channel {
 
         if(reportType === ReportTypes.Vibration){
             console.log('Received a vibration report')
+            dataView.getUint8(2) // rumbleType: 0 = FourMotorRumble
+            const gamepadIndex = dataView.getUint8(3)
+
+            const gamepad = this.getPlayer()._channels.control.getGamepadHandler(gamepadIndex)
+
+            if(gamepad !== undefined){
+                const leftMotorPercent = dataView.getUint8(4) / 100
+                const rightMotorPercent = dataView.getUint8(5) / 100
+                const leftTriggerMotorPercent = dataView.getUint8(6) / 100
+                const rightTriggerMotorPercent = dataView.getUint8(7) / 100
+                const durationMs = dataView.getUint16(8, true)
+                const delayMs = dataView.getUint16(10, true)
+                const repeat = dataView.getUint8(12)
+
+                const rumble:VibrationFrame = {
+                    gamepadIndex,
+                    leftMotorPercent,
+                    rightMotorPercent,
+                    leftTriggerMotorPercent,
+                    rightTriggerMotorPercent,
+                    durationMs,
+                    delayMs,
+                    repeat,
+                }
+
+                gamepad.handleVibration(rumble)
+            } else {
+                console.log('[InputChannel] Received a vibration report but no gamepad handler is available')
+            }
 
         } else if(reportType === ReportTypes.ServerMetadata){
             console.log('[InputChannel] Received server video dimensions:', dataView.getUint32(2, true), dataView.getUint32(6, true))
