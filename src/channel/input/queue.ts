@@ -76,6 +76,12 @@ export default class InputQueue {
         // console.log('Sending queues:', this._metadataQueue.length, this._gamepadQueue.length, this._pointerQueue.length, this._mouseQueue.length, this._keyboardQueue.length)
 
         const packet = new InputPacket(this.getSequenceNum())
+        if(this._pointerQueue.length > 0){
+            packet.setStreamConfig({
+                width: this._player._channels.input.getServerVideoWidth(),
+                height: this._player._channels.input.getServerVideoHeight(),
+            })
+        }
         packet.setData(this._metadataQueue, this._gamepadQueue, this._pointerQueue, this._mouseQueue, this._keyboardQueue)
         this._player._channels.input.send(packet.toBuffer())
 

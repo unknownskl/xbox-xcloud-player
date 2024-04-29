@@ -32,6 +32,14 @@ export default class InputChannel extends Channel {
         }
     }
 
+    getServerVideoWidth(){
+        return this._serverVideoWidth
+    }
+
+    getServerVideoHeight(){
+        return this._serverVideoHeight
+    }
+
     start(){
         const Packet = new InputPacket(0)
         Packet.setMetadata(navigator.maxTouchPoints > 1 ? navigator.maxTouchPoints : 1)
@@ -89,9 +97,8 @@ export default class InputChannel extends Channel {
     }
 
     gamepadStateLoop(){
-
         const gamepadHandlers = this.getPlayer()._channels.control.getGamepadHandlers()
-        console.log('[InputChannel] gamepadHandlers:', gamepadHandlers)
+        // console.log('[InputChannel] gamepadStateLoop() called', gamepadHandlers)
         const gamepadFrames:Array<GamepadFrame> = []
         for(const gamepad in gamepadHandlers){
             if(gamepadHandlers[gamepad] instanceof Gamepad){

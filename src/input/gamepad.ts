@@ -22,6 +22,7 @@ export default class Gamepad {
     private _player: xCloudPlayer | undefined
     private _index: number
     private _physicalGamepadId = -1
+    private _rumbleInterval
 
     private _options:GamepadOptionsDefaults = {
         enable_keyboard: false,
@@ -115,6 +116,10 @@ export default class Gamepad {
         this._player._channels.control.sendGamepadState(this._index, false)
         this._physicalGamepadId = -1
 
+        if(this._rumbleInterval !== undefined){
+            clearInterval(this._rumbleInterval)
+        }
+
         if(this._options.enable_keyboard === true){
             window.removeEventListener('keydown', this._listener.keyDown)
             window.removeEventListener('keyup', this._listener.keyUp)
@@ -205,15 +210,19 @@ export default class Gamepad {
                         this._player?._channels.control.getGamepadHandlers()[gamepad] instanceof Gamepad &&
                         (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId === navigator.getGamepads()[gamepadBrowser]?.index
                     ) {
+                        console.log('[Gamepad] Active gamepad already detected:', gamepadIndex, (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId)
                         gamepadFoundInHandler = true
-                        break
+                        continue;
                     }
                 }
 
-                if(gamepadFoundInHandler === false && gamepadIndex){
+                if(gamepadFoundInHandler === false){
                     this._physicalGamepadId = gamepadIndex
+                    console.log('[Gamepad] Active gamepad detected:', this._physicalGamepadId)
                 }
             }
+        } else {
+            console.log('[Gamepad] Physical gamepad already detected:', this._physicalGamepadId)
         }
     }
 
@@ -278,8 +287,6 @@ export default class Gamepad {
     getPhysicalGamepadId(){
         return this._physicalGamepadId
     }
-
-    private _rumbleInterval
 
     handleVibration(report:VibrationFrame){
         if(this._physicalGamepadId < 0){

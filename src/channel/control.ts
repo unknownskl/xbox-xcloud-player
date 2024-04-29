@@ -63,6 +63,9 @@ export default class ControlChannel extends Channel {
        
         if(wasAdded === true){
             if(handler !== undefined){
+                if(this._gamepadHandlers[gamepadIndex] !== undefined){
+                    this._gamepadHandlers[gamepadIndex]?.detach()
+                }
                 this._gamepadHandlers[gamepadIndex] = handler
             }
         } else {

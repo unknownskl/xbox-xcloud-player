@@ -68,6 +68,11 @@ export interface MetadataFrame {
     frameRenderedTimeMs: number;
 }
 
+export interface StreamConfig {
+    width: number;
+    height: number;
+}
+
 export default class InputPacket {
 
     _reportType = ReportTypes.None
@@ -81,9 +86,16 @@ export default class InputPacket {
     _keyboardFrames:Array<KeyboardFrame> = []
 
     _maxTouchpoints = 0
+    _serverVideoWidth = 0
+    _serverVideoHeight = 0
 
     constructor(sequence){
         this._sequence = sequence
+    }
+
+    setStreamConfig(options:StreamConfig){
+        this._serverVideoWidth = options.width
+        this._serverVideoHeight = options.height
     }
 
     setMetadata(maxTouchpoints = 1){
@@ -233,7 +245,7 @@ export default class InputPacket {
                 packet.setUint16(offset+12, this._normalizeTriggerValue(input.RightTrigger), true) // RightTrigger
 
                 packet.setUint32(offset+14, 1, true) // PhysicalPhysicality
-                packet.setUint32(offset+18, 0, false) // VirtualPhysicality
+                packet.setUint32(offset+18, 1, false) // VirtualPhysicality
                 offset += 22
             }
         }
@@ -257,8 +269,8 @@ export default class InputPacket {
             packet.setUint8(offset, shift.events.length)
             offset++
 
-            const screenWidth = 1920*2
-            const screenHeight = 1080*2
+            const screenWidth = this._serverVideoWidth
+            const screenHeight = this._serverVideoHeight
 
             for(const event in shift.events){
                 const rect = shift.events[event].target.getBoundingClientRect()
@@ -365,16 +377,10 @@ export default class InputPacket {
         let offset = 14
 
         if(this._metadataFrames.length > 0) {offset = this._writeMetadataData(packet, offset, this._metadataFrames)}
-
         if(this._gamepadFrames.length > 0) {offset = this._writeGamepadData(packet, offset, this._gamepadFrames)}
-        
         if(this._pointerFrames.length > 0) {offset = this._writePointerData(packet, offset, this._pointerFrames)}
-        
         if(this._mouseFrames.length > 0) {offset = this._writeMouseData(packet, offset, this._mouseFrames)}
-        
         if(this._keyboardFrames.length > 0) {offset = this._writeKeyboardData(packet, offset, this._keyboardFrames)}
-
-
 
         if(this._reportType === ReportTypes.ClientMetadata){
             packet.setUint8(offset, this._maxTouchpoints)
