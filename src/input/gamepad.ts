@@ -13,7 +13,7 @@ export interface GamepadOptions {
     gamepad_axes_mapping?: {
         [key:string]: string;
     };
-    gamepad_deadzone?: number
+    gamepad_deadzone?: number;
 }
 
 export interface GamepadOptionsDefaults extends Required<GamepadOptions> {}
@@ -344,8 +344,8 @@ export default class Gamepad {
             return 0
         }
 
-        value = value - Math.sign(value) * this._options.gamepad_deadzone;
-        value /= (1.0 - this._options.gamepad_deadzone);
+        value = value - Math.sign(value) * this._options.gamepad_deadzone
+        value /= (1.0 - this._options.gamepad_deadzone)
         
         return value
     }
