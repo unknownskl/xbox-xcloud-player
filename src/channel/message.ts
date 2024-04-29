@@ -53,7 +53,7 @@ export default class MessageChannel extends Channel {
     }
 
     sendConfig(){
-        const systemUis = [10, 19, 31, 27, 32, -41]
+        const systemUis = []
         const systemVersion = [0, 1, 0]
         const uiConfig = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
             'version': systemVersion,

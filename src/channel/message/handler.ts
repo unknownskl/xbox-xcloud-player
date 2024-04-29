@@ -27,6 +27,18 @@ export default class MessageHandler {
                 // console.log('Showing touch layout:', data)
                 break
 
+            case '/streaming/systemUi/messages/ShowMessageDialog':
+                const jsonData = JSON.parse(data.content)
+                console.log(jsonData)
+
+                if(confirm(jsonData.TitleText+'\n\n'+jsonData.ContentText)){
+                    this.completeTransaction(data.id, { Result: 0 })
+                } else {
+                    this.completeTransaction(data.id, { Result: 1 })
+                    // this.cancelTransaction(data.id, '')
+                }
+                break
+
             default:
                 console.log('[MessageChannel] Unhandled transaction:', data)
         }

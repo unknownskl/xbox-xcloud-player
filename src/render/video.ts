@@ -1,5 +1,7 @@
+import xCloudPlayer from '../player'
+
 export default class VideoComponent {
-    private _player:any
+    private _player:xCloudPlayer
 
     private _element:HTMLVideoElement | undefined
 
@@ -19,7 +21,7 @@ export default class VideoComponent {
         videoElement.style.backgroundColor = 'black'
         videoElement.style.touchAction = 'none'
 
-        const element = document.getElementById(this._player._elementId)
+        const element = document.getElementById(this._player.getElementId())
         if(element === null) {return}
 
         this._element = videoElement
@@ -34,9 +36,9 @@ export default class VideoComponent {
         this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
 
         this._player._channels.input.queueMetadataFrame({
-            serverDataKey: data.rtpTimestamp,
-            firstFramePacketArrivalTimeMs: data.receiveTime,
-            frameSubmittedTimeMs: data.receiveTime,
+            serverDataKey: data.rtpTimestamp as number,
+            firstFramePacketArrivalTimeMs: data.receiveTime as number,
+            frameSubmittedTimeMs: data.receiveTime as number,
             frameDecodedTimeMs: data.expectedDisplayTime,
             frameRenderedTimeMs: data.expectedDisplayTime,
         })
@@ -47,7 +49,7 @@ export default class VideoComponent {
     }
 
     destroy(){
-        const streamHolder = document.getElementById(this._player._elementId)
+        const streamHolder = document.getElementById(this._player.getElementId())
         const element = streamHolder?.querySelector('video')
 
         if(element){

@@ -71,6 +71,8 @@ export default class xCloudPlayer {
         }
     }
 
+    getElementId(){ return this._elementId }
+
     createOffer() {
         return new Promise((resolve, reject) => {
             this._peerConnection.createOffer({
