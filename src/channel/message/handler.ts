@@ -28,15 +28,7 @@ export default class MessageHandler {
                 break
 
             case '/streaming/systemUi/messages/ShowMessageDialog':
-                const jsonData = JSON.parse(data.content)
-                console.log(jsonData)
-
-                if(confirm(jsonData.TitleText+'\n\n'+jsonData.ContentText)){
-                    this.completeTransaction(data.id, { Result: 0 })
-                } else {
-                    this.completeTransaction(data.id, { Result: 1 })
-                    // this.cancelTransaction(data.id, '')
-                }
+                this.handleMessage(data)
                 break
 
             default:
@@ -66,5 +58,16 @@ export default class MessageHandler {
         })
 
         this._channel.send(transaction)
+    }
+
+    handleMessage(data) {
+        const jsonData = JSON.parse(data.content)
+        console.log(jsonData)
+        if(confirm(jsonData.TitleText+'\n\n'+jsonData.ContentText)){
+            this.completeTransaction(data.id, { Result: 0 })
+        } else {
+            this.completeTransaction(data.id, { Result: 1 })
+            // this.cancelTransaction(data.id, '')
+        }
     }
 }
