@@ -212,7 +212,7 @@ export default class Gamepad {
                     ) {
                         console.log('[Gamepad] Active gamepad already detected:', gamepadIndex, (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId)
                         gamepadFoundInHandler = true
-                        continue;
+                        continue
                     }
                 }
 
