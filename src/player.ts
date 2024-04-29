@@ -6,6 +6,7 @@ import MessageChannel from './channel/message'
 
 import Ice from './lib/ice'
 import Sdp from './lib/sdp'
+import Stats from './lib/stats'
 
 import VideoComponent from './render/video'
 import AudioComponent from './render/audio'
@@ -39,6 +40,7 @@ export default class xCloudPlayer {
 
     private _sdpHelper = new Sdp(this)
     private _iceHelper = new Ice(this)
+    private _statsHelper = new Stats(this)
     private _videoComponent: VideoComponent | undefined
     private _audioComponent: AudioComponent | undefined
 
@@ -117,6 +119,16 @@ export default class xCloudPlayer {
         } else {
             return undefined
         }
+    }
+
+    toggleDebugOverlay() {
+        if(this._videoComponent){
+            this._videoComponent.toggleDebugOverlay()
+        }
+    }
+
+    getStats() {
+        return this._statsHelper
     }
 
     destroy() {

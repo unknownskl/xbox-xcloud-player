@@ -1,12 +1,15 @@
 import xCloudPlayer from '../player'
+import Overlay from './overlay'
 
 export default class VideoComponent {
     private _player:xCloudPlayer
 
     private _element:HTMLVideoElement | undefined
+    private _overlay:Overlay
 
     constructor(player:any){
         this._player = player
+        this._overlay = new Overlay(this, this._player)
     }
 
     create(stream:MediaStream) {
@@ -26,6 +29,7 @@ export default class VideoComponent {
 
         this._element = videoElement
         element.appendChild(this._element)
+        element.style.position = 'relative'
 
         this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
     }
@@ -46,6 +50,10 @@ export default class VideoComponent {
 
     getElement(){
         return this._element
+    }
+
+    toggleDebugOverlay(){
+        this._overlay.toggleDebug()
     }
 
     destroy(){

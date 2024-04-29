@@ -74,6 +74,8 @@ div#app {
 
 div#rightmenu {
   width: 20%;
+  height: 100vh;
+  overflow-y: scroll;
 }
 
 ul#consolesList {
