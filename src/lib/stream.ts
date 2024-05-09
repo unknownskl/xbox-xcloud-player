@@ -126,6 +126,31 @@ export default class Stream {
         })
     }
 
+    sendChatSDPOffer(sdpOffer){
+        return new Promise((resolve, reject) => {
+            const body = JSON.stringify({
+                'messageType':'offer',
+                'requestId': 2,
+                'sdp': sdpOffer.sdp,
+                'configuration':{
+                    'isMediaStreamsChatRenegotiation': true,
+                },
+            })
+
+            this._apiClient.post(this.getSessionPath()+'/sdp', body, { 'Content-Type': 'application/json', 'Accept': 'application/json' }).then(() => {
+                this.waitForSdpResponse().then((sdpResponse) => {
+                    resolve(sdpResponse)
+
+                }).catch((error) => {
+                    reject(error)
+                })
+
+            }).catch((error) => {
+                reject(error)
+            })
+        })
+    }
+
     waitForSdpResponse(){
         return new Promise((resolve) => {
             const checkInterval = setInterval(() => {
