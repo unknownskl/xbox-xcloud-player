@@ -67,17 +67,20 @@ export default class Sdp {
                 if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=4d')) {
                     t1.push(capabilities[codec])
 
-                } else if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=42')) {
+                } else if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=42e')) {
                     t2.push(capabilities[codec])
+
+                } else if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=420')) {
+                    t3.push(capabilities[codec])
                 } 
             } else if(capabilities[codec].mimeType.includes('ulpfec')) {
-                t3.push(capabilities[codec])
+                t4.push(capabilities[codec])
             } else if(capabilities[codec].mimeType.includes('flexfec')) {
-                t3.push(capabilities[codec])
+                t4.push(capabilities[codec])
             } else if(capabilities[codec].mimeType.includes('VP9')) {
-                t3.push(capabilities[codec])
+                t4.push(capabilities[codec])
             } else if(capabilities[codec].mimeType.includes('VP8')) {
-                t3.push(capabilities[codec])
+                t4.push(capabilities[codec])
             }
             // else {
             //     t4.push(capabilities[codec])

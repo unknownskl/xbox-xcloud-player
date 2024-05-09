@@ -22,7 +22,7 @@ export default class Overlay {
         if(this._overlays.debug === undefined){
             this.createDebugOverlay()
         } else {
-            this.destroyDebugOverlay()
+            this.destroy()
         }
     }
 
@@ -46,7 +46,7 @@ export default class Overlay {
         this.refreshDebugOverlay()
     }
 
-    destroyDebugOverlay(){
+    destroy(){
         this._overlays.debug?.remove()
         this._overlays.debug = undefined
     }
@@ -59,6 +59,9 @@ export default class Overlay {
             this._overlays.debug.appendChild(this.createLabel('Resolution', this._player.getStats()._videoWidth+'x'+this._player.getStats()._videoHeight, 'ok'))
             this._overlays.debug.appendChild(this.createLabel('FPS', this._player.getStats()._videoFps.toString(), this._player.getStats()._videoFps >= 58 ? 'ok' : 'warning'))
             this._overlays.debug.appendChild(this.createLabel('Connection', this._player.getStats()._remoteIsIpv6 ? 'IPv6' : 'IPv4', 'ok'))
+            this._overlays.debug.appendChild(this.createLabel('Video', this._player.getStats()._videoCodec, 'ok'))
+            const rttButtonState = (this._player.getStats()._rtt*1000 > 75) ? 'error' : (this._player.getStats()._rtt*1000 > 40) ? 'warning' : 'ok'
+            this._overlays.debug.appendChild(this.createLabel('RTT', (this._player.getStats()._rtt*1000).toString()+' ms', rttButtonState))
             
             setTimeout(() => {
                 this.refreshDebugOverlay()
@@ -72,9 +75,12 @@ export default class Overlay {
             background: 'linear-gradient(0deg, rgba(28,26,26,1) 0%, rgba(47,45,45,1) 100%)',
             padding: '10px',
             fontSize: '12px',
+            marginTop: '3px',
             marginRight: '10px',
+            marginBottom: '2px',
             textTransform: 'uppercase',
             color: 'white',
+            display: 'inline-block',
         }
 
         const element = document.createElement('span')

@@ -4,7 +4,9 @@ export interface xCloudApiClientConfig {
     locale?: string;
     token?: string;
     host?: string;
+    force_1080p?: boolean;
 }
+interface xCloudApiClientConfigRequired extends Required<xCloudApiClientConfig> {}
 
 export interface StartStreamReponse {
     sessionId: string;
@@ -31,10 +33,11 @@ export interface Console {
 
 export default class xCloudApiClient {
 
-    private _config:xCloudApiClientConfig = {
+    private _config:xCloudApiClientConfigRequired = {
         locale: 'en-US',
         token: '',
         host: '',
+        force_1080p: true,
     }
 
     constructor(config:xCloudApiClientConfig = {}){
@@ -55,40 +58,6 @@ export default class xCloudApiClient {
 
     startStream(type:'home'|'cloud', titleId:string){
         return new Promise<Stream>((resolve, reject) => {
-            const deviceInfo = JSON.stringify({
-                'appInfo': {
-                    'env': {
-                        'clientAppId': 'Microsoft.GamingApp',
-                        'clientAppType': 'native',
-                        'clientAppVersion': '2203.1001.4.0',
-                        'clientSdkVersion': '8.5.2',
-                        'httpEnvironment': 'prod',
-                        'sdkInstallId': '',
-                    },
-                },
-                'dev': {
-                    'hw': {
-                        'make': 'Microsoft',
-                        'model': 'Surface Pro',
-                        'sdktype': 'native',
-                    },
-                    'os': {
-                        'name': 'Windows 11',
-                        'ver': '22631.2715',
-                        'platform': 'desktop',
-                    },
-                    'displayInfo': {
-                        'dimensions': {
-                            'widthInPixels': 1920,
-                            'heightInPixels': 1080,
-                        },
-                        'pixelDensity': {
-                            'dpiX': 1,
-                            'dpiY': 1,
-                        },
-                    },
-                },
-            })
 
             this.post('/v5/sessions/'+type+'/play', JSON.stringify({
                 clientSessionId: '',
@@ -96,6 +65,7 @@ export default class xCloudApiClient {
                 systemUpdateGroup: '',
                 settings: {
                     nanoVersion: 'V3;WebrtcTransport.dll',
+                    enableOptionalDataCollection: false,
                     enableTextToSpeech: false,
                     highContrast: 0,
                     locale: this._config.locale,
@@ -106,9 +76,7 @@ export default class xCloudApiClient {
                 },
                 serverId: (type === 'home') ? titleId : '',
                 fallbackRegionNames: [],
-            }), {
-                'X-MS-Device-Info': deviceInfo,
-            }).then((response) => {
+            })).then((response) => {
                 const stream = new Stream(this, response as StartStreamReponse)
                 resolve(stream)
             }).catch((error) => {
@@ -119,10 +87,14 @@ export default class xCloudApiClient {
 
     get(url, headers = {}){
         return new Promise((resolve, reject) => {
+            const deviceInfo = this.getDeviceInfo()
+
             fetch(this.getBaseHost()+url, {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-Gssv-Client': 'XboxComBrowser',
+                    'X-MS-Device-Info': deviceInfo,
                     ...(this._config.token !== '' ? { 'Authorization': 'Bearer '+this._config.token } : {}),
                     ...headers,
                 },
@@ -142,11 +114,15 @@ export default class xCloudApiClient {
 
     post(url, body, headers = {}){
         return new Promise((resolve, reject) => {
+            const deviceInfo = this.getDeviceInfo()
+
             fetch(this.getBaseHost()+url, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-Gssv-Client': 'XboxComBrowser',
+                    'X-MS-Device-Info': deviceInfo,
                     ...(this._config.token !== '' ? { 'Authorization': 'Bearer '+this._config.token } : {}),
                     ...headers,
                 },
@@ -162,6 +138,56 @@ export default class xCloudApiClient {
                     }
                 })
             })
+        })
+    }
+
+    getDeviceInfo(){
+        return JSON.stringify({
+            'appInfo': {
+                'env': {
+                    // 'clientAppId': 'Microsoft.GamingApp',
+                    // 'clientAppType': 'native',
+                    // 'clientAppVersion': '2203.1001.4.0',
+                    // 'clientSdkVersion': '8.5.2',
+                    // 'httpEnvironment': 'prod',
+                    // 'sdkInstallId': '',
+
+                    'clientAppId':'www.xbox.com',
+                    'clientAppType':'browser',
+                    'clientAppVersion':'21.1.98',
+                    'clientSdkVersion':'8.5.3',
+                    'httpEnvironment':'prod',
+                    'sdkInstallId':'',
+                },
+            },
+            'dev': {
+                'hw': {
+                    'make': 'Microsoft',
+                    // 'model': 'Surface Pro',
+                    'model': 'unknown',
+                    // 'sdktype': 'native',
+                    'sdktype': 'web',
+                },
+                'os': {
+                    'name': (this._config.force_1080p === true) ? 'windows' : 'android',
+                    'ver': '22631.2715',
+                    'platform': 'desktop',
+                },
+                'displayInfo': {
+                    'dimensions': {
+                        'widthInPixels': 1920,
+                        'heightInPixels': 1080,
+                    },
+                    'pixelDensity': {
+                        'dpiX': 2,
+                        'dpiY': 2,
+                    },
+                },
+                'browser':{
+                    'browserName':'chrome',
+                    'browserVersion':'119.0',
+                },
+            },
         })
     }
 

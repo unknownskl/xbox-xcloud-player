@@ -60,6 +60,10 @@ export default class VideoComponent {
         const streamHolder = document.getElementById(this._player.getElementId())
         const element = streamHolder?.querySelector('video')
 
+        if(this._overlay !== undefined){
+            this._overlay.destroy()
+        }
+
         if(element){
             element.remove()
         }

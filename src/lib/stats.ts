@@ -10,11 +10,13 @@ export default class Stats {
     _videoWidth:number = 0
     _videoHeight:number = 0
     _videoFps:number = 0
+    _rtt:number = 0.0
 
     _remoteHost:string = ''
     _remotePort:number = 0
     _remoteIsLocal = false
     _remoteIsIpv6 = false
+    _activeRemoteCandidate:string = ''
 
     constructor(player:xCloudPlayer) {
         this._player = player
@@ -30,6 +32,9 @@ export default class Stats {
 
                 if(report.type === 'inbound-rtp'){
                     this.readInboundRtp(report)
+
+                } else if(report.type === 'candidate-pair' && report.packetsReceived !== undefined && report.packetsReceived > 0){
+                    this.readCandidatePair(report)
                     
                 } else if(report.type === 'remote-candidate'){
                     this.readRemoteCandidate(report)
@@ -39,24 +44,40 @@ export default class Stats {
     }
 
     readInboundRtp(report:RTCInboundRtpStreamStats){
-        if(report.kind === 'video' && report.codecId){
-            this._videoCodec = report.codecId
+        if(report.kind === 'video' && report.codecId && report.packetsReceived !== undefined && report.packetsReceived > 0){
+
+            if(report.codecId.includes('profile-level-id=4d')){
+                this._videoCodec = 'H264 (High)'
+
+            } else if(report.codecId.includes('profile-level-id=42e')) {
+                this._videoCodec = 'H264 (Normal)'
+
+            } else if(report.codecId.includes('profile-level-id=420')) {
+                this._videoCodec = 'H264 (Low)'
+
+            } else {
+                this._videoCodec = 'Other ('+report.codecId+')'
+            }
 
             if(report.frameWidth){ this._videoWidth = report.frameWidth }
             if(report.frameHeight){ this._videoHeight = report.frameHeight }
             if(report.framesPerSecond){ this._videoFps = report.framesPerSecond }
-
             // report.jitter
 
-        } else if(report.kind === 'audio' && report.codecId){
+        } else if(report.kind === 'audio' && report.codecId && report.packetsReceived !== undefined && report.packetsReceived > 0){
             this._audioCodec = report.codecId
 
             // report.jitter
         }
     }
 
+    readCandidatePair(report){
+        this._activeRemoteCandidate = report.remoteCandidateId
+        this._rtt = report.currentRoundTripTime
+    }
+
     readRemoteCandidate(report){
-        console.log('Remote Candidate:', report)
+        if(report.id !== this._activeRemoteCandidate) {return}
 
         if(this.isPrivateIP(report.address)){
             this._remoteIsLocal = true
