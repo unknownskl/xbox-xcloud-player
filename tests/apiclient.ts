@@ -8,13 +8,13 @@ describe('ApiClient', () => {
 
     it('should have the default values set', () => {
         const apiClient = new ApiClient()
-        expect(apiClient.getConfig()).toStrictEqual({ locale: 'en-US', host: '', token: '' })
+        expect(apiClient.getConfig()).toStrictEqual({ locale: 'en-US', host: '', token: '', force_1080p: true })
         expect(apiClient.getBaseHost()).toBe('')
     })
 
     it('should set the config correctly', () => {
-        const apiClient = new ApiClient({ locale: 'xx-XX', host: 'res1', token: 'res2' })
-        expect(apiClient.getConfig()).toStrictEqual({ locale: 'xx-XX', host: 'res1', token: 'res2' })
+        const apiClient = new ApiClient({ locale: 'xx-XX', host: 'res1', token: 'res2', force_1080p: false })
+        expect(apiClient.getConfig()).toStrictEqual({ locale: 'xx-XX', host: 'res1', token: 'res2', force_1080p: false })
         expect(apiClient.getBaseHost()).toBe('res1')
     })
 
