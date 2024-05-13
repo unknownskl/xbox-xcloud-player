@@ -8,10 +8,10 @@ class StreamApp {
     constructor() {
         this._apiClient = new xCloudPlayer.default.ApiClient({ host: 'http://'+window.location.hostname+':'+window.location.port })
         this._apiClient.getConsoles().then((consoles) => {
-            var consoleDiv = document.getElementById('consolesList')
-            var consolesHtml = '';
+            const consoleDiv = document.getElementById('consolesList')
+            let consolesHtml = '';
         
-            for(var device in consoles.results) {
+            for(const device in consoles.results) {
                 // consolesHtml += consoles.results[device].deviceName+' ('+consoles.results[device].consoleType+') - '+consoles.results[device].serverId+' isSameNetwork:'+!consoles.results[device].outOfHomeWarning+' <button style="padding: 20px;">'+consoles.results[device].powerState+'</button> <button style="padding: 20px;" onclick="app.startSession(\'xhome\', \''+consoles.results[device].serverId+'\')">Start session</button> <br />'
                 consolesHtml += '<li>'
                 consolesHtml += '   '+consoles.results[device].deviceName+'('+consoles.results[device].consoleType+') <br />'
