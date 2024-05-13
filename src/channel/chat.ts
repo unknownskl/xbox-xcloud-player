@@ -54,8 +54,8 @@ export default class ChatChannel extends Channel {
                 this.getPlayer()._sdpHandler ? this.getPlayer()._sdpHandler(offer) : null
             })
         }).catch((err) => {
-            alert(`Error connecting to microphone: ${err}`);
-        });
+            alert(`Error connecting to microphone: ${err}`)
+        })
     }
 
     stopMicrophone() {

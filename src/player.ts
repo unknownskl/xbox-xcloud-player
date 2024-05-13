@@ -44,7 +44,7 @@ export default class xCloudPlayer {
     private _videoComponent: VideoComponent | undefined
     private _audioComponent: AudioComponent | undefined
 
-    _sdpHandler: (offer: RTCSessionDescriptionInit) => void = (offer) => {}
+    _sdpHandler: (offer: RTCSessionDescriptionInit) => void = () => {}
 
     constructor(elementId:string, options:xCloudPlayerConfig = {}) {
         this._elementId = elementId
@@ -76,7 +76,7 @@ export default class xCloudPlayer {
     getElementId(){ return this._elementId }
 
     onConnectionStateChange(callback: (state: string) => void) {
-        this._peerConnection.onconnectionstatechange = (event) => {
+        this._peerConnection.onconnectionstatechange = () => {
             callback(this._peerConnection.connectionState)
         }
     }
