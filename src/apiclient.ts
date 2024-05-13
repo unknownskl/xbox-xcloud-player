@@ -141,6 +141,34 @@ export default class xCloudApiClient {
         })
     }
 
+    delete(url, headers = {}){
+        return new Promise((resolve, reject) => {
+            const deviceInfo = this.getDeviceInfo()
+
+            fetch(this.getBaseHost()+url, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Gssv-Client': 'XboxComBrowser',
+                    'X-MS-Device-Info': deviceInfo,
+                    ...(this._config.token !== '' ? { 'Authorization': 'Bearer '+this._config.token } : {}),
+                    ...headers,
+                },
+            }).then(response => {
+                response.json().then(data => {
+                    resolve(data)
+                }).catch((error) => {
+                    if(response.status >= 200 && response.status <= 299){
+                        resolve({ status: response.status })
+                    } else {
+                        reject({ error: error })
+                    }
+                })
+            })
+        })
+    }
+
     getDeviceInfo(){
         return JSON.stringify({
             'appInfo': {

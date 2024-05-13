@@ -198,4 +198,25 @@ export default class Stream {
             }, 1000)
         })
     }
+
+    sendKeepalive(){
+        return new Promise((resolve, reject) => {
+            this._apiClient.post(this.getSessionPath()+'/keepalive', '').then(keepaliveResponse => {
+                resolve(keepaliveResponse)
+            }).catch((error) => {
+                reject({ error: error })
+            })
+        })
+    }
+
+    stop(){
+        return new Promise((resolve, reject) => {
+            this._apiClient.delete(this.getSessionPath()).then(() => {
+                resolve({ status: 'ok'})
+
+            }).catch((error) => {
+                reject(error)
+            })
+        })
+    }
 }
