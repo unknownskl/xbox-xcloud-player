@@ -29,12 +29,11 @@ class StreamApp {
 
     start(type, titleId){
         document.getElementById('connectionStatus').innerText = 'Requesting stream: '+type+' - '+titleId
-        // console.log('Start stream:', type, titleId)
+
         this._apiClient.startStream('home', titleId).then((stream) => {
             document.getElementById('connectionStatus').innerText = 'Stream requested, waiting to be ready: '+type+' - '+titleId
-            // console.log('Stream started:', stream)
+            
             this._currentStream = stream
-
             this._currentStream.onProvisioned = () => {
                 console.log('Stream is provisioned. Lets start the player.')
                 this.loadPlayer()

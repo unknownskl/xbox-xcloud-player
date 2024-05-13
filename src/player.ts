@@ -152,8 +152,10 @@ export default class xCloudPlayer {
     destroy() {
         if(this._isDestoyed === false){
             this._peerConnection.close()
-            this._peerConnection.onconnectionstatechange ? this._peerConnection.onconnectionstatechange(new Event('connectionstatechanged')) : null
-            console.log('[xPlayer] Player destroyed:', this._peerConnection.connectionState)
+
+            if(this._peerConnection.onconnectionstatechange){
+                this._peerConnection.onconnectionstatechange(new Event('connectionstatechanged'))
+            }
             
             for(const channel in this._channels) {
                 this._channels[channel].destroy()

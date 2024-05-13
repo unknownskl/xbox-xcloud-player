@@ -51,7 +51,11 @@ export default class ChatChannel extends Channel {
             // Add to SDP
             this.getPlayer()._peerConnection.addTrack(stream.getAudioTracks()[0], stream)
             this.getPlayer().createOffer().then((offer) => {
-                this.getPlayer()._sdpHandler ? this.getPlayer()._sdpHandler(offer) : null
+                if(this.getPlayer()._sdpHandler){
+                    this.getPlayer()._sdpHandler(offer)
+                } else {
+                    console.log('No SDP handler set. Set an SDP Handler via player.setChatSdpHandler()')
+                }
             })
         }).catch((err) => {
             alert(`Error connecting to microphone: ${err}`)
