@@ -6,6 +6,18 @@ export const mockRTCPeerConnection = () => {
         }
     } as any));
 
+    (global as any).navigator = {
+        permissions: {
+            query: () => {
+                return {
+                    then: (cb) => {
+                        cb({state: 'granted'})
+                    }
+                }
+            }
+        }
+    };
+
     (global as any).RTCRtpReceiver = {
     // (global as any).RTCRtpReceiver = jest.fn(() => ({
         getCapabilities: () => {
