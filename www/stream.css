@@ -126,8 +126,12 @@ div#content {
   height: 100vh;
 }
 
-div#debugBar {
-  background: #000000;
+div#statusBar {
+  background: rgba(0,0,0, 0.5);
   width: 100%;
   height: 50px;
+}
+
+div#statusBar p {
+  padding: 10px;
 }

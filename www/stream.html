@@ -19,8 +19,8 @@
       </div>
 
       <div id="content">
-        <div id="debugBar">
-          
+        <div id="statusBar">
+          <p>Status: <span id="connectionStatus">-</span></p>
         </div>
         <div id="streamHolder">
           
@@ -30,8 +30,10 @@
       <div id="rightmenu">
         <h2>Controls:</h2>
 
-        <button onclick="app.destroyPlayer()">Destroy player</button><br />
-        <button onclick="app._player.toggleDebugOverlay()">Toggle Debug Overlay</button>
+        <button onclick="app.destroyPlayer()">Destroy player</button>
+        <button onclick="app._player.toggleDebugOverlay()">Toggle Debug</button><br />
+        <button onclick="app._player._channels.chat.startMicrophone()">Start Mic</button>
+        <button onclick="app._player._channels.chat.stopMicrophone()">Stop Mic</button>
 
         <h2>Mouse Keyboard:</h2>
         <button onclick="vMkb.attach(0)">Attach MKB</button>

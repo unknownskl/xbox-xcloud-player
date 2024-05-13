@@ -3,6 +3,8 @@ import xCloudPlayer from '../player'
 export default class AudioComponent {
     private _player:xCloudPlayer
 
+    private _element:HTMLAudioElement | undefined
+
     constructor(player:any){
         this._player = player
     }
@@ -13,10 +15,16 @@ export default class AudioComponent {
         audioElement.autoplay = true
         audioElement.muted = false
 
+        this._element = audioElement
+
         const element = document.getElementById(this._player.getElementId())
         if(element === null) {return}
 
-        element.appendChild(audioElement)
+        element.appendChild(this._element)
+    }
+
+    getElement(){
+        return this._element
     }
 
     destroy(){
