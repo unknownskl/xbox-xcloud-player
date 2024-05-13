@@ -166,7 +166,7 @@ export default class xCloudPlayer {
 
             this._isDestoyed = true
         } else {
-            throw new Error('Cannot destroy because the player is already destroyed.')
+            console.log('Cannot destroy because the player is already destroyed.')
         }
     }
 }

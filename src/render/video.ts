@@ -29,7 +29,10 @@ export default class VideoComponent {
 
         this._element = videoElement
         element.appendChild(this._element)
-        element.style.position = 'relative'
+        const isStatic = getComputedStyle(element).position === 'static' ? true : false
+        if(isStatic === true){
+            element.style.position = 'relative'
+        }
 
         this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
     }
