@@ -162,7 +162,9 @@ class VirtualGamepad {
 
     sendGamepadButtonPress(button) {
         this._gamepad.sendButtonState(button, 1)
-        this._gamepad.sendButtonState(button, 0)
+        setTimeout(() => {
+            this._gamepad.sendButtonState(button, 0)
+        }, 50)
     }
 
     sendGamepadButtonState(button, value) {
