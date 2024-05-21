@@ -2,6 +2,7 @@ class StreamApp {
 
     _currentStream
     _refreshInterval
+    _keepaliveInterval
 
     _player
 
@@ -27,16 +28,45 @@ class StreamApp {
         })
     }
 
+    loaded(){
+        document.getElementById('xcloudTitle').value = localStorage.getItem('xcloudTitle')
+        document.getElementById('xcloudTitle').addEventListener('change', (event) => {
+            const titleId = event.target.value
+            localStorage.setItem('xcloudTitle', titleId)
+        })
+    }
+
     start(type, titleId){
         document.getElementById('connectionStatus').innerText = 'Requesting stream: '+type+' - '+titleId
 
-        this._apiClient.startStream('home', titleId).then((stream) => {
+        this._apiClient.startStream(type, titleId).then((stream) => {
             document.getElementById('connectionStatus').innerText = 'Stream requested, waiting to be ready: '+type+' - '+titleId
             
             this._currentStream = stream
             this._currentStream.onProvisioned = () => {
                 console.log('Stream is provisioned. Lets start the player.')
                 this.loadPlayer()
+                this._keepaliveInterval = setInterval(() => {
+                    this._currentStream.sendKeepalive().then((response) => {
+                        console.log('Keepalive sent:', response)
+                    }).catch((error) => {
+                        console.error('Failed to send keepalive:', error)
+                    })
+                }, 30*1000)
+            }
+            this._currentStream.onReadyToConnect = () => {
+                fetch('/api/msal')
+                .then((response) => response.text())
+                .then((response) => {
+                    this._currentStream.sendMSALAuth(response).then((response) => {
+                        console.log('MSAL Auth response:', response)
+                    }).catch((error) => {
+                        console.error('Failed to send MSAL Auth:', error)
+                    })
+                }).catch((error) => {
+                    console.error('Failed to fetch MSAL token:', error)
+                })
+                console.log('Console is ready. Lets send over the MSAL token.')
             }
 
             this._currentStream.waitForState('Provisioned')
@@ -94,6 +124,8 @@ class StreamApp {
     destroyPlayer(){
         if(this._player !== undefined){
             this._player.destroy()
+            clearInterval(this._refreshInterval)
+            clearInterval(this._keepaliveInterval)
             delete this._player
         } else {
             console.log('Player is already destroyed!')
@@ -194,5 +226,5 @@ const vTouch = new VirtualTouch()
 const app = new StreamApp()
 
 window.addEventListener('load', (event) => {
-    
+    app.loaded()
 })

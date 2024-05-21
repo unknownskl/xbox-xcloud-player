@@ -209,6 +209,12 @@ export default class Stream {
         })
     }
 
+    sendMSALAuth(userToken:string){
+        return this._apiClient.post(this.getSessionPath()+'/connect', JSON.stringify({
+            'userToken': userToken,
+        }), { 'Content-Type': 'application/json', 'Accept': 'application/json' })
+    }
+
     stop(){
         return new Promise((resolve, reject) => {
             this._apiClient.delete(this.getSessionPath()).then(() => {
