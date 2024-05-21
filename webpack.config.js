@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    xCloudPlayer: './src/Library.ts',
+    xCloudPlayer: './src/library.ts',
     // opusWorker: './src/Worker/Opus.js',
   },
   module: {
@@ -15,7 +15,7 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts'],
   },
   output: {
     filename: '[name].min.js',

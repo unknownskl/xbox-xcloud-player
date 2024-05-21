@@ -37,3 +37,23 @@ Run development build in watch mode:
 Create production build:
 
     npm run build
+
+### API
+
+There are several API's available. The 2 main API's you want to use are the ApiClient and Player.
+
+## ApiClient
+
+Create new ApiClient for API requests
+
+    import xCloudPlayer from 'xbox-xcloud-player'
+    const ApiClient = new xCloudPlayer.ApiClient({ locale: 'en-US', host: 'https://uks.core.gssv-play-prodxhome.xboxlive.com', token: '<xHome gamestreaming token>' })
+
+    const consoles = ApiClient.getConsoles().then((consoles) => {
+        console.log('Consoles:', consoles)
+    })
+
+## Player
+
+    import xCloudPlayer from 'xbox-xcloud-player'
+    const ApiClient = new xCloudPlayer.Player()

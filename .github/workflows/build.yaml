@@ -1,4 +1,11 @@
-on: ['push', 'pull_request']
+name: Build
+on:
+    push:
+      branches:
+        - main
+        - '**'
+    pull_request:
+      types: [opened, synchronize, reopened]
 
 jobs:
     build:
@@ -20,11 +27,23 @@ jobs:
         - name: Install dependencies
           run: npm ci
 
+        - name: debug
+          run: ls -la
+
         - name: Lint code
           run: npm run lint
+
+        - name: Build dist
+          run: npm run build
 
         - name: Run tests
           run: npm test
 
-        - name: Build dist
-          run: npm run build
+        - name: SonarCloud Scan
+          uses: SonarSource/sonarcloud-github-action@master
+          env: 
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          with:
+            args: >
+              -Dsonar.organization=unknownskl-github
+              -Dsonar.projectKey=unknownskl_xbox-xcloud-player
