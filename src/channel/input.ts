@@ -120,8 +120,8 @@ export default class InputChannel extends Channel {
         return this._inputQueue.queueMetadataFrame(data)
     }
 
-    queueGamepadFrames(frames:Array<GamepadFrame>){
-        this._inputQueue.queueGamepadFrames(frames)
+    queueGamepadFrames(frames:Array<GamepadFrame>, forceSend = false){
+        this._inputQueue.queueGamepadFrames(frames, forceSend)
     }
 
     queueMouseFrame(data:MouseFrame){

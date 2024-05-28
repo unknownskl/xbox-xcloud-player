@@ -26,6 +26,9 @@ export default class Gamepad {
     private _physicalGamepadId = -1
     private _rumbleInterval
     private _isFocused = true
+    private _gamepadOverride = {
+        buttons: {},
+    }
 
     private _options:GamepadOptionsDefaults = {
         enable_keyboard: false,
@@ -157,14 +160,11 @@ export default class Gamepad {
         if(! (button in this.getDefaultFamepadFrame())){
             console.log('[Gamepad] Invalid button:', button)
             return
-        } else {
-
-            const buttonPreset = this.getDefaultFamepadFrame()
-            buttonPreset.GamepadIndex = this._index
-            buttonPreset[button] = value
-
-            return this._player._channels.input.queueGamepadFrames([buttonPreset])
         }
+
+        const buttonPreset = this.getDefaultFamepadFrame()
+        buttonPreset.GamepadIndex = this._index
+        this._gamepadOverride.buttons[button] = value
     }
 
     onKeyDown(event:KeyboardEvent){
@@ -174,10 +174,10 @@ export default class Gamepad {
 
         for(const button in this._options.keyboard_mapping){
             if(this._options.keyboard_mapping[button] === event.key){
-                this.sendButtonState(button, 1)
+                this._gamepadOverride.buttons[button] = 1
+                event.preventDefault()
             }
         }
-        event.preventDefault()
     }
 
     onKeyUp(event:KeyboardEvent){
@@ -187,10 +187,10 @@ export default class Gamepad {
 
         for(const button in this._options.keyboard_mapping){
             if(this._options.keyboard_mapping[button] === event.key){
-                this.sendButtonState(button, 0)
+                this._gamepadOverride.buttons[button] = 0
+                event.preventDefault()
             }
         }
-        event.preventDefault()
     }
 
     onWindowFocus(){
@@ -280,9 +280,13 @@ export default class Gamepad {
         }
     }
 
+    hasOverrideButtons(){
+        return Object.keys(this._gamepadOverride.buttons).length > 0
+    }
+
     getGamepadState(){
         const gamepad = this.getGamepad(this._physicalGamepadId)
-        if(this._physicalGamepadId < 0 || gamepad === undefined || this._isFocused === false){
+        if((this._physicalGamepadId < 0 || gamepad === undefined || this._isFocused === false) && (this.hasOverrideButtons() === false)){
             return undefined
         }
 
@@ -290,8 +294,32 @@ export default class Gamepad {
         frame.GamepadIndex = this._index
 
         // Set buttons
-        for(const button in this._options.gamepad_mapping){
-            frame[button] = gamepad.buttons[this._options.gamepad_mapping[button]].value
+        if(gamepad !== undefined){
+            for(const button in this._options.gamepad_mapping){
+                frame[button] = gamepad.buttons[this._options.gamepad_mapping[button]].value
+            }
+
+            // Set axis
+            for(const axis in this._options.gamepad_axes_mapping){
+                frame[axis] = this.normaliseAxis(gamepad.axes[this._options.gamepad_axes_mapping[axis]])
+            }
+        }
+
+        // Check for button overrides from the keyboard
+        for(const button in this._gamepadOverride.buttons){
+            frame[button] = this._gamepadOverride.buttons[button]
+
+            // Clean up existing keys if they are 0
+            if(this._gamepadOverride.buttons[button] === 0){
+                // Remove key from override
+                const newOverrideButtons = {}
+                for(const oButton in this._gamepadOverride.buttons){
+                    if(this._gamepadOverride.buttons[oButton] !== 0){
+                        newOverrideButtons[oButton] = this._gamepadOverride.buttons[oButton]
+                    }
+                }
+                this._gamepadOverride.buttons = newOverrideButtons
+            }
         }
 
         // Start + Select Nexus menu workaround
@@ -300,11 +328,6 @@ export default class Gamepad {
             frame.Menu = 0
 
             frame.Nexus = 1
-        }
-
-        // Set axis
-        for(const axis in this._options.gamepad_axes_mapping){
-            frame[axis] = this.normaliseAxis(gamepad.axes[this._options.gamepad_axes_mapping[axis]])
         }
 
         return frame

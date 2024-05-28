@@ -26,11 +26,11 @@ export default class InputQueue {
         this.checkQueueAndSend()
     }
 
-    queueGamepadFrames(frames:Array<GamepadFrame>) {
+    queueGamepadFrames(frames:Array<GamepadFrame>, forceSend = false) {
         for(const frame in frames){
             this._gamepadQueue.push(frames[frame])
         }
-        this.checkQueueAndSend()
+        this.checkQueueAndSend(forceSend)
     }
 
     queueMouseFrame(data:MouseFrame) {
@@ -52,21 +52,23 @@ export default class InputQueue {
         this.checkQueueAndSend()
     }
 
-    checkQueueAndSend() {
-        if(this._metadataQueue.length > 10){
+    checkQueueAndSend(forceSend = false) {
+        if(forceSend === true){
+            this.sendQueue()
+            return
+        }
+        
+        if(this._metadataQueue.length > 5){
             this.sendQueue()
 
         } else if(this._metadataQueue.length > 0){
             if(this._gamepadQueue.length > 0){
                 this.sendQueue()
-            }
-            if(this._mouseQueue.length > 0){
+            } else if(this._mouseQueue.length > 0){
                 this.sendQueue()
-            }
-            if(this._keyboardQueue.length > 0){
+            } else if(this._keyboardQueue.length > 0){
                 this.sendQueue()
-            }
-            if(this._pointerQueue.length > 0){
+            } else if(this._pointerQueue.length > 0){
                 this.sendQueue()
             }
         }
