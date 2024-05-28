@@ -15,6 +15,7 @@ export interface GamepadOptions {
         [key:string]: string;
     };
     gamepad_deadzone?: number;
+    gamepad_force_capture?: boolean;
 }
 
 export interface GamepadOptionsDefaults extends Required<GamepadOptions> {}
@@ -24,6 +25,7 @@ export default class Gamepad {
     private _index: number
     private _physicalGamepadId = -1
     private _rumbleInterval
+    private _isFocused = true
 
     private _options:GamepadOptionsDefaults = {
         enable_keyboard: false,
@@ -74,6 +76,7 @@ export default class Gamepad {
             'RightThumbYAxis': '3',
         },
         gamepad_deadzone: 0.2,
+        gamepad_force_capture: false,
     }
 
     private _listener = {
@@ -81,6 +84,8 @@ export default class Gamepad {
         keyUp: this.onKeyUp.bind(this),
         gamepadConnected: this.onGamepadConnected.bind(this),
         gamepadDisconnected: this.onGamepadDisconnected.bind(this),
+        windowFocus: this.onWindowFocus.bind(this),
+        windowBlur: this.onWindowBlur.bind(this),
     }
 
     constructor(index:number, options:GamepadOptions = {}){
@@ -107,6 +112,11 @@ export default class Gamepad {
             window.addEventListener('gamepaddisconnected', this._listener.gamepadDisconnected)
         }
 
+        if(this._options.enable_gamepad === true && this._options.gamepad_force_capture === false){
+            window.addEventListener('blur', this._listener.windowBlur)
+            window.addEventListener('focus', this._listener.windowFocus)
+        }
+
         this.detectActiveGamepad()
     }
 
@@ -131,6 +141,11 @@ export default class Gamepad {
             window.removeEventListener('gamepadconnected', this._listener.gamepadConnected)
             window.removeEventListener('gamepaddisconnected', this._listener.gamepadDisconnected)
         }
+
+        if(this._options.enable_gamepad === true && this._options.gamepad_force_capture === false){
+            window.removeEventListener('blur', this._listener.windowBlur)
+            window.removeEventListener('focus', this._listener.windowFocus)
+        }
     }
 
     sendButtonState(button, value){
@@ -153,6 +168,10 @@ export default class Gamepad {
     }
 
     onKeyDown(event:KeyboardEvent){
+        if(this._isFocused === false){
+            return
+        }
+
         for(const button in this._options.keyboard_mapping){
             if(this._options.keyboard_mapping[button] === event.key){
                 this.sendButtonState(button, 1)
@@ -162,12 +181,24 @@ export default class Gamepad {
     }
 
     onKeyUp(event:KeyboardEvent){
+        if(this._isFocused === false){
+            return
+        }
+
         for(const button in this._options.keyboard_mapping){
             if(this._options.keyboard_mapping[button] === event.key){
                 this.sendButtonState(button, 0)
             }
         }
         event.preventDefault()
+    }
+
+    onWindowFocus(){
+        this._isFocused = true
+    }
+
+    onWindowBlur(){
+        this._isFocused = false
     }
 
     getDefaultFamepadFrame(){
@@ -251,13 +282,14 @@ export default class Gamepad {
 
     getGamepadState(){
         const gamepad = this.getGamepad(this._physicalGamepadId)
-        if(this._physicalGamepadId < 0 || gamepad === undefined){
+        if(this._physicalGamepadId < 0 || gamepad === undefined || this._isFocused === false){
             return undefined
         }
 
         const frame = this.getDefaultFamepadFrame()
         frame.GamepadIndex = this._index
 
+        // Set buttons
         for(const button in this._options.gamepad_mapping){
             frame[button] = gamepad.buttons[this._options.gamepad_mapping[button]].value
         }
@@ -270,6 +302,7 @@ export default class Gamepad {
             frame.Nexus = 1
         }
 
+        // Set axis
         for(const axis in this._options.gamepad_axes_mapping){
             frame[axis] = this.normaliseAxis(gamepad.axes[this._options.gamepad_axes_mapping[axis]])
         }
