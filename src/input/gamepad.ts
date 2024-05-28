@@ -4,6 +4,7 @@ import { VibrationFrame } from '../channel/input'
 export interface GamepadOptions {
     enable_keyboard?: boolean;
     enable_gamepad?: boolean;
+    enable_vibration?: boolean;
     keyboard_mapping?: {
         [key:string]: string;
     };
@@ -27,6 +28,7 @@ export default class Gamepad {
     private _options:GamepadOptionsDefaults = {
         enable_keyboard: false,
         enable_gamepad: true,
+        enable_vibration: true,
         keyboard_mapping: {
             'A': 'Enter',
             'B': 'Backspace',
@@ -298,6 +300,10 @@ export default class Gamepad {
         if(gamepad === undefined){
             console.log('[Gamepad] Received a vibration report but no physical gamepad is connected')
             return
+        }
+
+        if(this._options.enable_vibration === false){
+            return;
         }
 
         const rumbleData = {
