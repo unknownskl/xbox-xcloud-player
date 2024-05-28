@@ -359,7 +359,7 @@ export default class Gamepad {
         }
 
         if(this._options.enable_vibration === false){
-            return;
+            return
         }
 
         const rumbleData = {
