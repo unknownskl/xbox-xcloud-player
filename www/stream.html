@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <title>Xbox-xCloud-Player</title>
-    <script src="./dist/assets/xCloudPlayer.min.js"></script>
-    <!-- <script src="./dist/assets/examplePlayer.min.js"></script> -->
-    <script src="./stream.js"></script>
+    <!-- <script src="./dist/assets/xCloudPlayer.min.js"></script> -->
+    <script src="./dist/assets/examplePlayer.min.js"></script>
+    <!-- <script src="./dist/example/stream.js"></script> -->
+    <!-- <script src="./stream.js"></script> -->
     <link rel="stylesheet" href="stream.css">
   </head>
   <body>
@@ -18,7 +19,7 @@
         <ul id="consolesList">
         </ul>
         <h2>xCloud:</h2>
-        <input id="xcloudTitle" type="text" /><button onclick="app.start('cloud', document.getElementById('xcloudTitle').value)">Start title</button>
+        <input id="xcloudTitle" type="text" /><button onclick="examplePlayer.app.start('cloud', document.getElementById('xcloudTitle').value)">Start title</button>
       </div>
 
       <div id="content">
@@ -33,89 +34,89 @@
       <div id="rightmenu">
         <h2>Controls:</h2>
 
-        <button onclick="app.destroyPlayer()">Destroy player</button>
-        <button onclick="app._player.toggleDebugOverlay()">Toggle Debug</button><br />
-        <button onclick="app._player._channels.chat.startMicrophone()">Start Mic</button>
-        <button onclick="app._player._channels.chat.stopMicrophone()">Stop Mic</button>
+        <button onclick="examplePlayer.app.destroyPlayer()">Destroy player</button>
+        <button onclick="examplePlayer.app._player.toggleDebugOverlay()">Toggle Debug</button><br />
+        <button onclick="examplePlayer.app._player._channels.chat.startMicrophone()">Start Mic</button>
+        <button onclick="examplePlayer.app._player._channels.chat.stopMicrophone()">Stop Mic</button>
 
         <h2>Mouse Keyboard:</h2>
-        <button onclick="vMkb.attach(0)">Attach MKB</button>
-        <button onclick="vMkb.detach()">Detach MKB</button>
+        <button onclick="examplePlayer.vMkb.attach(0)">Attach MKB</button>
+        <button onclick="examplePlayer.vMkb.detach()">Detach MKB</button>
 
         <h2>Touch:</h2>
-        <button onclick="vTouch.attach(0)">Attach Touch</button>
-        <button onclick="vTouch.detach()">Detach Touch</button>
+        <button onclick="examplePlayer.vTouch.attach(0)">Attach Touch</button>
+        <button onclick="examplePlayer.vTouch.detach()">Detach Touch</button>
 
         <h2>Gamepad 1:</h2>
-        <button onclick="vGamepad1.attach(0)">Attach gamepad at (0)</button>
-        <button onclick="vGamepad1.detach()">Detach gamepad</button>
+        <button onclick="examplePlayer.vGamepad1.attach(0)">Attach gamepad at (0)</button>
+        <button onclick="examplePlayer.vGamepad1.detach()">Detach gamepad</button>
 
         <div class="gamepad_layout">
           <div class="gamepad_row">
             <div class="gamepad_col">
-              <button onmousedown="vGamepad1.sendGamepadButtonState('LeftTrigger', 1)" onmouseup="vGamepad1.sendGamepadButtonState('LeftTrigger', 0)">L2</button><br />
-              <button onmousedown="vGamepad1.sendGamepadButtonState('LeftShoulder', 1)" onmouseup="vGamepad1.sendGamepadButtonState('LeftShoulder', 0)">L1</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('LeftTrigger', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('LeftTrigger', 0)">L2</button><br />
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('LeftShoulder', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('LeftShoulder', 0)">L1</button>
             </div>
             <div class="gamepad_col">
-              <button onmousedown="vGamepad1.sendGamepadButtonState('RightTrigger', 1)" onmouseup="vGamepad1.sendGamepadButtonState('RightTrigger', 0)">R2</button><br />
-              <button onmousedown="vGamepad1.sendGamepadButtonState('RightShoulder', 1)" onmouseup="vGamepad1.sendGamepadButtonState('RightShoulder', 0)">R1</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('RightTrigger', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('RightTrigger', 0)">R2</button><br />
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('RightShoulder', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('RightShoulder', 0)">R1</button>
             </div>
           </div>
           <div class="gamepad_row">
             <div class="gamepad_col">
-              <button onmousedown="vGamepad1.sendGamepadButtonState('DPadUp', 1)" onmouseup="vGamepad1.sendGamepadButtonState('DPadUp', 0)">Up</button> <br />
-              <button onmousedown="vGamepad1.sendGamepadButtonState('DPadLeft', 1)" onmouseup="vGamepad1.sendGamepadButtonState('DPadLeft', 0)">Left</button>
-              <button onmousedown="vGamepad1.sendGamepadButtonState('DPadRight', 1)" onmouseup="vGamepad1.sendGamepadButtonState('DPadRight', 0)">Right</button> <br />
-              <button onmousedown="vGamepad1.sendGamepadButtonState('DPadDown', 1)" onmouseup="vGamepad1.sendGamepadButtonState('DPadDown', 0)">Down</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('DPadUp', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('DPadUp', 0)">Up</button> <br />
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('DPadLeft', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('DPadLeft', 0)">Left</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('DPadRight', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('DPadRight', 0)">Right</button> <br />
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('DPadDown', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('DPadDown', 0)">Down</button>
             </div>
             <div class="gamepad_col">
-              <button onmousedown="vGamepad1.sendGamepadButtonState('Nexus', 1)" onmouseup="vGamepad1.sendGamepadButtonState('Nexus', 0)">Nexus</button> <br />
-              <button onmousedown="vGamepad1.sendGamepadButtonState('View', 1)" onmouseup="vGamepad1.sendGamepadButtonState('View', 0)">View</button>
-              <button onmousedown="vGamepad1.sendGamepadButtonState('Menu', 1)" onmouseup="vGamepad1.sendGamepadButtonState('Menu', 0)">Menu</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('Nexus', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('Nexus', 0)">Nexus</button> <br />
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('View', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('View', 0)">View</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('Menu', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('Menu', 0)">Menu</button>
             </div>
             <div class="gamepad_col">
-              <button onmousedown="vGamepad1.sendGamepadButtonState('Y', 1)" onmouseup="vGamepad1.sendGamepadButtonState('Y', 0)">Y</button> <br />
-              <button onmousedown="vGamepad1.sendGamepadButtonState('X', 1)" onmouseup="vGamepad1.sendGamepadButtonState('X', 0)">X</button>
-              <button onmousedown="vGamepad1.sendGamepadButtonState('B', 1)" onmouseup="vGamepad1.sendGamepadButtonState('B', 0)">B</button> <br />
-              <button onmousedown="vGamepad1.sendGamepadButtonState('A', 1)" onmouseup="vGamepad1.sendGamepadButtonState('A', 0)">A</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('Y', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('Y', 0)">Y</button> <br />
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('X', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('X', 0)">X</button>
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('B', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('B', 0)">B</button> <br />
+              <button onmousedown="examplePlayer.vGamepad1.sendGamepadButtonState('A', 1)" onmouseup="examplePlayer.vGamepad1.sendGamepadButtonState('A', 0)">A</button>
             </div>
           </div>
         </div>
 
-        <button onclick="vGamepad1.sendGamepadButtonPress('Nexus')">Nexus</button>
+        <button onclick="examplePlayer.vGamepad1.sendGamepadButtonPress('Nexus')">Nexus</button>
 
         <h2>Gamepad 2:</h2>
-        <button onclick="vGamepad2.attach(1)">Attach gamepad at (1)</button>
-        <button onclick="vGamepad2.detach()">Detach gamepad</button>
+        <button onclick="examplePlayer.vGamepad2.attach(1)">Attach gamepad at (1)</button>
+        <button onclick="examplePlayer.vGamepad2.detach()">Detach gamepad</button>
 
         <div class="gamepad_layout">
           <div class="gamepad_row">
             <div class="gamepad_col">
-              <button onmousedown="vGamepad2.sendGamepadButtonState('LeftTrigger', 1)" onmouseup="vGamepad2.sendGamepadButtonState('LeftTrigger', 0)">L2</button><br />
-              <button onmousedown="vGamepad2.sendGamepadButtonState('LeftShoulder', 1)" onmouseup="vGamepad2.sendGamepadButtonState('LeftShoulder', 0)">L1</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('LeftTrigger', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('LeftTrigger', 0)">L2</button><br />
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('LeftShoulder', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('LeftShoulder', 0)">L1</button>
             </div>
             <div class="gamepad_col">
-              <button onmousedown="vGamepad2.sendGamepadButtonState('RightTrigger', 1)" onmouseup="vGamepad2.sendGamepadButtonState('RightTrigger', 0)">R2</button><br />
-              <button onmousedown="vGamepad2.sendGamepadButtonState('RightShoulder', 1)" onmouseup="vGamepad2.sendGamepadButtonState('RightShoulder', 0)">R1</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('RightTrigger', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('RightTrigger', 0)">R2</button><br />
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('RightShoulder', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('RightShoulder', 0)">R1</button>
             </div>
           </div>
           <div class="gamepad_row">
             <div class="gamepad_col">
-              <button onmousedown="vGamepad2.sendGamepadButtonState('DPadUp', 1)" onmouseup="vGamepad2.sendGamepadButtonState('DPadUp', 0)">Up</button> <br />
-              <button onmousedown="vGamepad2.sendGamepadButtonState('DPadLeft', 1)" onmouseup="vGamepad2.sendGamepadButtonState('DPadLeft', 0)">Left</button>
-              <button onmousedown="vGamepad2.sendGamepadButtonState('DPadRight', 1)" onmouseup="vGamepad2.sendGamepadButtonState('DPadRight', 0)">Right</button> <br />
-              <button onmousedown="vGamepad2.sendGamepadButtonState('DPadDown', 1)" onmouseup="vGamepad2.sendGamepadButtonState('DPadDown', 0)">Down</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('DPadUp', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('DPadUp', 0)">Up</button> <br />
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('DPadLeft', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('DPadLeft', 0)">Left</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('DPadRight', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('DPadRight', 0)">Right</button> <br />
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('DPadDown', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('DPadDown', 0)">Down</button>
             </div>
             <div class="gamepad_col">
-              <button onmousedown="vGamepad2.sendGamepadButtonState('Nexus', 1)" onmouseup="vGamepad2.sendGamepadButtonState('Nexus', 0)">Nexus</button> <br />
-              <button onmousedown="vGamepad2.sendGamepadButtonState('View', 1)" onmouseup="vGamepad2.sendGamepadButtonState('View', 0)">View</button>
-              <button onmousedown="vGamepad2.sendGamepadButtonState('Menu', 1)" onmouseup="vGamepad2.sendGamepadButtonState('Menu', 0)">Menu</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('Nexus', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('Nexus', 0)">Nexus</button> <br />
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('View', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('View', 0)">View</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('Menu', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('Menu', 0)">Menu</button>
             </div>
             <div class="gamepad_col">
-              <button onmousedown="vGamepad2.sendGamepadButtonState('Y', 1)" onmouseup="vGamepad2.sendGamepadButtonState('Y', 0)">Y</button> <br />
-              <button onmousedown="vGamepad2.sendGamepadButtonState('X', 1)" onmouseup="vGamepad2.sendGamepadButtonState('X', 0)">X</button>
-              <button onmousedown="vGamepad2.sendGamepadButtonState('B', 1)" onmouseup="vGamepad2.sendGamepadButtonState('B', 0)">B</button> <br />
-              <button onmousedown="vGamepad2.sendGamepadButtonState('A', 1)" onmouseup="vGamepad2.sendGamepadButtonState('A', 0)">A</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('Y', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('Y', 0)">Y</button> <br />
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('X', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('X', 0)">X</button>
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('B', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('B', 0)">B</button> <br />
+              <button onmousedown="examplePlayer.vGamepad2.sendGamepadButtonState('A', 1)" onmouseup="examplePlayer.vGamepad2.sendGamepadButtonState('A', 0)">A</button>
             </div>
           </div>
         </div>

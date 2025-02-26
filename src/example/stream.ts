@@ -1,4 +1,9 @@
+import xCloudPlayer from '../library'
+import xCloudApiClient from '../apiclient'
+
 class StreamApp {
+
+    _apiClient:xCloudApiClient
 
     _currentStream
     _refreshInterval
@@ -7,9 +12,12 @@ class StreamApp {
     _player
 
     constructor() {
-        this._apiClient = new xCloudPlayer.default.ApiClient({ host: 'http://'+window.location.hostname+':'+window.location.port })
+        this._apiClient = new xCloudPlayer.ApiClient({ host: 'http://'+window.location.hostname+':'+window.location.port })
         this._apiClient.getConsoles().then((consoles) => {
             const consoleDiv = document.getElementById('consolesList')
+            if(consoleDiv === null){
+                return
+            }
             let consolesHtml = '';
         
             for(const device in consoles.results) {
@@ -17,30 +25,40 @@ class StreamApp {
                 consolesHtml += '<li>'
                 consolesHtml += '   '+consoles.results[device].deviceName+'('+consoles.results[device].consoleType+') <br />'
                 consolesHtml += '   '+consoles.results[device].serverId+' - '+consoles.results[device].powerState + '<br />'
-                consolesHtml += '   <button style="margin: 10px; padding: 5px;" onclick="app.start(\'home\', \''+consoles.results[device].serverId+'\')">Start session</button>'
+                consolesHtml += '   <button style="margin: 10px; padding: 5px;" onclick="examplePlayer.app.start(\'home\', \''+consoles.results[device].serverId+'\')">Start session</button>'
                 consolesHtml += '</li>'
             }
             consoleDiv.innerHTML = consolesHtml
         
         }).catch((error) => {
             var consoleDiv = document.getElementById('consolesList')
+            if(consoleDiv === null){
+                return
+            }
             consoleDiv.innerHTML = JSON.stringify(error)
         })
     }
 
     loaded(){
-        document.getElementById('xcloudTitle').value = localStorage.getItem('xcloudTitle')
-        document.getElementById('xcloudTitle').addEventListener('change', (event) => {
-            const titleId = event.target.value
+        const holder = document.getElementById('xcloudTitle') as any
+
+        holder.value = localStorage.getItem('xcloudTitle')
+        document.getElementById('xcloudTitle')?.addEventListener('change', (event) => {
+            const titleId = (event.target as any)?.value
             localStorage.setItem('xcloudTitle', titleId)
         })
     }
 
     start(type, titleId){
-        document.getElementById('connectionStatus').innerText = 'Requesting stream: '+type+' - '+titleId
+        const connectionStatus = document.getElementById('connectionStatus')
+        if(connectionStatus === null){
+            return
+        }
+
+        connectionStatus.innerText = 'Requesting stream: '+type+' - '+titleId
 
         this._apiClient.startStream(type, titleId).then((stream) => {
-            document.getElementById('connectionStatus').innerText = 'Stream requested, waiting to be ready: '+type+' - '+titleId
+            connectionStatus.innerText = 'Stream requested, waiting to be ready: '+type+' - '+titleId
             
             this._currentStream = stream
             this._currentStream.onProvisioned = () => {
@@ -81,18 +99,23 @@ class StreamApp {
     }
 
     loadPlayer(){
+        const connectionStatus = document.getElementById('connectionStatus')
+        if(connectionStatus === null){
+            return
+        }
+
         console.log('Console is ready, lets setup the WebRTC client.')
-        this._player = new xCloudPlayer.default.Player('streamHolder')
+        this._player = new xCloudPlayer.Player('streamHolder')
 
         this._player.onConnectionStateChange((state) => {
-            document.getElementById('connectionStatus').innerText = state
+            connectionStatus.innerText = state
         })
 
         this._player.setChatSdpHandler((offer) => {
             this._currentStream.sendChatSDPOffer(offer).then((sdpResponse) => {
                 this._player.setRemoteOffer(JSON.parse(sdpResponse.exchangeResponse).sdp)
             }).catch((error) => {
-                reject(error)
+                console.log('sendChatSDPOffer error:', error)
             })
         })
 
@@ -141,10 +164,11 @@ class StreamApp {
 class VirtualGamepad {
 
     _isAttached = false
+    _gamepad
 
     attach(index = 0) {
         console.log('[VirtualGamepad] Attaching virtual gamepad on index:', index)
-        this._gamepad = new xCloudPlayer.default.Gamepad(index, { enable_keyboard: true})
+        this._gamepad = new xCloudPlayer.Gamepad(index, { enable_keyboard: true})
 
         if(app._player){
             this._gamepad.attach(app._player)
@@ -177,9 +201,12 @@ class VirtualGamepad {
 }
 
 class VirtualMKB {
+    _isAttached = false
+    _mkb
+
     attach(index = 0) {
         console.log('[VirtualMKB] Attaching MKB on index:', index)
-        this._mkb = new xCloudPlayer.default.MouseKeyboard(index)
+        this._mkb = new xCloudPlayer.MouseKeyboard(index)
 
         if(app._player){
             this._mkb.attach(app._player)
@@ -201,9 +228,12 @@ class VirtualMKB {
 }
 
 class VirtualTouch {
+    _isAttached = false
+    _touch
+
     attach(index = 0) {
         console.log('[VirtualTouch] Attaching Touch on index:', index)
-        this._touch = new xCloudPlayer.default.Touch(index)
+        this._touch = new xCloudPlayer.Touch(index)
 
         if(app._player){
             this._touch.attach(app._player)
@@ -232,5 +262,14 @@ const vTouch = new VirtualTouch()
 const app = new StreamApp()
 
 window.addEventListener('load', (event) => {
+    console.log('loaded!')
     app.loaded()
 })
+
+export {
+    app,
+    vGamepad1,
+    vGamepad2,
+    vMkb,
+    vTouch
+}
