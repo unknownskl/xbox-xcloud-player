@@ -10,7 +10,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "jest --coverage",
-    "auth": "rimraf .xbox.tokens.json && xbox-auth auth"
+    "auth": "rimraf .xbox.tokens.json && xbox-auth auth --auth msal"
   },
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
     "typescript": "^5.3.3",
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4",
-    "xal-node": "^1.0.2"
+    "xal-node": "^1.1.1"
   },
   "dependencies": {
     "uuid": "^9.0.1"
