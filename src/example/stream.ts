@@ -18,10 +18,9 @@ class StreamApp {
             if(consoleDiv === null){
                 return
             }
-            let consolesHtml = '';
+            let consolesHtml = ''
         
             for(const device in consoles.results) {
-                // consolesHtml += consoles.results[device].deviceName+' ('+consoles.results[device].consoleType+') - '+consoles.results[device].serverId+' isSameNetwork:'+!consoles.results[device].outOfHomeWarning+' <button style="padding: 20px;">'+consoles.results[device].powerState+'</button> <button style="padding: 20px;" onclick="app.startSession(\'xhome\', \''+consoles.results[device].serverId+'\')">Start session</button> <br />'
                 consolesHtml += '<li>'
                 consolesHtml += '   '+consoles.results[device].deviceName+'('+consoles.results[device].consoleType+') <br />'
                 consolesHtml += '   '+consoles.results[device].serverId+' - '+consoles.results[device].powerState + '<br />'
@@ -31,7 +30,7 @@ class StreamApp {
             consoleDiv.innerHTML = consolesHtml
         
         }).catch((error) => {
-            var consoleDiv = document.getElementById('consolesList')
+            const consoleDiv = document.getElementById('consolesList')
             if(consoleDiv === null){
                 return
             }
@@ -78,16 +77,16 @@ class StreamApp {
             }
             this._currentStream.onReadyToConnect = () => {
                 fetch('/api/msal')
-                .then((response) => response.text())
-                .then((response) => {
-                    this._currentStream.sendMSALAuth(response).then((response) => {
-                        console.log('MSAL Auth response:', response)
+                    .then((response) => response.text())
+                    .then((response) => {
+                        this._currentStream.sendMSALAuth(response).then((response) => {
+                            console.log('MSAL Auth response:', response)
+                        }).catch((error) => {
+                            console.error('Failed to send MSAL Auth:', error)
+                        })
                     }).catch((error) => {
-                        console.error('Failed to send MSAL Auth:', error)
+                        console.error('Failed to fetch MSAL token:', error)
                     })
-                }).catch((error) => {
-                    console.error('Failed to fetch MSAL token:', error)
-                })
                 console.log('Console is ready. Lets send over the MSAL token.')
             }
 
@@ -261,7 +260,7 @@ const vTouch = new VirtualTouch()
 
 const app = new StreamApp()
 
-window.addEventListener('load', (event) => {
+window.addEventListener('load', () => {
     console.log('loaded!')
     app.loaded()
 })
@@ -271,5 +270,5 @@ export {
     vGamepad1,
     vGamepad2,
     vMkb,
-    vTouch
+    vTouch,
 }
