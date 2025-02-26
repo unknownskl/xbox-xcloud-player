@@ -17,8 +17,6 @@ export interface xCloudPlayerConfig {
     video_bitrate?: number;
     keyframe_interval?: number;
 }
-export interface xCloudPlayerConfigProperties extends Required<xCloudPlayerConfig> {}
-
 export default class xCloudPlayer {
     _peerConnection = new RTCPeerConnection({})
     _channels = {
@@ -28,7 +26,7 @@ export default class xCloudPlayer {
         message: new MessageChannel(this),
     }
 
-    _config:xCloudPlayerConfigProperties = {
+    _config:Required<xCloudPlayerConfig> = {
         audio_mono: false,
         audio_bitrate: 0,
         video_bitrate: 0,
