@@ -3,6 +3,7 @@ const path = require('path');
 module.exports = {
   entry: {
     xCloudPlayer: './src/library.ts',
+    examplePlayer: './www/stream.js'
     // opusWorker: './src/Worker/Opus.js',
   },
   module: {

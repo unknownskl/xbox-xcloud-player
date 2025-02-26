@@ -112,7 +112,7 @@ export default class MouseKeyboard {
             return
         }
 
-        // @ts-expect-error requestPointerLock() is not defined to consume arguments
+        // @disable ts-expect-error requestPointerLock() is not defined to consume arguments
         const promise = this._player?.getVideoElement()?.requestPointerLock({
             unadjustedMovement: true,
         }) as Promise<undefined> | undefined

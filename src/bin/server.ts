@@ -160,7 +160,7 @@ app.post(['/v5/*'], (req, res) => {
         return
     }
 
-    console.log('[PROXY] POST', req.path, req.body)
+    console.log('[PROXY] POST', req.path, JSON.stringify(req.body, null, 2))
     let client
     if(req.path.includes('/cloud/')){
         client = Manager._apiCloudClient

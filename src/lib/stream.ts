@@ -59,6 +59,7 @@ export default class Stream {
                 if(fireProvisioned === true){ this.onProvisioned(this) }
 
             }).catch((error) => {
+                this.onError(this)
                 reject(error)
             })
         })

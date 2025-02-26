@@ -404,7 +404,7 @@ export default class Gamepad {
                 }, report.delayMs + report.durationMs)
             }
         } else {
-            console.log('[Gamepad] Unknown vibration type:', gamepad.vibrationActuator?.type)
+            console.log('[Gamepad] Unknown vibration type:', (gamepad.vibrationActuator as any).type)
         }
     }
 

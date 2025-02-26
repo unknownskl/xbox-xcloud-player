@@ -48,6 +48,10 @@ class StreamApp {
                 this.loadPlayer()
                 this._keepaliveInterval = setInterval(() => {
                     this._currentStream.sendKeepalive().then((response) => {
+                        if(response.code === 'SessionNotActive' || response.code === 'SessionNotFound'){
+                            clearInterval(this._keepaliveInterval)
+                            console.log('Removing keepalive as session is not active anymore.')
+                        }
                         console.log('Keepalive sent:', response)
                     }).catch((error) => {
                         console.error('Failed to send keepalive:', error)

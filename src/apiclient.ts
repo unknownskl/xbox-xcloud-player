@@ -112,7 +112,7 @@ export default class xCloudApiClient {
         })
     }
 
-    post(url, body, headers = {}){
+    post(url, body, headers = {}):Promise<any>{
         return new Promise((resolve, reject) => {
             const deviceInfo = this.getDeviceInfo()
 
