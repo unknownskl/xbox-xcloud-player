@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import bodyParser from 'body-parser'
-import { TokenStore, Xal } from 'xal-node'
+import { TokenStore, Xal, Msal } from 'xal-node'
 
 import ApiClient from '../apiclient'
 
@@ -25,6 +25,7 @@ app.get(['/', '/sw.js', '/favicon.ico'], (req, res) => {
 class xHomeTokenManager {
     _tokenstore:TokenStore
     _xal:Xal
+    _msal:Msal
 
     _tokenxHome:string = ''
     _tokenxCloud:string = ''
@@ -36,6 +37,7 @@ class xHomeTokenManager {
         this._tokenstore = new TokenStore()
         this._tokenstore.load('.xbox.tokens.json', true)
         this._xal = new Xal(this._tokenstore)
+        this._msal = new Msal(this._tokenstore)
     }
 
     loadTokens(){
@@ -63,7 +65,19 @@ class xHomeTokenManager {
     }
 
     requestxHomeToken(){
-        return this._xal.getStreamingToken(this._tokenstore)
+        if(this._tokenstore.getAuthenticationMethod() === 'msal'){
+            return this._msal.getStreamingTokens()
+        } else {
+            return this._xal.getStreamingTokens()
+        }
+    }
+
+    getMsalToken(){
+        if(this._tokenstore.getAuthenticationMethod() === 'msal'){
+            return this._msal.getMsalToken()
+        } else {
+            return this._xal.getMsalToken()
+        }
     }
 
     tokensLoaded() {
@@ -104,7 +118,7 @@ app.get(['/api/msal'], (req, res) => {
         return
     }
 
-    Manager._xal.getMsalToken(Manager._tokenstore).then((result) => {
+    Manager.getMsalToken().then((result) => {
         res.send(result.data.lpt)
 
     }).catch((err) => {
