@@ -276,9 +276,11 @@ export default class InputPacket {
                 const rect = shift.events[event].target.getBoundingClientRect()
 
                 let e = 0.06575749909301447 * (screenHeight / 1)
-                    , n = 0.06575749909301447 * (screenWidth / 1)
+                let n = 0.06575749909301447 * (screenWidth / 1)
 
-                e=1, n=1
+                // @TODO: Check if this is correct
+                e =1
+                n =1
 
                 if(shift.events[event].type === 'pointerup'){
                     e = 0

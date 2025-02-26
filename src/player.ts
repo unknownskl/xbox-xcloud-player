@@ -109,7 +109,7 @@ export default class xCloudPlayer {
                 sdp: finalSdp,
             })
         } catch(e){
-            console.log('[xPlayer] setRemoteOffer() Remote SDP is not valid:', sdpRemote)
+            console.log('[xPlayer] setRemoteOffer() Remote SDP is not valid:', sdpRemote, e)
         }
     }
 
