@@ -6,9 +6,23 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # target-branch: "main"
+    labels:
+      - "dependencies"
 
   # Maintain dependencies for npm
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+    # target-branch: "main"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "npm"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+    # target-branch: "main"
+    labels:
+      - "dependencies"

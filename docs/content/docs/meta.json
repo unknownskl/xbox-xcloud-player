@@ -1,0 +1,14 @@
+{
+    "root": true,
+    "pages": [
+      "--- Documentation ---",
+      "index",
+      "...",
+
+      "--- API Definitions ---",
+      "...api",
+
+      "--- Changelogs ---",
+      "...changelogs"
+    ]
+}
