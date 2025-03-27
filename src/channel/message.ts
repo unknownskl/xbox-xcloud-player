@@ -13,6 +13,7 @@ export default class MessageChannel extends Channel {
     getChannelConfig() {
         return {
             protocol: 'messageV1',
+            ordered: true,
         }
     }
 
@@ -21,8 +22,8 @@ export default class MessageChannel extends Channel {
         const handshake = JSON.stringify({
             'type':'Handshake',
             'version':'messageV1',
-            'id':'f9c5f412-0e69-4ede-8e62-92c7f5358c56',
-            'cv':'',
+            'id':'be0bfc6d-1e83-4c8a-90ed-fa8601c5a179',
+            'cv':'0',
         })
         this.send(handshake)
     }
@@ -54,12 +55,15 @@ export default class MessageChannel extends Channel {
 
     sendConfig(){
         const systemUis = []
-        const systemVersion = [0, 1, 0]
+        const systemVersion = [0, 2, 0]
         const uiConfig = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
             'version': systemVersion,
             'systemUis': systemUis, // Xbox Windows app has [33], xCloud has [10,19,31,27,32,-41]
             
+            // 8 = unknown
             // 10 = ShowVirtualKeyboard
+            // 13 = unknown
+            // 15 = unknown
             // 19 = ShowMessageDialog
             // 31 = ShowApplication
             // 27 = ShowPurchase
@@ -74,7 +78,7 @@ export default class MessageChannel extends Channel {
         }))
         this.send(uiConfig)
 
-        const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': 'c11ddb2e-c7e3-4f02-a62b-fd5448e0b851' }))
+        const clientConfig = JSON.stringify(this.generateMessage('/streaming/properties/clientappinstallidchanged', { 'clientAppInstallId': 'c97d7ee0-73b2-4239-bf1d-9d805a338429' }))
         this.send(clientConfig)
 
         const orientationConfig = JSON.stringify(this.generateMessage('/streaming/characteristics/orientationchanged', { 'orientation': 0 }))

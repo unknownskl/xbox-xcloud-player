@@ -104,11 +104,19 @@ export default class Stream {
                     },
                     'input':{
                         'minVersion':1,
-                        'maxVersion':8, // @TODO: Update to 9 + add new channels 'reliableinput' and 'unreliableinput'
+                        'maxVersion':9,
                     },
                     'message':{
                         'minVersion':1,
                         'maxVersion':1,
+                    },
+                    'reliableinput':{
+                        'minVersion':9,
+                        'maxVersion':9,
+                    },
+                    'unreliableinput':{
+                        'minVersion':9,
+                        'maxVersion':9,
                     },
                 },
             })

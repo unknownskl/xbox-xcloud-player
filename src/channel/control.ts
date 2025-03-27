@@ -25,9 +25,8 @@ export default class ControlChannel extends Channel {
 
     getChannelConfig() {
         return {
-            protocol: 'controlV1', // @TODO: Implement V2 for reliable input and unreliable input channels
-            ordered: 0,
-            maxRetransmits: 0,
+            protocol: 'controlV1',
+            ordered: true,
         }
     }
 

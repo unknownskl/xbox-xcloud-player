@@ -24,6 +24,7 @@ export default class ChatChannel extends Channel {
 
     getChannelConfig() {
         return {
+            ordered: true,
             protocol: 'chatV1',
         }
     }
