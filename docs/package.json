@@ -11,7 +11,7 @@
   "dependencies": {
     "fumadocs-core": "^15.0.15",
     "fumadocs-mdx": "^11.5.7",
-    "fumadocs-typescript": "^3.1.0",
+    "fumadocs-typescript": "^4.0.1",
     "fumadocs-ui": "^15.2.1",
     "next": "^15.2.4",
     "react": "^19.0.0",
