@@ -20,14 +20,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.5",
     "@types/mdx": "^2.0.13",
-    "@types/node": "^22.15.3",
+    "@types/node": "^22.15.18",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "^15.3.1",
     "postcss": "^8.4.49",
-    "tailwindcss": "^4.1.5",
+    "tailwindcss": "^4.1.7",
     "typescript": "^5.8.3"
   }
 }
