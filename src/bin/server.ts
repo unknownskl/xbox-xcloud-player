@@ -127,7 +127,7 @@ app.get(['/api/msal'], (req, res) => {
     })
 })
 
-app.get(['/v6/*', '/v5/*'], (req, res) => {
+app.get(['/v6/{*any}', '/v5/{*any}'], (req, res) => {
     if(Manager._apiClient === undefined){
         res.status(503)
         res.send('Server not ready yet. Please try again later.')
@@ -153,7 +153,7 @@ app.get(['/v6/*', '/v5/*'], (req, res) => {
     })
 })
 
-app.post(['/v5/*'], (req, res) => {
+app.post(['/v5/{*any}'], (req, res) => {
     if(Manager._apiClient === undefined){
         res.status(503)
         res.send('Server not ready yet. Please try again later.')
