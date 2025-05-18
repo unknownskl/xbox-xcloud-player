@@ -7,9 +7,15 @@ on:
       - 'feature/*'
     tags:
       - v*
+    paths:
+      - 'docs/**'
+      - '.github/workflows/build-docs.yml'
   pull_request:
     branches:
       - main
+    paths:
+      - 'docs/**'
+      - '.github/workflows/build-docs.yml'
 
 permissions:
   id-token: write
