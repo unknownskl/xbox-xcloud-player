@@ -13,7 +13,7 @@ const compat = new FlatCompat({
     allConfig: js.configs.all
 });
 
-export default defineConfig([globalIgnores(["**/dist", "src/Opus", "src/Worker/Opus.js"]), {
+export default defineConfig([globalIgnores(["**/dist"]), {
     extends: compat.extends(
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
