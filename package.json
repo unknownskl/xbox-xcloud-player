@@ -30,7 +30,7 @@
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
     "dotenv": "^16.3.1",
-    "eslint": "^8.56.0",
+    "eslint": "^9.27.0",
     "eslint-plugin-import": "^2.24.1",
     "express": "^4.17.1",
     "ip-address": "^10.0.1",
