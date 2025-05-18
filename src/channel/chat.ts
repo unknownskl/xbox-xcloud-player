@@ -8,7 +8,6 @@ export default class ChatChannel extends Channel {
     constructor(player:any){
         super(player)
 
-        // @ts-expect-error - microphone is not a valid value but it is: https://developer.mozilla.org/en-US/docs/Web/API/Permissions/query
         navigator.permissions.query({ name: 'microphone' }).then((permissionStatus) => {
             this._micPermissions = permissionStatus.state
         
