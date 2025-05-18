@@ -1,7 +1,9 @@
-import { generateFiles } from 'fumadocs-typescript';
+import { generateFiles, createGenerator } from 'fumadocs-typescript';
 import * as path from 'node:path';
+
+const generator = createGenerator()
  
-void generateFiles({
+void generateFiles(generator, {
   input: ['./content/docs/**/*.model.mdx'],
   // Rename x.model.mdx to x.mdx
   output: (file) =>
