@@ -13,7 +13,7 @@
     "fumadocs-mdx": "^11.6.9",
     "fumadocs-typescript": "^4.0.6",
     "fumadocs-ui": "^15.5.3",
-    "next": "^15.4.5",
+    "next": "^15.4.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
