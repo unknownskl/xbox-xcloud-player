@@ -1,4 +1,9 @@
-// import ApiClient from '../dist/apiclient'
+import xCloudPlayer, {
+    xCloudApiClientConfig,
+    ConsolesResponse,
+    StartStreamResponse,
+    Stream,
+} from '../src/library'
 import ApiClient from '../src/apiclient'
 
 describe('ApiClient', () => {
@@ -69,5 +74,43 @@ describe('ApiClient', () => {
             console.log('error', error)
             expect(error).toBeUndefined()
         })
+    })
+
+    it('should expose strongly typed library exports and return values', async () => {
+        const config: xCloudApiClientConfig = {
+            locale: 'en-US',
+            host: 'https://example.test',
+            token: 'token',
+            force_1080p: true,
+        }
+        const client = new xCloudPlayer.ApiClient(config)
+        const mockConsoles: ConsolesResponse = {
+            totalItems: 1,
+            results: [{
+                deviceName: 'Xbox',
+                serverId: 'F000',
+                powerState: 'On',
+                consoleType: 'XboxSeriesX',
+                playPath: 'v5/sessions/home/play',
+                outOfHomeWarning: false,
+                wirelessWarning: false,
+                isDevKit: false,
+            }],
+            continuationToken: null,
+        }
+        const mockStream: StartStreamResponse = {
+            sessionId: 'abc',
+            sessionPath: 'v5/sessions/home/abc',
+            state: 'Provisioning',
+        }
+
+        client.get = jest.fn(() => Promise.resolve(mockConsoles))
+        client.post = jest.fn(() => Promise.resolve(mockStream))
+
+        const consoles: ConsolesResponse = await client.getConsoles()
+        expect(consoles.results[0].deviceName).toBe('Xbox')
+
+        const stream: Stream = await client.startStream('home', 'F000')
+        expect(stream.getSessionId()).toBe('abc')
     })
 })

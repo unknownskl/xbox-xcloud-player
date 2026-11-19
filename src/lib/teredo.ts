@@ -21,11 +21,11 @@ export default class Teredo {
         this._ipv4Port = port_1
     }
 
-    getIpv4Address(){
+    getIpv4Address():string{
         return this._ipv4Address
     }
 
-    getIpv4Port(){
+    getIpv4Port():number{
         return this._ipv4Port
     }
 }

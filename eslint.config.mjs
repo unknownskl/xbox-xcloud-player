@@ -56,10 +56,14 @@ export default defineConfig([globalIgnores(["**/dist"]), {
             exceptAfterSingleLine: true,
         }],
 
-        "@typescript-eslint/explicit-function-return-type": "off",
+        "@typescript-eslint/explicit-function-return-type": ["error", {
+            allowExpressions: true,
+            allowTypedFunctionExpressions: true,
+            allowHigherOrderFunctions: true,
+        }],
         "@typescript-eslint/no-non-null-assertion": "off",
-        "@typescript-eslint/explicit-module-boundary-types": "off",
-        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/explicit-module-boundary-types": "error",
+        "@typescript-eslint/no-explicit-any": "error",
         "@typescript-eslint/no-empty-object-type": "off",
     },
 }]);

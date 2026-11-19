@@ -1,15 +1,20 @@
 import xCloudPlayer from '../library'
-import xCloudApiClient from '../apiclient'
+import xCloudApiClient, { StreamType } from '../apiclient'
+import xCloudPlayerInstance from '../player'
+import Stream from '../lib/stream'
+import Gamepad, { GamepadFrameKey } from '../input/gamepad'
+import MouseKeyboard from '../input/mousekeyboard'
+import Touch from '../input/touch'
 
 class StreamApp {
 
     _apiClient:xCloudApiClient
 
-    _currentStream
-    _refreshInterval
-    _keepaliveInterval
+    _currentStream: Stream | undefined
+    _refreshInterval: ReturnType<typeof setInterval> | undefined
+    _keepaliveInterval: ReturnType<typeof setInterval> | undefined
 
-    _player
+    _player: xCloudPlayerInstance | undefined
 
     constructor() {
         this._apiClient = new xCloudPlayer.ApiClient({ host: 'http://'+window.location.hostname+':'+window.location.port })
@@ -20,16 +25,16 @@ class StreamApp {
             }
             let consolesHtml = ''
         
-            for(const device in consoles.results) {
+            for(const device of consoles.results) {
                 consolesHtml += '<li>'
-                consolesHtml += '   '+consoles.results[device].deviceName+'('+consoles.results[device].consoleType+') <br />'
-                consolesHtml += '   '+consoles.results[device].serverId+' - '+consoles.results[device].powerState + '<br />'
-                consolesHtml += '   <button style="margin: 10px; padding: 5px;" onclick="examplePlayer.app.start(\'home\', \''+consoles.results[device].serverId+'\')">Start session</button>'
+                consolesHtml += '   '+device.deviceName+'('+device.consoleType+') <br />'
+                consolesHtml += '   '+device.serverId+' - '+device.powerState + '<br />'
+                consolesHtml += '   <button style="margin: 10px; padding: 5px;" onclick="examplePlayer.app.start(\'home\', \''+device.serverId+'\')">Start session</button>'
                 consolesHtml += '</li>'
             }
             consoleDiv.innerHTML = consolesHtml
         
-        }).catch((error) => {
+        }).catch((error:unknown) => {
             const consoleDiv = document.getElementById('consolesList')
             if(consoleDiv === null){
                 return
@@ -38,17 +43,19 @@ class StreamApp {
         })
     }
 
-    loaded(){
-        const holder = document.getElementById('xcloudTitle') as any
+    loaded():void{
+        const holder = document.getElementById('xcloudTitle') as HTMLInputElement | null
 
-        holder.value = localStorage.getItem('xcloudTitle')
-        document.getElementById('xcloudTitle')?.addEventListener('change', (event) => {
-            const titleId = (event.target as any)?.value
-            localStorage.setItem('xcloudTitle', titleId)
-        })
+        if(holder !== null){
+            holder.value = localStorage.getItem('xcloudTitle') || ''
+            holder.addEventListener('change', (event:Event) => {
+                const titleId = (event.target as HTMLInputElement | null)?.value || ''
+                localStorage.setItem('xcloudTitle', titleId)
+            })
+        }
     }
 
-    start(type, titleId){
+    start(type:StreamType, titleId:string):void{
         const connectionStatus = document.getElementById('connectionStatus')
         if(connectionStatus === null){
             return
@@ -60,99 +67,105 @@ class StreamApp {
             connectionStatus.innerText = 'Stream requested, waiting to be ready: '+type+' - '+titleId
             
             this._currentStream = stream
-            this._currentStream.onProvisioned = () => {
+            stream.onProvisioned = () => {
                 console.log('Stream is provisioned. Lets start the player.')
                 this.loadPlayer()
                 this._keepaliveInterval = setInterval(() => {
-                    this._currentStream.sendKeepalive().then((response) => {
+                    stream.sendKeepalive().then((response) => {
                         if(response.code === 'SessionNotActive' || response.code === 'SessionNotFound'){
                             clearInterval(this._keepaliveInterval)
                             console.log('Removing keepalive as session is not active anymore.')
                         }
                         console.log('Keepalive sent:', response)
-                    }).catch((error) => {
+                    }).catch((error:unknown) => {
                         console.error('Failed to send keepalive:', error)
                     })
                 }, 30*1000)
+                return stream
             }
-            this._currentStream.onReadyToConnect = () => {
+            stream.onReadyToConnect = () => {
                 fetch('/api/msal')
                     .then((response) => response.text())
                     .then((response) => {
-                        this._currentStream.sendMSALAuth(response).then((response) => {
-                            console.log('MSAL Auth response:', response)
-                        }).catch((error) => {
+                        stream.sendMSALAuth(response).then((authResponse) => {
+                            console.log('MSAL Auth response:', authResponse)
+                        }).catch((error:unknown) => {
                             console.error('Failed to send MSAL Auth:', error)
                         })
-                    }).catch((error) => {
+                    }).catch((error:unknown) => {
                         console.error('Failed to fetch MSAL token:', error)
                     })
                 console.log('Console is ready. Lets send over the MSAL token.')
+                return stream
             }
 
-            this._currentStream.waitForState('Provisioned')
-        }).catch((error) => {
+            stream.waitForState('Provisioned')
+        }).catch((error:unknown) => {
             console.error('Failed to start stream:', error)
         })
 
     }
 
-    loadPlayer(){
+    loadPlayer():void{
         const connectionStatus = document.getElementById('connectionStatus')
-        if(connectionStatus === null){
+        const currentStream = this._currentStream
+        if(connectionStatus === null || currentStream === undefined){
             return
         }
 
         console.log('Console is ready, lets setup the WebRTC client.')
-        this._player = new xCloudPlayer.Player('streamHolder')
+        const player = new xCloudPlayer.Player('streamHolder')
+        this._player = player
 
-        this._player.onConnectionStateChange((state) => {
+        player.onConnectionStateChange((state) => {
             connectionStatus.innerText = state
         })
 
-        this._player.setChatSdpHandler((offer) => {
-            this._currentStream.sendChatSDPOffer(offer).then((sdpResponse) => {
-                this._player.setRemoteOffer(JSON.parse(sdpResponse.exchangeResponse).sdp)
-            }).catch((error) => {
+        player.setChatSdpHandler((offer) => {
+            currentStream.sendChatSDPOffer(offer).then((sdpResponse) => {
+                const parsed = JSON.parse(sdpResponse.exchangeResponse) as { sdp: string }
+                player.setRemoteOffer(parsed.sdp)
+            }).catch((error:unknown) => {
                 console.log('sendChatSDPOffer error:', error)
             })
         })
 
-        this._player.createOffer().then((offer) => {
-            this._currentStream.sendSDPOffer(offer).then((sdpResponse) => {
-                this._player.setRemoteOffer(JSON.parse(sdpResponse.exchangeResponse).sdp)
+        player.createOffer().then((offer) => {
+            currentStream.sendSDPOffer(offer).then((sdpResponse) => {
+                const parsedSdp = JSON.parse(sdpResponse.exchangeResponse) as { sdp: string }
+                player.setRemoteOffer(parsedSdp.sdp)
 
-                const candidates = this._player.getIceCandidates()
+                const candidates = player.getIceCandidates()
                 const iceCandidates = candidates.map((candidate) => {
                     return JSON.stringify({ candidate: candidate.candidate, sdpMid: candidate.sdpMid, sdpMLineIndex: candidate.sdpMLineIndex, usernameFragment: candidate.usernameFragment })
                 })
                 
-                this._currentStream.sendIceCandidates(iceCandidates).then((iceResponse) => {
-                    const iceRemote = JSON.parse(iceResponse.exchangeResponse)
-                    this._player.setRemoteIceCandidates(iceRemote)
+                currentStream.sendIceCandidates(iceCandidates).then((iceResponse) => {
+                    const iceRemote = JSON.parse(iceResponse.exchangeResponse) as Array<RTCIceCandidateInit>
+                    player.setRemoteIceCandidates(iceRemote)
 
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     console.error('Failed to send ice candidates:', error)
                 })
 
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 console.error('Failed to send offer:', error)
             })
 
-        }).catch((error) => {
+        }).catch((error:unknown) => {
             console.error('Failed to create offer:', error)
         })
 
         console.log(this._player)
     }
 
-    destroyPlayer(){
+    destroyPlayer():void{
         if(this._player !== undefined){
             this._player.destroy()
             clearInterval(this._refreshInterval)
             clearInterval(this._keepaliveInterval)
-            delete this._player
+            this._player = undefined
         } else {
             console.log('Player is already destroyed!')
         
@@ -163,9 +176,9 @@ class StreamApp {
 class VirtualGamepad {
 
     _isAttached = false
-    _gamepad
+    _gamepad: Gamepad | undefined
 
-    attach(index = 0) {
+    attach(index:number = 0):void {
         console.log('[VirtualGamepad] Attaching virtual gamepad on index:', index)
         this._gamepad = new xCloudPlayer.Gamepad(index, { enable_keyboard: true})
 
@@ -178,8 +191,8 @@ class VirtualGamepad {
         }
     }
 
-    detach() {
-        if(this._isAttached === false){
+    detach():void {
+        if(this._isAttached === false || this._gamepad === undefined){
             console.log('[VirtualGamepad] Virtual Gamepad is not attached')
             return
         }
@@ -187,23 +200,26 @@ class VirtualGamepad {
         this._isAttached = false
     }
 
-    sendGamepadButtonPress(button) {
-        this._gamepad.sendButtonState(button, 1)
+    sendGamepadButtonPress(button:GamepadFrameKey | string):void {
+        const gamepad = this._gamepad
+        if(gamepad === undefined) {return}
+
+        gamepad.sendButtonState(button, 1)
         setTimeout(() => {
-            this._gamepad.sendButtonState(button, 0)
+            gamepad.sendButtonState(button, 0)
         }, 50)
     }
 
-    sendGamepadButtonState(button, value) {
-        this._gamepad.sendButtonState(button, value)
+    sendGamepadButtonState(button:GamepadFrameKey | string, value:number):void {
+        this._gamepad?.sendButtonState(button, value)
     }
 }
 
 class VirtualMKB {
     _isAttached = false
-    _mkb
+    _mkb: MouseKeyboard | undefined
 
-    attach(index = 0) {
+    attach(index:number = 0):void {
         console.log('[VirtualMKB] Attaching MKB on index:', index)
         this._mkb = new xCloudPlayer.MouseKeyboard(index)
 
@@ -216,8 +232,8 @@ class VirtualMKB {
         }
     }
 
-    detach() {
-        if(this._isAttached === false){
+    detach():void {
+        if(this._isAttached === false || this._mkb === undefined){
             console.log('[VirtualMKB] Virtual MKB is not attached')
             return
         }
@@ -228,9 +244,9 @@ class VirtualMKB {
 
 class VirtualTouch {
     _isAttached = false
-    _touch
+    _touch: Touch | undefined
 
-    attach(index = 0) {
+    attach(index:number = 0):void {
         console.log('[VirtualTouch] Attaching Touch on index:', index)
         this._touch = new xCloudPlayer.Touch(index)
 
@@ -243,8 +259,8 @@ class VirtualTouch {
         }
     }
 
-    detach() {
-        if(this._isAttached === false){
+    detach():void {
+        if(this._isAttached === false || this._touch === undefined){
             console.log('[VirtualTouch] Virtual Touch is not attached')
             return
         }

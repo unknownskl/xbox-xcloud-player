@@ -17,7 +17,7 @@
         "strict": true,
         "skipLibCheck": false,
         "esModuleInterop": true,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "resolveJsonModule": true
     },
     "include": [

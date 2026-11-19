@@ -1,6 +1,6 @@
 export const mockRTCPeerConnection = () => {
     // Mock RTCPeerConnection
-    (global as any).RTCRtpTransceiver = jest.fn(cb => ({
+    (global as any).RTCRtpTransceiver = jest.fn((_cb?: unknown) => ({
         setCodecPreferences: () => {
             // console.log('peerConnection.close');
         }
@@ -10,7 +10,7 @@ export const mockRTCPeerConnection = () => {
         permissions: {
             query: () => {
                 return {
-                    then: (cb) => {
+                    then: (cb: (result: { state: PermissionState }) => void) => {
                         cb({state: 'granted'})
                     }
                 }
@@ -129,21 +129,21 @@ export const mockRTCPeerConnection = () => {
         }
     } as any;
 
-    (global as any).RTCPeerConnection = jest.fn(cb => ({
-        createDataChannel: (label) => {
+    (global as any).RTCPeerConnection = jest.fn((_cb?: unknown) => ({
+        createDataChannel: (_label: string) => {
             return {
-                addEventListener: (type, listener) => {
+                addEventListener: (_type: string, _listener: unknown) => {
                     // console.log('dataChannel.addEventListener: ', type);
                 }
             }
         },
-        addEventListener: (type, listener) => {
+        addEventListener: (_type: string, _listener: unknown) => {
             // console.log('peerConnection.addEventListener: ', type);
         },
-        addTransceiver: (type, listener) => {
+        addTransceiver: (_type: string, _listener: unknown) => {
             // console.log('peerConnection.addTransceiver: ', type);
             return {
-                setCodecPreferences: (codecs) => {
+                setCodecPreferences: (_codecs: RTCRtpCodec[]) => {
                     // console.log('peerConnection.close');
                 }
             }

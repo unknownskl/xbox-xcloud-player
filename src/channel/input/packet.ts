@@ -26,8 +26,21 @@ export interface InputFrame {
     RightTrigger: number;
 }
 
+export interface PointerEventTarget {
+    getBoundingClientRect(): { left: number; top: number; width: number; height: number };
+}
+
+export interface PointerEventData {
+    target: EventTarget | PointerEventTarget | null;
+    type: string;
+    pressure: number;
+    twist: number;
+    x: number;
+    y: number;
+}
+
 export interface PointerFrame {
-    events: Array<any>;
+    events: Array<PointerEventData>;
 }
 
 export interface MouseFrame {
@@ -89,22 +102,22 @@ export default class InputPacket {
     _serverVideoWidth = 0
     _serverVideoHeight = 0
 
-    constructor(sequence){
+    constructor(sequence:number){
         this._sequence = sequence
     }
 
-    setStreamConfig(options:StreamConfig){
+    setStreamConfig(options:StreamConfig):void{
         this._serverVideoWidth = options.width
         this._serverVideoHeight = options.height
     }
 
-    setMetadata(maxTouchpoints = 1){
+    setMetadata(maxTouchpoints:number = 1):void{
         this._reportType = ReportTypes.ClientMetadata
         this._totalSize = 15
         this._maxTouchpoints = maxTouchpoints
     }
 
-    setData(metadataQueue:Array<any>, gamepadQueue:Array<InputFrame>, pointerQueue:Array<PointerFrame>, mouseQueue:Array<MouseFrame>, keyboardQueue:Array<KeyboardFrame>){
+    setData(metadataQueue:Array<MetadataFrame>, gamepadQueue:Array<InputFrame>, pointerQueue:Array<PointerFrame>, mouseQueue:Array<MouseFrame>, keyboardQueue:Array<KeyboardFrame>):void{
         let size = 14
 
         if(metadataQueue.length > 0){
@@ -140,34 +153,34 @@ export default class InputPacket {
         this._totalSize = size
     }
 
-    _calculateMetadataSize(frames:Array<MetadataFrame>){
+    _calculateMetadataSize(frames:Array<MetadataFrame>):number{
         return 1 + ((7 * 4) * frames.length)
     }
 
-    _calculateGamepadSize(frames:Array<InputFrame>){
+    _calculateGamepadSize(frames:Array<InputFrame>):number{
         return 1 + (23 * frames.length)
     }
 
-    _calculatePointerSize(frames:Array<PointerFrame>){
+    _calculatePointerSize(frames:Array<PointerFrame>):number{
         let pointerSize = 1
-        for(const frame in frames){
-            pointerSize = pointerSize + 1 + (frames[frame].events.length * 20)
+        for(const frame of frames){
+            pointerSize = pointerSize + 1 + (frame.events.length * 20)
         }
 
         return pointerSize
     }
 
-    _calculateMouseSize(frames:Array<MouseFrame>){
+    _calculateMouseSize(frames:Array<MouseFrame>):number{
         return 1 + (18 * frames.length)
     }
 
-    _calculateKeyboardSize(frames:Array<KeyboardFrame>){
+    _calculateKeyboardSize(frames:Array<KeyboardFrame>):number{
         return 1 + (3 * frames.length)
     }
 
 
 
-    _writeMetadataData(packet:DataView, offset:number, frames:Array<MetadataFrame>){
+    _writeMetadataData(packet:DataView, offset:number, frames:Array<MetadataFrame>):number{
         packet.setUint8(offset, frames.length)
         offset++
 
@@ -202,7 +215,7 @@ export default class InputPacket {
         return offset
     }
 
-    _writeGamepadData(packet:DataView, offset:number, frames:Array<InputFrame>){
+    _writeGamepadData(packet:DataView, offset:number, frames:Array<InputFrame>):number{
         packet.setUint8(offset, frames.length)
         offset++
 
@@ -253,7 +266,7 @@ export default class InputPacket {
         return offset
     }
 
-    _writePointerData(packet:DataView, offset:number, frames:Array<PointerFrame>){
+    _writePointerData(packet:DataView, offset:number, frames:Array<PointerFrame>):number{
         packet.setUint8(offset, 1)
         // packet.setUint8(offset, frames.length)
         offset++
@@ -272,8 +285,9 @@ export default class InputPacket {
             const screenWidth = this._serverVideoWidth
             const screenHeight = this._serverVideoHeight
 
-            for(const event in shift.events){
-                const rect = shift.events[event].target.getBoundingClientRect()
+            for(const event of shift.events){
+                const target = event.target as Element | PointerEventTarget | null
+                const rect = target !== null ? target.getBoundingClientRect() : { left: 0, top: 0, width: screenWidth || 1, height: screenHeight || 1 }
 
                 let e = 0.06575749909301447 * (screenHeight / 1)
                 let n = 0.06575749909301447 * (screenWidth / 1)
@@ -282,20 +296,20 @@ export default class InputPacket {
                 e =1
                 n =1
 
-                if(shift.events[event].type === 'pointerup'){
+                if(event.type === 'pointerup'){
                     e = 0
                     n = 0
                 }
 
                 packet.setUint16(offset, e, true)
                 packet.setUint16(offset+2, n, true)
-                packet.setUint8(offset+4, 255*shift.events[event].pressure)
-                packet.setUint16(offset+5, shift.events[event].twist, true)
+                packet.setUint8(offset+4, 255*event.pressure)
+                packet.setUint16(offset+5, event.twist, true)
                 packet.setUint32(offset+7, 0, true)
-                let o = (shift.events[event].x - rect.left) * (screenWidth / rect.width)
-                    , l = (shift.events[event].y - rect.top) * (screenHeight / rect.height)
+                let o = (event.x - rect.left) * (screenWidth / rect.width)
+                    , l = (event.y - rect.top) * (screenHeight / rect.height)
 
-                if(shift.events[event].type === 'pointerup'){
+                if(event.type === 'pointerup'){
                     // Reset x and y to 0 on pointerup
                     o = 0
                     l = 0
@@ -303,8 +317,8 @@ export default class InputPacket {
 
                 packet.setUint32(offset+11, o, true)
                 packet.setUint32(offset+15, l, true)
-                packet.setUint8(offset+19, (shift.events[event].type === 'pointerdown') ? 1 :
-                    (shift.events[event].type === 'pointerup') ? 2 : (shift.events[event].type === 'pointermove') ? 3 : 0)
+                packet.setUint8(offset+19, (event.type === 'pointerdown') ? 1 :
+                    (event.type === 'pointerup') ? 2 : (event.type === 'pointermove') ? 3 : 0)
                     
                 offset = offset+20
             }
@@ -313,7 +327,7 @@ export default class InputPacket {
         return offset
     }
 
-    _writeMouseData(packet:DataView, offset:number, frames:Array<MouseFrame>){
+    _writeMouseData(packet:DataView, offset:number, frames:Array<MouseFrame>):number{
         packet.setUint8(offset, frames.length)
         offset++
 
@@ -341,7 +355,7 @@ export default class InputPacket {
         return offset
     }
 
-    _writeKeyboardData(packet:DataView, offset:number, frames:Array<KeyboardFrame>){
+    _writeKeyboardData(packet:DataView, offset:number, frames:Array<KeyboardFrame>):number{
         packet.setUint8(offset, frames.length)
         offset++
 
@@ -368,7 +382,7 @@ export default class InputPacket {
         return offset
     }
 
-    toBuffer(){
+    toBuffer():DataView<ArrayBuffer>{
         const metadataAlloc = new Uint8Array(this._totalSize)
         const packet = new DataView(metadataAlloc.buffer)
 
@@ -396,7 +410,7 @@ export default class InputPacket {
         return packet
     }
 
-    _normalizeTriggerValue(e) {
+    _normalizeTriggerValue(e:number):number {
         if (e < 0) {
             return this._convertToUInt16(0)
         }
@@ -405,19 +419,19 @@ export default class InputPacket {
         return this._convertToUInt16(a)
     }
 
-    _normalizeAxisValue(e) {
+    _normalizeAxisValue(e:number):number {
         const t = this._convertToInt16(32767),
             a = this._convertToInt16(-32767),
             n = e * t
         return n > t ? t : n < a ? a : this._convertToInt16(n)
     }
 
-    _convertToInt16(e) {
+    _convertToInt16(e:number):number {
         const int = new Int16Array(1)
         return int[0] = e, int[0]
     }
 
-    _convertToUInt16(e) {
+    _convertToUInt16(e:number):number {
         const int = new Uint16Array(1)
         return int[0] = e, int[0]
     }

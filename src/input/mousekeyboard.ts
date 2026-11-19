@@ -1,5 +1,11 @@
 import xCloudPlayer from '../player'
 
+interface NavigatorWithKeyboard extends Navigator {
+    keyboard?: {
+        lock?: () => Promise<void>;
+    };
+}
+
 export default class MouseKeyboard {
     private _player: xCloudPlayer | undefined
     private _index: number
@@ -18,7 +24,7 @@ export default class MouseKeyboard {
         this._index = index
     }
 
-    attach(xCloudPlayer:xCloudPlayer){
+    attach(xCloudPlayer:xCloudPlayer):void{
         this._player = xCloudPlayer
 
         this._player._channels.control.sendGamepadState(this._index, true, this)
@@ -44,7 +50,7 @@ export default class MouseKeyboard {
 
     }
 
-    detach(){
+    detach():void{
         if(this._player === undefined){
             console.log('[MKB] Player is not attached. this._player is:', this._player)
             return
@@ -62,7 +68,7 @@ export default class MouseKeyboard {
         this._player.getVideoElement()?.removeEventListener('click', this._listener.lockMouseKeyboard)
     }
 
-    onPointerMove(event:PointerEvent){
+    onPointerMove(event:PointerEvent):void{
         this._player?._channels.input.queueMouseFrame({
             X: event.movementX*2,
             Y: event.movementY*2,
@@ -73,7 +79,7 @@ export default class MouseKeyboard {
         })
     }
 
-    onPointerClick(event:PointerEvent){
+    onPointerClick(event:PointerEvent):void{
         // console.log('Pointer clicked:', event)
         this._player?._channels.input.queueMouseFrame({
             X: event.movementX*2,
@@ -85,11 +91,11 @@ export default class MouseKeyboard {
         })
     }
 
-    onPointerScroll(event:WheelEvent){
+    onPointerScroll(event:WheelEvent):void{
         console.log('[MKB] Pointer scrolled:', event)
     }
 
-    onKeyDown(event:KeyboardEvent){
+    onKeyDown(event:KeyboardEvent):void{
         this._player?._channels.input.queueKeyboardFrame({
             key: event.key,
             keyCode: event.keyCode,
@@ -98,7 +104,7 @@ export default class MouseKeyboard {
         event.preventDefault()
     }
 
-    onKeyUp(event:KeyboardEvent){
+    onKeyUp(event:KeyboardEvent):void{
         this._player?._channels.input.queueKeyboardFrame({
             key: event.key,
             keyCode: event.keyCode,
@@ -106,25 +112,27 @@ export default class MouseKeyboard {
         })
     }
 
-    lockMouseKeyboard(){
-        if(this._player === undefined || this._player.getVideoElement() === undefined){
+    lockMouseKeyboard():void{
+        const videoElement = this._player?.getVideoElement()
+        if(this._player === undefined || videoElement === undefined){
             console.log('[MKB] Player or VideoComponent is not attached. Failed to lock Mouse & Keyboard because there is nothing to lock for.')
             return
         }
 
-        // @disable ts-expect-error requestPointerLock() is not defined to consume arguments
-        const promise = this._player?.getVideoElement()?.requestPointerLock({
+        const promise = videoElement.requestPointerLock({
             unadjustedMovement: true,
-        }) as Promise<undefined> | undefined
+        }) as Promise<void> | undefined
 
         if(promise === undefined){
             console.log('[MKB] Failed to lock Mouse & Keyboard because the requestPointerLock() is undefined')
             return
         }
 
-        if ('keyboard' in navigator && 'lock' in (navigator.keyboard as any)) {
+        const nav = navigator as NavigatorWithKeyboard
+        if (nav.keyboard !== undefined && typeof nav.keyboard.lock === 'function') {
+            const keyboardLock = nav.keyboard.lock.bind(nav.keyboard)
             document.body.requestFullscreen().then(() => {
-                (navigator as any).keyboard.lock()
+                void keyboardLock()
             })
         } else {
             console.log('[MKB] Keyboard lock is not supported. Error:', 'NotSupportedError')
@@ -133,7 +141,7 @@ export default class MouseKeyboard {
       
         promise.then(() => {
             console.log('[MKB] pointer is locked')
-        }).catch((error) => {
+        }).catch((error: { name?: string }) => {
             if (error.name === 'NotSupportedError') {
                 console.log('[MKB] Mouse pointer lock is not supported. Error:', 'NotSupportedError')
             }

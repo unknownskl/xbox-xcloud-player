@@ -1,5 +1,19 @@
 import xCloudPlayer from '../player'
 import { VibrationFrame } from '../channel/input'
+import { InputFrame } from '../channel/input/packet'
+
+export type GamepadAxisName = 'LeftThumbXAxis' | 'LeftThumbYAxis' | 'RightThumbXAxis' | 'RightThumbYAxis'
+export type GamepadButtonName = Exclude<keyof InputFrame, 'GamepadIndex' | GamepadAxisName>
+export type GamepadFrameKey = Exclude<keyof InputFrame, 'GamepadIndex'>
+
+interface DualRumbleActuator {
+    readonly type?: string;
+    playEffect(type:string, params:Record<string, number>): Promise<string>;
+}
+
+interface GamepadWithVibration extends globalThis.Gamepad {
+    readonly vibrationActuator: GamepadHapticActuator & DualRumbleActuator;
+}
 
 export interface GamepadOptions {
     enable_keyboard?: boolean;
@@ -24,9 +38,9 @@ export default class Gamepad {
     private _player: xCloudPlayer | undefined
     private _index: number
     private _physicalGamepadId = -1
-    private _rumbleInterval
+    private _rumbleInterval: ReturnType<typeof setInterval> | undefined
     private _isFocused = true
-    private _gamepadOverride = {
+    private _gamepadOverride: { buttons: Partial<Record<GamepadFrameKey, number>> } = {
         buttons: {},
     }
 
@@ -100,7 +114,7 @@ export default class Gamepad {
         }
     }
 
-    attach(xCloudPlayer:xCloudPlayer){
+    attach(xCloudPlayer:xCloudPlayer):void{
         this._player = xCloudPlayer
 
         this._player._channels.control.sendGamepadState(this._index, true, this)
@@ -123,7 +137,7 @@ export default class Gamepad {
         this.detectActiveGamepad()
     }
 
-    detach(){
+    detach():void{
         if(this._player === undefined){
             console.log('[Gamepad] Player is not attached. this._player is:', this._player)
             return
@@ -151,13 +165,17 @@ export default class Gamepad {
         }
     }
 
-    sendButtonState(button, value){
+    private isGamepadFrameKey(button:string): button is GamepadFrameKey {
+        return button !== 'GamepadIndex' && button in this.getDefaultFamepadFrame()
+    }
+
+    sendButtonState(button:GamepadFrameKey | string, value:number):void{
         if(this._player === undefined){
             console.log('[Gamepad] Player is not attached. this._player is:', this._player)
             return
         }
 
-        if(! (button in this.getDefaultFamepadFrame())){
+        if(!this.isGamepadFrameKey(button)){
             console.log('[Gamepad] Invalid button:', button)
             return
         }
@@ -167,41 +185,41 @@ export default class Gamepad {
         this._gamepadOverride.buttons[button] = value
     }
 
-    onKeyDown(event:KeyboardEvent){
+    onKeyDown(event:KeyboardEvent):void{
         if(this._isFocused === false){
             return
         }
 
         for(const button in this._options.keyboard_mapping){
-            if(this._options.keyboard_mapping[button] === event.key){
+            if(this._options.keyboard_mapping[button] === event.key && this.isGamepadFrameKey(button)){
                 this._gamepadOverride.buttons[button] = 1
                 event.preventDefault()
             }
         }
     }
 
-    onKeyUp(event:KeyboardEvent){
+    onKeyUp(event:KeyboardEvent):void{
         if(this._isFocused === false){
             return
         }
 
         for(const button in this._options.keyboard_mapping){
-            if(this._options.keyboard_mapping[button] === event.key){
+            if(this._options.keyboard_mapping[button] === event.key && this.isGamepadFrameKey(button)){
                 this._gamepadOverride.buttons[button] = 0
                 event.preventDefault()
             }
         }
     }
 
-    onWindowFocus(){
+    onWindowFocus():void{
         this._isFocused = true
     }
 
-    onWindowBlur(){
+    onWindowBlur():void{
         this._isFocused = false
     }
 
-    getDefaultFamepadFrame(){
+    getDefaultFamepadFrame():InputFrame{
         return {
             GamepadIndex: 0,
             Nexus: 0,
@@ -229,23 +247,27 @@ export default class Gamepad {
         }
     }
 
-    detectActiveGamepad(){
+    detectActiveGamepad():void{
         if(this._physicalGamepadId < 0){
-            for(const gamepadBrowser in navigator.getGamepads()){
-                const gamepadIndex = navigator.getGamepads()[gamepadBrowser]?.index
+            for(const gamepadBrowser of navigator.getGamepads()){
+                const gamepadIndex = gamepadBrowser?.index
                 if(gamepadIndex === undefined){
                     continue
                 }
 
                 let gamepadFoundInHandler = false
-                for(const gamepad in this._player?._channels.control.getGamepadHandlers()){
-                    if(
-                        this._player?._channels.control.getGamepadHandlers()[gamepad] instanceof Gamepad &&
-                        (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId === navigator.getGamepads()[gamepadBrowser]?.index
-                    ) {
-                        console.log('[Gamepad] Active gamepad already detected:', gamepadIndex, (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId)
-                        gamepadFoundInHandler = true
-                        continue
+                const handlers = this._player?._channels.control.getGamepadHandlers()
+                if(handlers !== undefined){
+                    for(const slot of [0, 1, 2, 3] as const){
+                        const handler = handlers[slot]
+                        if(
+                            handler instanceof Gamepad &&
+                            handler._physicalGamepadId === gamepadIndex
+                        ) {
+                            console.log('[Gamepad] Active gamepad already detected:', gamepadIndex, handler._physicalGamepadId)
+                            gamepadFoundInHandler = true
+                            continue
+                        }
                     }
                 }
 
@@ -259,14 +281,18 @@ export default class Gamepad {
         }
     }
 
-    onGamepadConnected(event:GamepadEvent){
+    onGamepadConnected(event:GamepadEvent):void{
         if(this._physicalGamepadId < 0){
-            for(const gamepad in this._player?._channels.control.getGamepadHandlers()){
-                if(
-                    this._player?._channels.control.getGamepadHandlers()[gamepad] instanceof Gamepad &&
-                    (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId === event.gamepad.index
-                ) {
-                    return
+            const handlers = this._player?._channels.control.getGamepadHandlers()
+            if(handlers !== undefined){
+                for(const slot of [0, 1, 2, 3] as const){
+                    const handler = handlers[slot]
+                    if(
+                        handler instanceof Gamepad &&
+                        handler._physicalGamepadId === event.gamepad.index
+                    ) {
+                        return
+                    }
                 }
             }
 
@@ -274,17 +300,17 @@ export default class Gamepad {
         }
     }
 
-    onGamepadDisconnected(event:GamepadEvent){
+    onGamepadDisconnected(event:GamepadEvent):void{
         if(event.gamepad.index === this._physicalGamepadId){
             this._physicalGamepadId = -1
         }
     }
 
-    hasOverrideButtons(){
+    hasOverrideButtons():boolean{
         return Object.keys(this._gamepadOverride.buttons).length > 0
     }
 
-    getGamepadState(){
+    getGamepadState():InputFrame | undefined{
         const gamepad = this.getGamepad(this._physicalGamepadId)
         if((this._physicalGamepadId < 0 || gamepad === undefined || this._isFocused === false) && (this.hasOverrideButtons() === false)){
             return undefined
@@ -296,26 +322,38 @@ export default class Gamepad {
         // Set buttons
         if(gamepad !== undefined){
             for(const button in this._options.gamepad_mapping){
-                frame[button] = gamepad.buttons[this._options.gamepad_mapping[button]].value
+                if(!this.isGamepadFrameKey(button)) {continue}
+                const mappedButton = gamepad.buttons[Number(this._options.gamepad_mapping[button])]
+                if(mappedButton !== undefined){
+                    frame[button] = mappedButton.value
+                }
             }
 
             // Set axis
             for(const axis in this._options.gamepad_axes_mapping){
-                frame[axis] = this.normaliseAxis(gamepad.axes[this._options.gamepad_axes_mapping[axis]])
+                if(!this.isGamepadFrameKey(axis)) {continue}
+                const mappedAxis = gamepad.axes[Number(this._options.gamepad_axes_mapping[axis])]
+                if(mappedAxis !== undefined){
+                    frame[axis] = this.normaliseAxis(mappedAxis)
+                }
             }
         }
 
         // Check for button overrides from the keyboard
-        for(const button in this._gamepadOverride.buttons){
-            frame[button] = this._gamepadOverride.buttons[button]
+        for(const button of Object.keys(this._gamepadOverride.buttons) as Array<GamepadFrameKey>){
+            const overrideVal = this._gamepadOverride.buttons[button]
+            if(overrideVal !== undefined){
+                frame[button] = overrideVal
+            }
 
             // Clean up existing keys if they are 0
-            if(this._gamepadOverride.buttons[button] === 0){
+            if(overrideVal === 0){
                 // Remove key from override
-                const newOverrideButtons = {}
-                for(const oButton in this._gamepadOverride.buttons){
-                    if(this._gamepadOverride.buttons[oButton] !== 0){
-                        newOverrideButtons[oButton] = this._gamepadOverride.buttons[oButton]
+                const newOverrideButtons: Partial<Record<GamepadFrameKey, number>> = {}
+                for(const oButton of Object.keys(this._gamepadOverride.buttons) as Array<GamepadFrameKey>){
+                    const oVal = this._gamepadOverride.buttons[oButton]
+                    if(oVal !== undefined && oVal !== 0){
+                        newOverrideButtons[oButton] = oVal
                     }
                 }
                 this._gamepadOverride.buttons = newOverrideButtons
@@ -333,7 +371,7 @@ export default class Gamepad {
         return frame
     }
 
-    getGamepad(index = -1){
+    getGamepad(index:number = -1):globalThis.Gamepad | undefined{
         const gamepad = navigator.getGamepads()[index]
         if(gamepad !== null) {
             return gamepad
@@ -342,11 +380,11 @@ export default class Gamepad {
         }
     }
 
-    getPhysicalGamepadId(){
+    getPhysicalGamepadId():number{
         return this._physicalGamepadId
     }
 
-    handleVibration(report:VibrationFrame){
+    handleVibration(report:VibrationFrame):void{
         if(this._physicalGamepadId < 0){
             console.log('[Gamepad] Received a vibration report but no physical gamepad is connected')
             return
@@ -372,8 +410,8 @@ export default class Gamepad {
             rightTrigger: report.rightTriggerMotorPercent,
         }
         
-        // @ts-expect-error - dual-rumble is not in the types
-        if(gamepad.vibrationActuator?.type === 'dual-rumble') {
+        const actuator = (gamepad as GamepadWithVibration).vibrationActuator as DualRumbleActuator | undefined
+        if(actuator?.type === 'dual-rumble') {
             const intensityRumble = report.rightMotorPercent < .6 ? (.6 - report.rightMotorPercent) / 2 : 0
             const intensityRumbleTriggers = (report.leftTriggerMotorPercent + report.rightTriggerMotorPercent) / 4
             const endIntensity = Math.min(intensityRumble, intensityRumbleTriggers)
@@ -385,7 +423,7 @@ export default class Gamepad {
             rumbleData.leftTrigger = 0
             rumbleData.rightTrigger = 0
 
-            gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)
+            actuator.playEffect('dual-rumble', rumbleData)
 
             clearInterval(this._rumbleInterval)
             if(report.repeat > 0) {
@@ -396,19 +434,19 @@ export default class Gamepad {
                         clearInterval(this._rumbleInterval)
                     }
 
-                    if(gamepad.vibrationActuator !== undefined) {
-                        gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)
+                    if(actuator !== undefined) {
+                        actuator.playEffect('dual-rumble', rumbleData)
                     }
                     repeatCount--
 
                 }, report.delayMs + report.durationMs)
             }
         } else {
-            console.log('[Gamepad] Unknown vibration type:', (gamepad.vibrationActuator as any).type)
+            console.log('[Gamepad] Unknown vibration type:', actuator?.type)
         }
     }
 
-    normaliseAxis(value) {
+    normaliseAxis(value:number):number {
         if(Math.abs(value) < this._options.gamepad_deadzone) {
             return 0
         }

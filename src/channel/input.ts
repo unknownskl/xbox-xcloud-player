@@ -21,26 +21,26 @@ export default class InputChannel extends Channel {
 
     private _inputQueue = new InputQueue(this.getPlayer())
 
-    getChannelName() {
+    getChannelName():string {
         return 'input'
     }
 
-    getChannelConfig() {
+    getChannelConfig():RTCDataChannelInit {
         return {
             ordered: true,
             protocol: '1.0',
         }
     }
 
-    getServerVideoWidth(){
+    getServerVideoWidth():number{
         return this._serverVideoWidth
     }
 
-    getServerVideoHeight(){
+    getServerVideoHeight():number{
         return this._serverVideoHeight
     }
 
-    start(){
+    start():void{
         const Packet = new InputPacket(0)
         Packet.setMetadata(navigator.maxTouchPoints > 1 ? navigator.maxTouchPoints : 1)
         this.send(Packet.toBuffer())
@@ -50,7 +50,7 @@ export default class InputChannel extends Channel {
         setTimeout(this.gamepadStateLoop.bind(this), 16)
     }
 
-    onMessage(event: MessageEvent<any>) {
+    onMessage(event: MessageEvent<ArrayBuffer>):void {
         const dataView = new DataView(event.data)
         const reportType = dataView.getUint8(0)
 
@@ -96,13 +96,14 @@ export default class InputChannel extends Channel {
 
     }
 
-    gamepadStateLoop(){
+    gamepadStateLoop():void{
         const gamepadHandlers = this.getPlayer()._channels.control.getGamepadHandlers()
         // console.log('[InputChannel] gamepadStateLoop() called', gamepadHandlers)
         const gamepadFrames:Array<GamepadFrame> = []
-        for(const gamepad in gamepadHandlers){
-            if(gamepadHandlers[gamepad] instanceof Gamepad){
-                const frame = (gamepadHandlers[gamepad] as Gamepad).getGamepadState()
+        for(const slot of [0, 1, 2, 3] as const){
+            const handler = gamepadHandlers[slot]
+            if(handler instanceof Gamepad){
+                const frame = handler.getGamepadState()
                 if(frame !== undefined){
                     gamepadFrames.push(frame)
                 }
@@ -116,27 +117,27 @@ export default class InputChannel extends Channel {
         setTimeout(this.gamepadStateLoop.bind(this), 16)
     }
 
-    queueMetadataFrame(data:MetadataFrame){
-        return this._inputQueue.queueMetadataFrame(data)
+    queueMetadataFrame(data:MetadataFrame):void{
+        this._inputQueue.queueMetadataFrame(data)
     }
 
-    queueGamepadFrames(frames:Array<GamepadFrame>, forceSend = false){
+    queueGamepadFrames(frames:Array<GamepadFrame>, forceSend:boolean = false):void{
         this._inputQueue.queueGamepadFrames(frames, forceSend)
     }
 
-    queueMouseFrame(data:MouseFrame){
+    queueMouseFrame(data:MouseFrame):void{
         this._inputQueue.queueMouseFrame(data)
     }
 
-    queueKeyboardFrame(data:KeyboardFrame){
+    queueKeyboardFrame(data:KeyboardFrame):void{
         this._inputQueue.queueKeyboardFrame(data)
     }
 
-    queuePointerFrame(data:PointerFrame){
+    queuePointerFrame(data:PointerFrame):void{
         this._inputQueue.queuePointerFrame(data)
     }
 
-    destroy() {
+    destroy():void {
         // console.log('DebugChannel destroy() called')
     }
 }

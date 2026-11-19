@@ -16,34 +16,34 @@ export default class InputQueue {
         this._player = player
     }
 
-    queueMetadataFrame(data:MetadataFrame) {
+    queueMetadataFrame(data:MetadataFrame):void {
         this._metadataQueue.push(data)
         this.checkQueueAndSend()
     }
 
-    queueGamepadFrame(data:GamepadFrame) {
+    queueGamepadFrame(data:GamepadFrame):void {
         this._gamepadQueue.push(data)
         this.checkQueueAndSend()
     }
 
-    queueGamepadFrames(frames:Array<GamepadFrame>, forceSend = false) {
-        for(const frame in frames){
-            this._gamepadQueue.push(frames[frame])
+    queueGamepadFrames(frames:Array<GamepadFrame>, forceSend:boolean = false):void {
+        for(const frame of frames){
+            this._gamepadQueue.push(frame)
         }
         this.checkQueueAndSend(forceSend)
     }
 
-    queueMouseFrame(data:MouseFrame) {
+    queueMouseFrame(data:MouseFrame):void {
         this._mouseQueue.push(data)
         this.checkQueueAndSend()
     }
 
-    queueKeyboardFrame(data:KeyboardFrame) {
+    queueKeyboardFrame(data:KeyboardFrame):void {
         this._keyboardQueue.push(data)
         this.checkQueueAndSend()
     }
 
-    queuePointerFrame(data:PointerFrame) {
+    queuePointerFrame(data:PointerFrame):void {
         if(this._pointerQueue.length > 0){
             this._pointerQueue[0].events = this._pointerQueue[0].events.concat(data.events)
         } else {
@@ -52,7 +52,7 @@ export default class InputQueue {
         this.checkQueueAndSend()
     }
 
-    checkQueueAndSend(forceSend = false) {
+    checkQueueAndSend(forceSend:boolean = false):void {
         if(forceSend === true){
             this.sendQueue()
             return
@@ -74,7 +74,7 @@ export default class InputQueue {
         }
     }
 
-    sendQueue() {
+    sendQueue():void {
         // console.log('Sending queues:', this._metadataQueue.length, this._gamepadQueue.length, this._pointerQueue.length, this._mouseQueue.length, this._keyboardQueue.length)
 
         const packet = new InputPacket(this.getSequenceNum())
@@ -90,7 +90,7 @@ export default class InputQueue {
         this.clearQueues()
     }
 
-    clearQueues() {
+    clearQueues():void {
         this._metadataQueue = []
         this._gamepadQueue = []
         this._pointerQueue = []
@@ -98,7 +98,7 @@ export default class InputQueue {
         this._keyboardQueue = []
     }
 
-    getSequenceNum() {
+    getSequenceNum():number {
         this._inputSequenceNum++
         return this._inputSequenceNum
     }

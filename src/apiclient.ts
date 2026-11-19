@@ -6,13 +6,14 @@ export interface xCloudApiClientConfig {
     host?: string;
     force_1080p?: boolean;
 }
-interface xCloudApiClientConfigRequired extends Required<xCloudApiClientConfig> {}
+export type xCloudApiClientConfigRequired = Required<xCloudApiClientConfig>
 
-export interface StartStreamReponse {
+export interface StartStreamResponse {
     sessionId: string;
     sessionPath: string;
     state: string;
 }
+export type StartStreamReponse = StartStreamResponse
 
 export interface ConsolesResponse {
     totalItems: number;
@@ -31,6 +32,13 @@ export interface Console {
     isDevKit: boolean;
 }
 
+export interface ApiStatusResponse {
+    status: number;
+}
+
+export type RequestHeaders = Record<string, string>
+export type StreamType = 'home' | 'cloud'
+
 export default class xCloudApiClient {
 
     private _config:xCloudApiClientConfigRequired = {
@@ -44,19 +52,19 @@ export default class xCloudApiClient {
         this._config = { ...this._config, ...config }
     }
 
-    getBaseHost(){
+    getBaseHost():string{
         if(this._config.host !== '') {return this._config.host} else {return ''}
     }
 
-    getConfig(){
+    getConfig():xCloudApiClientConfigRequired{
         return this._config
     }
 
-    getConsoles(){
+    getConsoles():Promise<ConsolesResponse>{
         return this.get('/v6/servers/home') as Promise<ConsolesResponse>
     }
 
-    startStream(type:'home'|'cloud', titleId:string){
+    startStream(type:StreamType, titleId:string):Promise<Stream>{
         return new Promise<Stream>((resolve, reject) => {
 
             this.post('/v5/sessions/'+type+'/play', JSON.stringify({
@@ -77,16 +85,16 @@ export default class xCloudApiClient {
                 serverId: (type === 'home') ? titleId : '',
                 fallbackRegionNames: [],
             })).then((response) => {
-                const stream = new Stream(this, response as StartStreamReponse)
+                const stream = new Stream(this, response as StartStreamResponse)
                 resolve(stream)
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })
     }
 
-    get(url, headers = {}){
-        return new Promise((resolve, reject) => {
+    get(url:string, headers:RequestHeaders = {}):Promise<unknown>{
+        return new Promise<unknown>((resolve, reject) => {
             const deviceInfo = this.getDeviceInfo()
 
             fetch(this.getBaseHost()+url, {
@@ -99,21 +107,23 @@ export default class xCloudApiClient {
                     ...headers,
                 },
             }).then(response => {
-                response.json().then(data => {
+                response.json().then((data:unknown) => {
                     resolve(data)
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     if(response.status >= 200 && response.status <= 299){
                         resolve({ status: response.status })
                     } else {
                         reject({ error: error })
                     }
                 })
+            }).catch((error:unknown) => {
+                reject({ error: error })
             })
         })
     }
 
-    post(url, body, headers = {}):Promise<any>{
-        return new Promise((resolve, reject) => {
+    post(url:string, body:string, headers:RequestHeaders = {}):Promise<unknown>{
+        return new Promise<unknown>((resolve, reject) => {
             const deviceInfo = this.getDeviceInfo()
 
             fetch(this.getBaseHost()+url, {
@@ -128,21 +138,23 @@ export default class xCloudApiClient {
                 },
                 body: body,
             }).then(response => {
-                response.json().then(data => {
+                response.json().then((data:unknown) => {
                     resolve(data)
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     if(response.status >= 200 && response.status <= 299){
                         resolve({ status: response.status })
                     } else {
                         reject({ error: error })
                     }
                 })
+            }).catch((error:unknown) => {
+                reject({ error: error })
             })
         })
     }
 
-    delete(url, headers = {}){
-        return new Promise((resolve, reject) => {
+    delete(url:string, headers:RequestHeaders = {}):Promise<unknown>{
+        return new Promise<unknown>((resolve, reject) => {
             const deviceInfo = this.getDeviceInfo()
 
             fetch(this.getBaseHost()+url, {
@@ -156,20 +168,22 @@ export default class xCloudApiClient {
                     ...headers,
                 },
             }).then(response => {
-                response.json().then(data => {
+                response.json().then((data:unknown) => {
                     resolve(data)
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     if(response.status >= 200 && response.status <= 299){
                         resolve({ status: response.status })
                     } else {
                         reject({ error: error })
                     }
                 })
+            }).catch((error:unknown) => {
+                reject({ error: error })
             })
         })
     }
 
-    getDeviceInfo(){
+    getDeviceInfo():string{
         return JSON.stringify({
             'appInfo': {
                 'env': {
@@ -470,18 +484,20 @@ export default class xCloudApiClient {
     //     })
     // }
 
-    readBody(fetchparam):any{
-        return new Promise((resolve, reject) => {
+    readBody<T = unknown>(fetchparam:Promise<Response>):Promise<T | 'retry'>{
+        return new Promise<T | 'retry'>((resolve, reject) => {
             fetchparam.then(response => {
                 if(response.status === 204){
                     resolve('retry')
                 } else {
-                    response.json().then(data => {
+                    response.json().then((data:T) => {
                         resolve(data)
-                    }).catch((error) => {
+                    }).catch((error:unknown) => {
                         reject({ error: error })
                     })
                 }
+            }).catch((error:unknown) => {
+                reject({ error: error })
             })
         })
     }

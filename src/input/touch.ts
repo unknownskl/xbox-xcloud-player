@@ -4,7 +4,7 @@ export default class Touch {
     private _player: xCloudPlayer | undefined
     private _index: number
 
-    private _pointerEvents = {}
+    private _pointerEvents: Record<string, PointerEvent> = {}
     private _lastPointerId = -1
 
     private _mouseDown = false
@@ -17,7 +17,7 @@ export default class Touch {
         this._index = index
     }
 
-    attach(xCloudPlayer:xCloudPlayer){
+    attach(xCloudPlayer:xCloudPlayer):void{
         this._player = xCloudPlayer
 
         this._player._channels.control.sendGamepadState(this._index, true, this)
@@ -34,7 +34,7 @@ export default class Touch {
 
     }
 
-    detach(){
+    detach():void{
         if(this._player === undefined){
             console.log('Player is not attached. this._player is:', this._player)
             return
@@ -46,7 +46,7 @@ export default class Touch {
         this._player.getVideoElement()?.removeEventListener('pointerup', this._listener.onPointer)
     }
 
-    onPointer(event:PointerEvent) {
+    onPointer(event:PointerEvent):void {
         this._lastPointerId = event.pointerId
 
         if(event.pointerType === 'mouse' && event.type === 'pointerdown'){

@@ -1,21 +1,35 @@
 import Channel from '../../lib/channel'
 
+export interface ChannelMessage {
+    type: string;
+    id?: string;
+    target?: string;
+    content?: string;
+    cv?: string;
+    version?: string;
+}
+
+export interface DialogMessageContent {
+    TitleText: string;
+    ContentText: string;
+}
+
 export default class MessageHandler {
     private _channel:Channel
-    private _data:object
+    private _data:ChannelMessage
 
-    constructor(channel:Channel, data:object) {
+    constructor(channel:Channel, data:ChannelMessage) {
         this._channel = channel
         this._data = data
 
         this.handle(this._data)
     }
 
-    handle(data) {
+    handle(data:ChannelMessage):void {
         console.log('[MessageHandler] Handling:', data)
         switch(data.target){
             case '/streaming/sessionLifetimeManagement/serverInitiatedDisconnect':
-                this.completeTransaction(data.id, '')
+                this.completeTransaction(data.id ?? '', '')
                 this._channel.getPlayer().destroy()
                 break
             
@@ -37,7 +51,7 @@ export default class MessageHandler {
 
     }
 
-    completeTransaction(id, data) {
+    completeTransaction(id:string, data:Record<string, unknown> | string):void {
         const transaction = JSON.stringify({
             'type': 'TransactionComplete',
             'content': JSON.stringify(data),
@@ -49,7 +63,7 @@ export default class MessageHandler {
         this._channel.send(transaction)
     }
 
-    cancelTransaction(id, data) {
+    cancelTransaction(id:string, data:Record<string, unknown> | string):void {
         const transaction = JSON.stringify({
             'type': 'ReceiverCancel',
             'content': JSON.stringify(data),
@@ -60,13 +74,14 @@ export default class MessageHandler {
         this._channel.send(transaction)
     }
 
-    handleMessage(data) {
-        const jsonData = JSON.parse(data.content)
+    handleMessage(data:ChannelMessage):void {
+        if(data.content === undefined) {return}
+        const jsonData = JSON.parse(data.content) as DialogMessageContent
         console.log(jsonData)
         if(confirm(jsonData.TitleText+'\n\n'+jsonData.ContentText)){
-            this.completeTransaction(data.id, { Result: 0 })
+            this.completeTransaction(data.id ?? '', { Result: 0 })
         } else {
-            this.completeTransaction(data.id, { Result: 1 })
+            this.completeTransaction(data.id ?? '', { Result: 1 })
             // this.cancelTransaction(data.id, '')
         }
     }

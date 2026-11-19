@@ -1,6 +1,8 @@
 import xCloudPlayer from '../player'
 import VideoComponent from './video'
 
+export type OverlayStyle = 'error' | 'warning' | 'ok' | ''
+
 interface OverlayInterface {
     debug: undefined | HTMLElement;
 }
@@ -18,7 +20,7 @@ export default class Overlay {
         this._player = player
     }
 
-    toggleDebug(){
+    toggleDebug():void{
         if(this._overlays.debug === undefined){
             this.createDebugOverlay()
         } else {
@@ -26,7 +28,7 @@ export default class Overlay {
         }
     }
 
-    createDebugOverlay(){
+    createDebugOverlay():void{
         this._overlays.debug = document.createElement('div')
         this._overlays.debug.id = 'playerDebugOverlay'
 
@@ -46,12 +48,12 @@ export default class Overlay {
         this.refreshDebugOverlay()
     }
 
-    destroy(){
+    destroy():void{
         this._overlays.debug?.remove()
         this._overlays.debug = undefined
     }
 
-    refreshDebugOverlay(){
+    refreshDebugOverlay():void{
         if(this._overlays.debug !== undefined){
             this._overlays.debug.innerHTML = ''
 
@@ -60,7 +62,7 @@ export default class Overlay {
             this._overlays.debug.appendChild(this.createLabel('FPS', this._player.getStats()._videoFps.toString(), this._player.getStats()._videoFps >= 58 ? 'ok' : 'warning'))
             this._overlays.debug.appendChild(this.createLabel('Connection', this._player.getStats()._remoteIsIpv6 ? 'IPv6' : 'IPv4', 'ok'))
             this._overlays.debug.appendChild(this.createLabel('Video', this._player.getStats()._videoCodec, 'ok'))
-            const rttButtonState = (this._player.getStats()._rtt*1000 > 75) ? 'error' : (this._player.getStats()._rtt*1000 > 40) ? 'warning' : 'ok'
+            const rttButtonState: OverlayStyle = (this._player.getStats()._rtt*1000 > 75) ? 'error' : (this._player.getStats()._rtt*1000 > 40) ? 'warning' : 'ok'
             this._overlays.debug.appendChild(this.createLabel('RTT', (this._player.getStats()._rtt*1000).toString()+' ms', rttButtonState))
             
             setTimeout(() => {
@@ -69,7 +71,7 @@ export default class Overlay {
         }
     }
 
-    createLabel(text:string, value:string = '', style:string = ''){
+    createLabel(text:string, value:string = '', style:OverlayStyle = ''):HTMLSpanElement{
         const labelStyle = {
             borderRadius: '5px',
             background: 'linear-gradient(0deg, rgba(28,26,26,1) 0%, rgba(47,45,45,1) 100%)',
@@ -85,20 +87,21 @@ export default class Overlay {
 
         const element = document.createElement('span')
 
-        const colors = {
+        const colors: Record<Exclude<OverlayStyle, ''>, string> = {
             'error': 'rgb(220, 53, 69)',
             'warning': 'rgb(255, 193, 7)',
             'ok': 'rgb(25, 135, 84)',
         }
 
         if(value !== ''){
-            element.innerHTML = `${text}: <span style="background: ${colors[style]}; border-radius: 5px; padding: 4px; padding-left: 8px; padding-right: 8px;">${value}</span>`
+            const color = style !== '' ? colors[style] : ''
+            element.innerHTML = `${text}: <span style="background: ${color}; border-radius: 5px; padding: 4px; padding-left: 8px; padding-right: 8px;">${value}</span>`
         } else {
             element.innerText = text
         }
             
 
-        for(const key in labelStyle){
+        for(const key of Object.keys(labelStyle) as Array<keyof typeof labelStyle>){
             element.style[key] = labelStyle[key]
         }
         return element

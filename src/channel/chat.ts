@@ -1,14 +1,15 @@
 import Channel from '../lib/channel'
+import xCloudPlayer from '../player'
 
 export default class ChatChannel extends Channel {
 
     _micPermissions:'granted'|'denied'|'prompt' = 'prompt'
     _micStream:MediaStream | undefined
 
-    constructor(player:any){
+    constructor(player:xCloudPlayer){
         super(player)
 
-        navigator.permissions.query({ name: 'microphone' }).then((permissionStatus) => {
+        navigator.permissions.query({ name: 'microphone' as PermissionName }).then((permissionStatus) => {
             this._micPermissions = permissionStatus.state
         
             permissionStatus.onchange = () => {
@@ -17,18 +18,18 @@ export default class ChatChannel extends Channel {
         })
     }
 
-    getChannelName() {
+    getChannelName():string {
         return 'chat'
     }
 
-    getChannelConfig() {
+    getChannelConfig():RTCDataChannelInit {
         return {
             ordered: true,
             protocol: 'chatV1',
         }
     }
 
-    startMicrophone() {
+    startMicrophone():void {
         if(this._micPermissions === 'denied'){
             alert('Microphone permissions are denied. Please enable them in your browser settings.')
             return
@@ -57,12 +58,12 @@ export default class ChatChannel extends Channel {
                     console.log('No SDP handler set. Set an SDP Handler via player.setChatSdpHandler()')
                 }
             })
-        }).catch((err) => {
+        }).catch((err:unknown) => {
             alert(`Error connecting to microphone: ${err}`)
         })
     }
 
-    stopMicrophone() {
+    stopMicrophone():void {
         if(this._micStream === undefined) {return}
 
         this._micStream.getTracks().forEach((track) => {
@@ -78,7 +79,7 @@ export default class ChatChannel extends Channel {
         this._micStream = undefined
     }
 
-    destroy() {
+    destroy():void {
         // console.log('DebugChannel destroy() called')
     }
 }

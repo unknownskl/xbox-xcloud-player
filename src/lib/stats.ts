@@ -1,5 +1,24 @@
 import xCloudPlayer from '../player'
 
+export interface InboundRtpStats extends RTCInboundRtpStreamStats {
+    packetsReceived?: number;
+    codecId?: string;
+    frameWidth?: number;
+    frameHeight?: number;
+    framesPerSecond?: number;
+}
+
+export interface CandidatePairStats extends RTCStats {
+    packetsReceived?: number;
+    remoteCandidateId?: string;
+    currentRoundTripTime?: number;
+}
+
+export interface RemoteCandidateStats extends RTCStats {
+    address?: string;
+    port?: number;
+}
+
 export default class Stats {
     private _player: xCloudPlayer
     private _peerConnection:RTCPeerConnection
@@ -25,25 +44,28 @@ export default class Stats {
         setInterval(this.loop.bind(this), 1000)
     }
 
-    loop(){
+    loop():void{
         this._peerConnection.getStats().then((stats) => {
-            stats.forEach((report) => {
+            stats.forEach((report:RTCStats) => {
                 //  @TODO: Implement chat stats using type outbound-rtp
 
                 if(report.type === 'inbound-rtp'){
-                    this.readInboundRtp(report)
+                    this.readInboundRtp(report as InboundRtpStats)
 
-                } else if(report.type === 'candidate-pair' && report.packetsReceived !== undefined && report.packetsReceived > 0){
-                    this.readCandidatePair(report)
+                } else if(report.type === 'candidate-pair'){
+                    const candidatePair = report as CandidatePairStats
+                    if(candidatePair.packetsReceived !== undefined && candidatePair.packetsReceived > 0){
+                        this.readCandidatePair(candidatePair)
+                    }
                     
                 } else if(report.type === 'remote-candidate'){
-                    this.readRemoteCandidate(report)
+                    this.readRemoteCandidate(report as RemoteCandidateStats)
                 }
             })
         })
     }
 
-    readInboundRtp(report:RTCInboundRtpStreamStats){
+    readInboundRtp(report:InboundRtpStats):void{
         if(report.kind === 'video' && report.codecId && report.packetsReceived !== undefined && report.packetsReceived > 0){
 
             if(report.codecId.includes('profile-level-id=4d')){
@@ -71,13 +93,17 @@ export default class Stats {
         }
     }
 
-    readCandidatePair(report){
-        this._activeRemoteCandidate = report.remoteCandidateId
-        this._rtt = report.currentRoundTripTime
+    readCandidatePair(report:CandidatePairStats):void{
+        if(report.remoteCandidateId !== undefined){
+            this._activeRemoteCandidate = report.remoteCandidateId
+        }
+        if(report.currentRoundTripTime !== undefined){
+            this._rtt = report.currentRoundTripTime
+        }
     }
 
-    readRemoteCandidate(report){
-        if(report.id !== this._activeRemoteCandidate) {return}
+    readRemoteCandidate(report:RemoteCandidateStats):void{
+        if(report.id !== this._activeRemoteCandidate || report.address === undefined) {return}
 
         if(this.isPrivateIP(report.address)){
             this._remoteIsLocal = true
@@ -92,15 +118,17 @@ export default class Stats {
         }
 
         this._remoteHost = report.address
-        this._remotePort = report.port
+        if(report.port !== undefined){
+            this._remotePort = report.port
+        }
     }
 
-    isPrivateIP(ip) {
+    isPrivateIP(ip:string):boolean {
         const parts = ip.split('.')
         return parts[0] === '10' || (parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31)) || (parts[0] === '192' && parts[1] === '168')
     }
 
-    isIpv6(ip) {
+    isIpv6(ip:string):boolean {
         const parts = ip.split(':')
         return parts.length > 3 ? true : false
     }

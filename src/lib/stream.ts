@@ -1,18 +1,42 @@
-import xCloudApiClient, { StartStreamReponse } from '../apiclient'
+import xCloudApiClient, { StartStreamResponse } from '../apiclient'
+
+export type StreamState = 'New' | 'Provisioning' | 'Provisioned' | 'ReadyToConnect' | 'Error'
 
 export interface StateResponse {
-    state: string;
+    state: StreamState;
+    errorDetails?: unknown;
+}
+
+export interface SdpExchangeResponse {
+    exchangeResponse: string;
+    status?: number;
+}
+
+export interface IceExchangeResponse {
+    exchangeResponse: string;
+    status?: number;
+}
+
+export type IceCandidatePayload = string | RTCIceCandidateInit
+
+export interface KeepaliveResponse {
+    code?: string;
+    status?: number;
+}
+
+export interface StopStreamResponse {
+    status: 'ok';
 }
 
 export default class Stream {
     private _apiClient: xCloudApiClient
     private _sessionId: string
     private _sessionPath: string
-    private _state:'New'|'Provisioning'|'Provisioned'|'ReadyToConnect'|'Error'
+    private _state:StreamState
 
-    private _waitInterval
+    private _waitInterval: ReturnType<typeof setInterval> | undefined
 
-    constructor(apiClient:xCloudApiClient, response:StartStreamReponse){
+    constructor(apiClient:xCloudApiClient, response:StartStreamResponse){
         this._apiClient = apiClient
         this._sessionId = response.sessionId
         this._sessionPath = response.sessionPath
@@ -23,7 +47,7 @@ export default class Stream {
         return this._sessionId
     }
 
-    getState():string{
+    getState():StreamState{
         return this._state
     }
 
@@ -31,7 +55,7 @@ export default class Stream {
         return '/'+this._sessionPath
     }
 
-    waitForState(desiredState:string){
+    waitForState(desiredState:StreamState):void{
         this._waitInterval = setInterval(() => {
             this.refreshState().then((state) => {
 
@@ -39,15 +63,16 @@ export default class Stream {
                     clearInterval(this._waitInterval)
                 }
                 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 console.error('Failed to refresh state of stream:', error)
             })
         }, 500)
     }
 
-    refreshState(){
-        return new Promise<string>((resolve, reject) => {
-            this._apiClient.get(this.getSessionPath()+'/state').then((response:any) => {
+    refreshState():Promise<StreamState>{
+        return new Promise<StreamState>((resolve, reject) => {
+            this._apiClient.get(this.getSessionPath()+'/state').then((rawResponse) => {
+                const response = rawResponse as StateResponse
                 
                 const fireReadyToConnect = (this._state !== 'ReadyToConnect' && response.state === 'ReadyToConnect') ? true : false
                 const fireProvisioned = (this._state !== 'Provisioned' && response.state === 'Provisioned') ? true : false
@@ -58,27 +83,27 @@ export default class Stream {
                 if(fireReadyToConnect === true){ this.onReadyToConnect(this) }
                 if(fireProvisioned === true){ this.onProvisioned(this) }
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 this.onError(this)
                 reject(error)
             })
         })
     }
 
-    onReadyToConnect(stream:Stream){
+    onReadyToConnect(stream:Stream):Stream{
         return stream
     }
 
-    onProvisioned(stream:Stream){
+    onProvisioned(stream:Stream):Stream{
         return stream
     }
 
-    onError(stream:Stream){
+    onError(stream:Stream):Stream{
         return stream
     }
 
-    sendSDPOffer(sdpOffer){
-        return new Promise((resolve, reject) => {
+    sendSDPOffer(sdpOffer:RTCSessionDescriptionInit):Promise<SdpExchangeResponse>{
+        return new Promise<SdpExchangeResponse>((resolve, reject) => {
             const body = JSON.stringify({
                 'messageType':'offer',
                 'sdp': sdpOffer.sdp,
@@ -125,18 +150,18 @@ export default class Stream {
                 this.waitForSdpResponse().then((sdpResponse) => {
                     resolve(sdpResponse)
 
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     reject(error)
                 })
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })
     }
 
-    sendChatSDPOffer(sdpOffer){
-        return new Promise((resolve, reject) => {
+    sendChatSDPOffer(sdpOffer:RTCSessionDescriptionInit):Promise<SdpExchangeResponse>{
+        return new Promise<SdpExchangeResponse>((resolve, reject) => {
             const body = JSON.stringify({
                 'messageType':'offer',
                 'requestId': 2,
@@ -150,21 +175,22 @@ export default class Stream {
                 this.waitForSdpResponse().then((sdpResponse) => {
                     resolve(sdpResponse)
 
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     reject(error)
                 })
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })
     }
 
-    waitForSdpResponse(){
-        return new Promise((resolve) => {
+    waitForSdpResponse():Promise<SdpExchangeResponse>{
+        return new Promise<SdpExchangeResponse>((resolve) => {
             const checkInterval = setInterval(() => {
-                this._apiClient.get(this.getSessionPath()+'/sdp').then(sdpResponse => {
-                    if((sdpResponse as any).status !== 204){
+                this._apiClient.get(this.getSessionPath()+'/sdp').then((rawResponse) => {
+                    const sdpResponse = rawResponse as SdpExchangeResponse
+                    if(sdpResponse.status !== 204){
                         resolve(sdpResponse)
                         clearInterval(checkInterval)
                     }
@@ -176,27 +202,28 @@ export default class Stream {
         })
     }
 
-    sendIceCandidates(candidates:Array<any>){
-        return new Promise((resolve, reject) => {
+    sendIceCandidates(candidates:Array<IceCandidatePayload>):Promise<IceExchangeResponse>{
+        return new Promise<IceExchangeResponse>((resolve, reject) => {
             this._apiClient.post(this.getSessionPath()+'/ice', JSON.stringify({ candidates: candidates }), { 'Content-Type': 'application/json', 'Accept': 'application/json' }).then(() => {
                 this.waitForIceResponse().then((iceResponse) => {
                     resolve(iceResponse)
 
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     reject(error)
                 })
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })
     }
 
-    waitForIceResponse(){
-        return new Promise((resolve) => {
+    waitForIceResponse():Promise<IceExchangeResponse>{
+        return new Promise<IceExchangeResponse>((resolve) => {
             const checkInterval = setInterval(() => {
-                this._apiClient.get(this.getSessionPath()+'/ice').then(iceResponse => {
-                    if((iceResponse as any).status !== 204){
+                this._apiClient.get(this.getSessionPath()+'/ice').then((rawResponse) => {
+                    const iceResponse = rawResponse as IceExchangeResponse
+                    if(iceResponse.status !== 204){
                         resolve(iceResponse)
                         clearInterval(checkInterval)
                     }
@@ -208,28 +235,28 @@ export default class Stream {
         })
     }
 
-    sendKeepalive(){
-        return new Promise((resolve, reject) => {
-            this._apiClient.post(this.getSessionPath()+'/keepalive', '').then(keepaliveResponse => {
-                resolve(keepaliveResponse)
-            }).catch((error) => {
+    sendKeepalive():Promise<KeepaliveResponse>{
+        return new Promise<KeepaliveResponse>((resolve, reject) => {
+            this._apiClient.post(this.getSessionPath()+'/keepalive', '').then((keepaliveResponse) => {
+                resolve(keepaliveResponse as KeepaliveResponse)
+            }).catch((error:unknown) => {
                 reject({ error: error })
             })
         })
     }
 
-    sendMSALAuth(userToken:string){
+    sendMSALAuth(userToken:string):Promise<unknown>{
         return this._apiClient.post(this.getSessionPath()+'/connect', JSON.stringify({
             'userToken': userToken,
         }), { 'Content-Type': 'application/json', 'Accept': 'application/json' })
     }
 
-    stop(){
-        return new Promise((resolve, reject) => {
+    stop():Promise<StopStreamResponse>{
+        return new Promise<StopStreamResponse>((resolve, reject) => {
             this._apiClient.delete(this.getSessionPath()).then(() => {
                 resolve({ status: 'ok'})
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })

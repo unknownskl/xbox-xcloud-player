@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import express from 'express'
+import express, { Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import { TokenStore, Xal, Msal } from 'xal-node'
 
@@ -18,7 +18,7 @@ app.listen(port, () => {
     console.log(`Streaming App listening at http://localhost:${port}`)
 })
 
-app.get(['/', '/sw.js', '/favicon.ico'], (req, res) => {
+app.get(['/', '/sw.js', '/favicon.ico'], (_req: Request, res: Response) => {
     res.send('Server running... <a href="stream.html">Open streaming interface</a>')
 })
 
@@ -30,8 +30,8 @@ class xHomeTokenManager {
     _tokenxHome:string = ''
     _tokenxCloud:string = ''
 
-    _apiClient
-    _apiCloudClient
+    _apiClient: ApiClient | undefined
+    _apiCloudClient: ApiClient | undefined
 
     constructor(){
         this._tokenstore = new TokenStore()
@@ -40,7 +40,7 @@ class xHomeTokenManager {
         this._msal = new Msal(this._tokenstore)
     }
 
-    loadTokens(){
+    loadTokens():void{
         this.requestxHomeToken().then((tokens) => {
             this._tokenxHome = tokens.xHomeToken.data.gsToken
             this._tokenxCloud = tokens.xCloudToken.data.gsToken
@@ -64,7 +64,7 @@ class xHomeTokenManager {
         })
     }
 
-    requestxHomeToken(){
+    requestxHomeToken():ReturnType<Msal['getStreamingTokens']>{
         if(this._tokenstore.getAuthenticationMethod() === 'msal'){
             return this._msal.getStreamingTokens()
         } else {
@@ -72,7 +72,7 @@ class xHomeTokenManager {
         }
     }
 
-    getMsalToken(){
+    getMsalToken():ReturnType<Msal['getMsalToken']>{
         if(this._tokenstore.getAuthenticationMethod() === 'msal'){
             return this._msal.getMsalToken()
         } else {
@@ -80,7 +80,7 @@ class xHomeTokenManager {
         }
     }
 
-    tokensLoaded() {
+    tokensLoaded():void {
         if(this._xal._xhomeToken === undefined) {return}
 
         console.log('[PROXY] Proxy requests to:', this._xal._xhomeToken.getDefaultRegion().baseUri.substring(8))
@@ -94,24 +94,7 @@ Manager.loadTokens()
  * Proxy requests
  */
 
-// app.get(['/v6/servers/home'], (req, res) => {
-//     if(Manager._apiClient === undefined){
-//         res.status(503)
-//         res.send('Server not ready yet. Please try again later.')
-//         return
-//     }
-
-//     Manager._apiClient.getConsoles().then((result) => {
-//         console.log('result', result)
-//         res.send(result)
-
-//     }).catch((err) => {
-//         console.log('error', err)
-//         res.send(err)
-//     })
-// })
-
-app.get(['/api/msal'], (req, res) => {
+app.get(['/api/msal'], (_req: Request, res: Response) => {
     if(Manager._apiClient === undefined){
         res.status(503)
         res.send('Server not ready yet. Please try again later.')
@@ -121,13 +104,13 @@ app.get(['/api/msal'], (req, res) => {
     Manager.getMsalToken().then((result) => {
         res.send(result.data.lpt)
 
-    }).catch((err) => {
+    }).catch((err:unknown) => {
         console.log('error', err)
         res.send(err)
     })
 })
 
-app.get(['/v6/{*any}', '/v5/{*any}'], (req, res) => {
+app.get(['/v6/{*any}', '/v5/{*any}'], (req: Request, res: Response) => {
     if(Manager._apiClient === undefined){
         res.status(503)
         res.send('Server not ready yet. Please try again later.')
@@ -135,25 +118,31 @@ app.get(['/v6/{*any}', '/v5/{*any}'], (req, res) => {
     }
 
     console.log('[PROXY] GET', req.path)
-    let client
+    let client: ApiClient | undefined
     if(req.path.includes('/cloud/')){
         client = Manager._apiCloudClient
     } else {
         client = Manager._apiClient
     }
 
+    if(client === undefined){
+        res.status(503)
+        res.send('Server not ready yet. Please try again later.')
+        return
+    }
+
     client.get(req.path, {}).then((result) => {
         console.log('[PROXY] OK:', req.path)
         res.send(result)
 
-    }).catch((err) => {
+    }).catch((err:unknown) => {
         console.log('[PROXY] Error:', err)
         res.status(500)
         res.send(err)
     })
 })
 
-app.post(['/v5/{*any}'], (req, res) => {
+app.post(['/v5/{*any}'], (req: Request, res: Response) => {
     if(Manager._apiClient === undefined){
         res.status(503)
         res.send('Server not ready yet. Please try again later.')
@@ -161,17 +150,25 @@ app.post(['/v5/{*any}'], (req, res) => {
     }
 
     console.log('[PROXY] POST', req.path, JSON.stringify(req.body, null, 2))
-    let client
+    let client: ApiClient | undefined
     if(req.path.includes('/cloud/')){
         client = Manager._apiCloudClient
     } else {
         client = Manager._apiClient
     }
-    client.post(req.path, JSON.stringify(req.body), { ...(req.header['x-ms-device-info'] !== undefined) ? { 'x-ms-device-info': req.header['x-ms-device-info'] } : {} }).then((result) => {
+
+    if(client === undefined){
+        res.status(503)
+        res.send('Server not ready yet. Please try again later.')
+        return
+    }
+
+    const deviceInfo = req.header('x-ms-device-info')
+    client.post(req.path, JSON.stringify(req.body), { ...(deviceInfo !== undefined ? { 'x-ms-device-info': deviceInfo } : {}) }).then((result) => {
         console.log('[PROXY] OK:', req.path)
         res.send(result)
 
-    }).catch((err) => {
+    }).catch((err:unknown) => {
         console.log('[PROXY] Error:', err)
         res.status(500)
         res.send(err)

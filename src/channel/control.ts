@@ -3,15 +3,19 @@ import MouseKeyboard from '../input/mousekeyboard'
 import Touch from '../input/touch'
 import Channel from '../lib/channel'
 
-interface GamepadHandlers {
-    0: undefined|Gamepad|MouseKeyboard|Touch;
-    1: undefined|Gamepad|MouseKeyboard|Touch;
-    2: undefined|Gamepad|MouseKeyboard|Touch;
-    3: undefined|Gamepad|MouseKeyboard|Touch;
+export type GamepadSlotIndex = 0 | 1 | 2 | 3
+
+export type InputHandler = Gamepad | MouseKeyboard | Touch
+
+export interface GamepadHandlers {
+    0: undefined|InputHandler;
+    1: undefined|InputHandler;
+    2: undefined|InputHandler;
+    3: undefined|InputHandler;
 }
 
 export default class ControlChannel extends Channel {
-    _keyframeInterval
+    _keyframeInterval: ReturnType<typeof setInterval> | undefined
     _gamepadHandlers:GamepadHandlers = {
         0: undefined,
         1: undefined,
@@ -19,18 +23,18 @@ export default class ControlChannel extends Channel {
         3: undefined,
     }
 
-    getChannelName() {
+    getChannelName():string {
         return 'control'
     }
 
-    getChannelConfig() {
+    getChannelConfig():RTCDataChannelInit {
         return {
             protocol: 'controlV1',
             ordered: true,
         }
     }
 
-    destroy() {
+    destroy():void {
         // console.log('DebugChannel destroy() called')
         clearInterval(this._keyframeInterval)
 
@@ -40,7 +44,7 @@ export default class ControlChannel extends Channel {
         this._gamepadHandlers[3]?.detach()
     }
 
-    sendAuthorization(){
+    sendAuthorization():void{
         const authRequest = JSON.stringify({
             'message':'authorizationRequest',
             'accessKey':'4BDB3609-C1F1-4195-9B37-FEFF45DA8B8E',
@@ -58,17 +62,23 @@ export default class ControlChannel extends Channel {
         }
     }
 
-    sendGamepadState(gamepadIndex, wasAdded = true, handler:undefined|Gamepad|MouseKeyboard|Touch = undefined) {
+    private isGamepadSlotIndex(index:number): index is GamepadSlotIndex {
+        return index === 0 || index === 1 || index === 2 || index === 3
+    }
+
+    sendGamepadState(gamepadIndex:number, wasAdded:boolean = true, handler:undefined|InputHandler = undefined):void {
        
-        if(wasAdded === true){
-            if(handler !== undefined){
-                if(this._gamepadHandlers[gamepadIndex] !== undefined){
-                    this._gamepadHandlers[gamepadIndex]?.detach()
+        if(this.isGamepadSlotIndex(gamepadIndex)){
+            if(wasAdded === true){
+                if(handler !== undefined){
+                    if(this._gamepadHandlers[gamepadIndex] !== undefined){
+                        this._gamepadHandlers[gamepadIndex]?.detach()
+                    }
+                    this._gamepadHandlers[gamepadIndex] = handler
                 }
-                this._gamepadHandlers[gamepadIndex] = handler
+            } else {
+                this._gamepadHandlers[gamepadIndex] = undefined
             }
-        } else {
-            this._gamepadHandlers[gamepadIndex] = undefined
         }
 
         const gamepadRequest = JSON.stringify({
@@ -79,7 +89,7 @@ export default class ControlChannel extends Channel {
         this.send(gamepadRequest)
     }
 
-    requestKeyframeRequest(ifrRequested = false) {
+    requestKeyframeRequest(ifrRequested:boolean = false):void {
         // console.log('xCloudPlayer Channel/Control.ts - ['+this._channelName+'] User requested Video KeyFrame')
         const keyframeRequest = JSON.stringify({
             message: 'videoKeyframeRequested',
@@ -89,17 +99,19 @@ export default class ControlChannel extends Channel {
         this.send(keyframeRequest)
     }
 
-    getGamepadHandlers(){
+    getGamepadHandlers():GamepadHandlers{
         return this._gamepadHandlers
     }
 
-    getGamepadHandler(index):Gamepad|undefined{
-        for(const gamepad in this.getPlayer()._channels.control.getGamepadHandlers()){
+    getGamepadHandler(index:number):Gamepad|undefined{
+        const handlers = this.getPlayer()._channels.control.getGamepadHandlers()
+        for(const slot of [0, 1, 2, 3] as const){
+            const handler = handlers[slot]
             if(
-                this.getPlayer()._channels.control.getGamepadHandlers()[gamepad] instanceof Gamepad &&
-                (this.getPlayer()._channels.control.getGamepadHandlers()[gamepad] as Gamepad).getPhysicalGamepadId() === index
+                handler instanceof Gamepad &&
+                handler.getPhysicalGamepadId() === index
             ) {
-                return this.getPlayer()._channels.control.getGamepadHandlers()[gamepad]
+                return handler
             }
         }
 

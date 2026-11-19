@@ -1,5 +1,7 @@
 import xCloudPlayer from '../player'
 
+export type ChannelSendData = string | Blob | ArrayBuffer | ArrayBufferView<ArrayBuffer>
+
 export default class Channel {
     private _player:xCloudPlayer
     private _dataChannel:RTCDataChannel
@@ -18,52 +20,64 @@ export default class Channel {
     }
 
     // Channel config functions
-    getChannelName() {
+    getChannelName():string {
         return 'channel'
     }
 
-    getChannelConfig() {
+    getChannelConfig():RTCDataChannelInit {
         return { }
     }
 
     // Default channel functions
-    onOpen(event:Event) {
+    onOpen(event:Event):void {
         console.log(this.getChannelName(), 'Opening channel:', event)
     }
 
-    onMessage(event:MessageEvent) {
+    onMessage(event:MessageEvent<unknown>):void {
         console.log(this.getChannelName(), 'Message channel:', event)
     }
 
-    onClosing(event:Event) {
+    onClosing(event:Event):void {
         console.log(this.getChannelName(), 'Closing channel:', event)
     }
 
-    onClose(event:Event) {
+    onClose(event:Event):void {
         console.log(this.getChannelName(), 'Closed channel:', event)
     }
 
-    onError(event:Event) {
+    onError(event:Event):void {
         console.log(this.getChannelName(), 'Error channel:', event)
     }
 
-    send(data:any) {
+    send(data:ChannelSendData):void {
         if(this._dataChannel.readyState !== 'open'){
             console.log('['+this.getChannelName()+'] Tried to send data while channel is not open. readyState is:', this._dataChannel.readyState)
             return
         }
 
         if(typeof data === 'string'){
-            data = (new TextEncoder).encode(data)
+            const encoded = (new TextEncoder).encode(data)
+            this._dataChannel.send(encoded)
+            return
         }
-        
-        return this._dataChannel.send(data)
+
+        if(data instanceof Blob){
+            this._dataChannel.send(data)
+            return
+        }
+
+        if(data instanceof ArrayBuffer){
+            this._dataChannel.send(data)
+            return
+        }
+
+        this._dataChannel.send(data)
     }
 
-    getPlayer(){
+    getPlayer():xCloudPlayer{
         return this._player
     }
 
     // Channel destroy function
-    destroy() {}
+    destroy():void {}
 }

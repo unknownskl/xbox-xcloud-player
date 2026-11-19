@@ -5,11 +5,11 @@ export default class AudioComponent {
 
     private _element:HTMLAudioElement | undefined
 
-    constructor(player:any){
+    constructor(player:xCloudPlayer){
         this._player = player
     }
 
-    create(stream:MediaStream) {
+    create(stream:MediaStream):void {
         const audioElement = document.createElement('audio')
         audioElement.srcObject = stream
         audioElement.autoplay = true
@@ -23,11 +23,11 @@ export default class AudioComponent {
         element.appendChild(this._element)
     }
 
-    getElement(){
+    getElement():HTMLAudioElement | undefined{
         return this._element
     }
 
-    destroy(){
+    destroy():void{
         const streamHolder = document.getElementById(this._player.getElementId())
         const element = streamHolder?.querySelector('audio')
 

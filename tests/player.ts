@@ -1,3 +1,4 @@
+import xCloudPlayer, { xCloudPlayerConfig, InputFrame, xCloudPlayerLibrary } from '../src/library'
 import Player from '../src/player'
 require('./testhelper')
 
@@ -29,5 +30,24 @@ describe('Player', () => {
         } catch(e){
             expect(e).toBeInstanceOf(Error)
         }
+    })
+
+    it('should expose typed player config, channels, and gamepad frames', () => {
+        const lib: xCloudPlayerLibrary = xCloudPlayer
+        const config: xCloudPlayerConfig = {
+            audio_mono: true,
+            audio_bitrate: 64,
+            video_bitrate: 4000,
+            keyframe_interval: 5,
+        }
+        const player = new lib.Player('videoHolder', config)
+        const gamepad = new lib.Gamepad(0)
+        const defaultFrame: InputFrame = gamepad.getDefaultFamepadFrame()
+
+        expect(player.getElementId()).toBe('videoHolder')
+        expect(defaultFrame.GamepadIndex).toBe(0)
+        expect(player.getIceCandidates()).toEqual([])
+
+        player.destroy()
     })
 })

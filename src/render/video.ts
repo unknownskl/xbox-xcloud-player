@@ -7,12 +7,12 @@ export default class VideoComponent {
     private _element:HTMLVideoElement | undefined
     private _overlay:Overlay
 
-    constructor(player:any){
+    constructor(player:xCloudPlayer){
         this._player = player
         this._overlay = new Overlay(this, this._player)
     }
 
-    create(stream:MediaStream) {
+    create(stream:MediaStream):void {
         const videoElement = document.createElement('video')
         videoElement.srcObject = stream
         videoElement.autoplay = true
@@ -37,7 +37,7 @@ export default class VideoComponent {
         this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
     }
 
-    processVideoMetadata(timestamp, data:VideoFrameCallbackMetadata) {
+    processVideoMetadata(_timestamp:DOMHighResTimeStamp, data:VideoFrameCallbackMetadata):void {
         if(this._element === undefined) {return}
 
         this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
@@ -51,15 +51,15 @@ export default class VideoComponent {
         })
     }
 
-    getElement(){
+    getElement():HTMLVideoElement | undefined{
         return this._element
     }
 
-    toggleDebugOverlay(){
+    toggleDebugOverlay():void{
         this._overlay.toggleDebug()
     }
 
-    destroy(){
+    destroy():void{
         const streamHolder = document.getElementById(this._player.getElementId())
         const element = streamHolder?.querySelector('video')
 

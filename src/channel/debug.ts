@@ -1,15 +1,15 @@
 import Channel from '../lib/channel'
 
 export default class DebugChannel extends Channel {
-    getChannelName() {
+    getChannelName():string {
         return 'debug'
     }
 
-    getChannelConfig() {
+    getChannelConfig():RTCDataChannelInit {
         return { }
     }
 
-    destroy() {
+    destroy():void {
         // console.log('DebugChannel destroy() called')
     }
 }

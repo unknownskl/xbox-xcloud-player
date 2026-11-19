@@ -17,9 +17,17 @@ export interface xCloudPlayerConfig {
     video_bitrate?: number;
     keyframe_interval?: number;
 }
+
+export interface PlayerChannels {
+    chat: ChatChannel;
+    control: ControlChannel;
+    input: InputChannel;
+    message: MessageChannel;
+}
+
 export default class xCloudPlayer {
-    _peerConnection = new RTCPeerConnection({})
-    _channels = {
+    _peerConnection: RTCPeerConnection = new RTCPeerConnection({})
+    _channels: PlayerChannels = {
         chat: new ChatChannel(this),
         control: new ControlChannel(this),
         input: new InputChannel(this),
@@ -56,14 +64,16 @@ export default class xCloudPlayer {
         videoTransceiver.setCodecPreferences(this._sdpHelper.getDefaultCodecPreferences())
 
         this._peerConnection.ontrack = (event) => {
+            const stream = event.streams[0]
+            if(stream === undefined) {return}
 
             if(event.track.kind === 'video'){
                 this._videoComponent = new VideoComponent(this)
-                this._videoComponent.create(event.streams[0])
+                this._videoComponent.create(stream)
 
             } else if(event.track.kind === 'audio'){
                 this._audioComponent = new AudioComponent(this)
-                this._audioComponent.create(event.streams[0])
+                this._audioComponent.create(stream)
 
             } else {
                 console.log('[xPlayer] Detected an unknown stream type: ', event.track.kind)
@@ -71,19 +81,19 @@ export default class xCloudPlayer {
         }
     }
 
-    getElementId(){ return this._elementId }
+    getElementId():string{ return this._elementId }
 
-    onConnectionStateChange(callback: (state: string) => void) {
+    onConnectionStateChange(callback: (state: RTCPeerConnectionState) => void):void {
         this._peerConnection.onconnectionstatechange = () => {
             callback(this._peerConnection.connectionState)
         }
     }
 
-    setChatSdpHandler(callback: (offer: RTCSessionDescriptionInit) => void) {
+    setChatSdpHandler(callback: (offer: RTCSessionDescriptionInit) => void):void {
         this._sdpHandler = callback
     }
 
-    createOffer() {
+    createOffer():Promise<RTCSessionDescriptionInit> {
         return new Promise<RTCSessionDescriptionInit>((resolve, reject) => {
             this._peerConnection.createOffer({
                 offerToReceiveAudio: true,
@@ -93,35 +103,35 @@ export default class xCloudPlayer {
                 this._peerConnection.setLocalDescription(playerOffer)
 
                 resolve(playerOffer)
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })
     }
 
-    setRemoteOffer(sdpRemote:string){
+    setRemoteOffer(sdpRemote:string):void{
         const finalSdp = this._sdpHelper.setRemoteSDP(sdpRemote)
         try {
             this._peerConnection.setRemoteDescription({
                 type: 'answer',
                 sdp: finalSdp,
             })
-        } catch(e){
+        } catch(e:unknown){
             console.log('[xPlayer] setRemoteOffer() Remote SDP is not valid:', sdpRemote, e)
         }
     }
 
-    getIceCandidates() {
+    getIceCandidates():RTCIceCandidate[] {
         return this._iceHelper.getCandidates()
     }
 
-    setRemoteIceCandidates(candidates:Array<any>) {
+    setRemoteIceCandidates(candidates:Array<RTCIceCandidateInit>):void {
         // @TODO: Sort ipv4 and ipv6, and use best route as preference (ipv6 only etc)
 
         this._iceHelper.setRemoteCandidates(candidates)
     }
 
-    getVideoElement() {
+    getVideoElement():HTMLVideoElement | undefined {
         if(this._videoComponent){
             return this._videoComponent.getElement()
         } else {
@@ -129,7 +139,7 @@ export default class xCloudPlayer {
         }
     }
 
-    getAudioElement() {
+    getAudioElement():HTMLAudioElement | undefined {
         if(this._audioComponent){
             return this._audioComponent.getElement()
         } else {
@@ -137,17 +147,17 @@ export default class xCloudPlayer {
         }
     }
 
-    toggleDebugOverlay() {
+    toggleDebugOverlay():void {
         if(this._videoComponent){
             this._videoComponent.toggleDebugOverlay()
         }
     }
 
-    getStats() {
+    getStats():Stats {
         return this._statsHelper
     }
 
-    destroy() {
+    destroy():void {
         if(this._isDestoyed === false){
             this._peerConnection.close()
 
@@ -155,7 +165,7 @@ export default class xCloudPlayer {
                 this._peerConnection.onconnectionstatechange(new Event('connectionstatechanged'))
             }
             
-            for(const channel in this._channels) {
+            for(const channel of Object.keys(this._channels) as Array<keyof PlayerChannels>) {
                 this._channels[channel].destroy()
             }
 

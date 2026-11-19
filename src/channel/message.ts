@@ -1,23 +1,23 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import Channel from '../lib/channel'
-import MessageHandler from './message/handler'
+import MessageHandler, { ChannelMessage } from './message/handler'
 
 export default class MessageChannel extends Channel {
     _handshakeCompleted = false
 
-    getChannelName() {
+    getChannelName():string {
         return 'message'
     }
 
-    getChannelConfig() {
+    getChannelConfig():RTCDataChannelInit {
         return {
             protocol: 'messageV1',
             ordered: true,
         }
     }
 
-    onOpen() {
+    onOpen():void {
         console.log('[MessageChannel] Sending handshake...')
         const handshake = JSON.stringify({
             'type':'Handshake',
@@ -28,8 +28,8 @@ export default class MessageChannel extends Channel {
         this.send(handshake)
     }
 
-    onMessage(event: MessageEvent<any>) {
-        const data = JSON.parse(event.data)
+    onMessage(event: MessageEvent<string>):void {
+        const data = JSON.parse(event.data) as ChannelMessage
         // console.log('[MessageChannel] received:', data)
 
         switch(data.type){
@@ -53,8 +53,8 @@ export default class MessageChannel extends Channel {
 
     }
 
-    sendConfig(){
-        const systemUis = []
+    sendConfig():void{
+        const systemUis:Array<number> = []
         const systemVersion = [0, 2, 0]
         const uiConfig = JSON.stringify(this.generateMessage('/streaming/systemUi/configuration', {
             'version': systemVersion,
@@ -104,7 +104,7 @@ export default class MessageChannel extends Channel {
         this.send(dimensionsConfig)
     }
 
-    generateMessage(path, data) {
+    generateMessage(path:string, data:Record<string, unknown>):ChannelMessage {
         return {
             'type': 'Message',
             'content': JSON.stringify(data),
@@ -114,7 +114,7 @@ export default class MessageChannel extends Channel {
         }
     }
 
-    destroy() {
+    destroy():void {
         // console.log('DebugChannel destroy() called')
     }
 }
