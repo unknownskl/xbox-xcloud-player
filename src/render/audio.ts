@@ -9,30 +9,28 @@ export default class AudioComponent {
         this._player = player
     }
 
-    create(stream:MediaStream) {
+    create(stream:MediaStream):void {
+        const element = document.getElementById(this._player.getElementId())
+        if(element === null) {return}
+
         const audioElement = document.createElement('audio')
         audioElement.srcObject = stream
         audioElement.autoplay = true
         audioElement.muted = false
 
         this._element = audioElement
-
-        const element = document.getElementById(this._player.getElementId())
-        if(element === null) {return}
-
         element.appendChild(this._element)
     }
 
-    getElement(){
+    getElement():HTMLAudioElement | undefined{
         return this._element
     }
 
-    destroy(){
-        const streamHolder = document.getElementById(this._player.getElementId())
-        const element = streamHolder?.querySelector('audio')
-
-        if(element){
-            element.remove()
+    destroy():void{
+        if(this._element !== undefined){
+            this._element.srcObject = null
+            this._element.remove()
+            this._element = undefined
         }
     }
 }

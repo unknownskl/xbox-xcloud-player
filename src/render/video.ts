@@ -6,6 +6,7 @@ export default class VideoComponent {
 
     private _element:HTMLVideoElement | undefined
     private _overlay:Overlay
+    private _frameCallbackId: number | undefined
 
     constructor(player:any){
         this._player = player
@@ -13,6 +14,9 @@ export default class VideoComponent {
     }
 
     create(stream:MediaStream) {
+        const element = document.getElementById(this._player.getElementId())
+        if(element === null) {return}
+
         const videoElement = document.createElement('video')
         videoElement.srcObject = stream
         videoElement.autoplay = true
@@ -24,9 +28,6 @@ export default class VideoComponent {
         videoElement.style.backgroundColor = 'black'
         videoElement.style.touchAction = 'none'
 
-        const element = document.getElementById(this._player.getElementId())
-        if(element === null) {return}
-
         this._element = videoElement
         element.appendChild(this._element)
         const isStatic = getComputedStyle(element).position === 'static' ? true : false
@@ -34,13 +35,17 @@ export default class VideoComponent {
             element.style.position = 'relative'
         }
 
-        this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
+        if(typeof this._element.requestVideoFrameCallback === 'function'){
+            this._frameCallbackId = this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
+        }
     }
 
     processVideoMetadata(timestamp, data:VideoFrameCallbackMetadata) {
         if(this._element === undefined) {return}
 
-        this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
+        if(typeof this._element.requestVideoFrameCallback === 'function'){
+            this._frameCallbackId = this._element.requestVideoFrameCallback(this.processVideoMetadata.bind(this))
+        }
 
         this._player._channels.input.queueMetadataFrame({
             serverDataKey: data.rtpTimestamp as number,
@@ -59,16 +64,19 @@ export default class VideoComponent {
         this._overlay.toggleDebug()
     }
 
-    destroy(){
-        const streamHolder = document.getElementById(this._player.getElementId())
-        const element = streamHolder?.querySelector('video')
-
+    destroy():void{
         if(this._overlay !== undefined){
             this._overlay.destroy()
         }
 
-        if(element){
-            element.remove()
+        if(this._element !== undefined){
+            if(this._frameCallbackId !== undefined && typeof this._element.cancelVideoFrameCallback === 'function'){
+                this._element.cancelVideoFrameCallback(this._frameCallbackId)
+            }
+            this._frameCallbackId = undefined
+            this._element.srcObject = null
+            this._element.remove()
+            this._element = undefined
         }
     }
 }
