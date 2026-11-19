@@ -135,3 +135,46 @@ div#statusBar {
 div#statusBar p {
   padding: 10px;
 }
+
+.volume_control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 6px;
+  margin-top: 8px;
+  border-top: 1px solid #2e3035;
+  border-bottom: 1px solid #2e3035;
+}
+
+.volume_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+#volumeValue {
+  font-variant-numeric: tabular-nums;
+  color: #d0d0d0;
+}
+
+.volume_row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+#volumeSlider {
+  flex: 1;
+  min-width: 0;
+  accent-color: rgb(25, 135, 84);
+  cursor: pointer;
+}
+
+#muteButton {
+  flex-shrink: 0;
+  min-width: 68px;
+  padding: 2px 8px;
+  cursor: pointer;
+}

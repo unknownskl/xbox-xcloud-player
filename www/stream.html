@@ -39,6 +39,17 @@
         <button onclick="examplePlayer.app._player._channels.chat.startMicrophone()">Start Mic</button>
         <button onclick="examplePlayer.app._player._channels.chat.stopMicrophone()">Stop Mic</button>
 
+        <div class="volume_control">
+          <div class="volume_header">
+            <label for="volumeSlider">Volume</label>
+            <span id="volumeValue">100%</span>
+          </div>
+          <div class="volume_row">
+            <input id="volumeSlider" type="range" min="0" max="100" step="1" value="100" aria-label="Stream volume" />
+            <button id="muteButton" type="button" aria-pressed="false">Mute</button>
+          </div>
+        </div>
+
         <h2>Mouse Keyboard:</h2>
         <button onclick="examplePlayer.vMkb.attach(0)">Attach MKB</button>
         <button onclick="examplePlayer.vMkb.detach()">Detach MKB</button>
