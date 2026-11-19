@@ -61,4 +61,23 @@ describe('Stream', () => {
             expect(error).toBeUndefined()
         })
     })
+
+    it('should allow void callbacks on stream lifecycle hooks', async () => {
+        const apiClient = new xCloudApiClient()
+        const stream = new Stream(apiClient, {
+            sessionId: '00000000-0000-0000-0000-000000000000',
+            sessionPath: 'v5/sessions/home/00000000-0000-0000-0000-000000000000',
+            state: 'Provisioning',
+        })
+
+        let provisionedCalled = false
+        stream.onProvisioned = () => {
+            provisionedCalled = true
+        }
+        apiClient.get = jest.fn(() => Promise.resolve({ state: 'Provisioned', errorDetails: null }))
+
+        const state = await stream.refreshState()
+        expect(state).toBe('Provisioned')
+        expect(provisionedCalled).toBe(true)
+    })
 })

@@ -1,4 +1,4 @@
-import xCloudApiClient, { StartStreamResponse } from '../apiclient'
+import xCloudApiClient, { StartStreamReponse } from '../apiclient'
 
 export type StreamState = 'New' | 'Provisioning' | 'Provisioned' | 'ReadyToConnect' | 'Error'
 
@@ -36,7 +36,7 @@ export default class Stream {
 
     private _waitInterval: ReturnType<typeof setInterval> | undefined
 
-    constructor(apiClient:xCloudApiClient, response:StartStreamResponse){
+    constructor(apiClient:xCloudApiClient, response:StartStreamReponse){
         this._apiClient = apiClient
         this._sessionId = response.sessionId
         this._sessionPath = response.sessionPath
@@ -90,15 +90,15 @@ export default class Stream {
         })
     }
 
-    onReadyToConnect(stream:Stream):Stream{
+    onReadyToConnect(stream:Stream):Stream | void{
         return stream
     }
 
-    onProvisioned(stream:Stream):Stream{
+    onProvisioned(stream:Stream):Stream | void{
         return stream
     }
 
-    onError(stream:Stream):Stream{
+    onError(stream:Stream):Stream | void{
         return stream
     }
 

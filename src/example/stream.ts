@@ -1,5 +1,5 @@
-import xCloudPlayer from '../library'
-import xCloudApiClient, { StreamType } from '../apiclient'
+import xCloudPlayer, { StreamType } from '../library'
+import xCloudApiClient from '../apiclient'
 import xCloudPlayerInstance from '../player'
 import Stream from '../lib/stream'
 import Gamepad, { GamepadFrameKey } from '../input/gamepad'
@@ -81,7 +81,6 @@ class StreamApp {
                         console.error('Failed to send keepalive:', error)
                     })
                 }, 30*1000)
-                return stream
             }
             stream.onReadyToConnect = () => {
                 fetch('/api/msal')
@@ -96,7 +95,6 @@ class StreamApp {
                         console.error('Failed to fetch MSAL token:', error)
                     })
                 console.log('Console is ready. Lets send over the MSAL token.')
-                return stream
             }
 
             stream.waitForState('Provisioned')

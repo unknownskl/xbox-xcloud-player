@@ -6,14 +6,13 @@ export interface xCloudApiClientConfig {
     host?: string;
     force_1080p?: boolean;
 }
-export type xCloudApiClientConfigRequired = Required<xCloudApiClientConfig>
+interface xCloudApiClientConfigRequired extends Required<xCloudApiClientConfig> {}
 
-export interface StartStreamResponse {
+export interface StartStreamReponse {
     sessionId: string;
     sessionPath: string;
     state: string;
 }
-export type StartStreamReponse = StartStreamResponse
 
 export interface ConsolesResponse {
     totalItems: number;
@@ -36,8 +35,8 @@ export interface ApiStatusResponse {
     status: number;
 }
 
-export type RequestHeaders = Record<string, string>
-export type StreamType = 'home' | 'cloud'
+type RequestHeaders = Record<string, string>
+type StreamType = 'home' | 'cloud'
 
 export default class xCloudApiClient {
 
@@ -56,7 +55,7 @@ export default class xCloudApiClient {
         if(this._config.host !== '') {return this._config.host} else {return ''}
     }
 
-    getConfig():xCloudApiClientConfigRequired{
+    getConfig():Required<xCloudApiClientConfig>{
         return this._config
     }
 
@@ -85,7 +84,7 @@ export default class xCloudApiClient {
                 serverId: (type === 'home') ? titleId : '',
                 fallbackRegionNames: [],
             })).then((response) => {
-                const stream = new Stream(this, response as StartStreamResponse)
+                const stream = new Stream(this, response as StartStreamReponse)
                 resolve(stream)
             }).catch((error:unknown) => {
                 reject(error)

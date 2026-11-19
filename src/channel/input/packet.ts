@@ -266,6 +266,10 @@ export default class InputPacket {
         return offset
     }
 
+    private hasBoundingClientRect(target:unknown): target is PointerEventTarget {
+        return typeof target === 'object' && target !== null && 'getBoundingClientRect' in target && typeof (target as PointerEventTarget).getBoundingClientRect === 'function'
+    }
+
     _writePointerData(packet:DataView, offset:number, frames:Array<PointerFrame>):number{
         packet.setUint8(offset, 1)
         // packet.setUint8(offset, frames.length)
@@ -286,8 +290,9 @@ export default class InputPacket {
             const screenHeight = this._serverVideoHeight
 
             for(const event of shift.events){
-                const target = event.target as Element | PointerEventTarget | null
-                const rect = target !== null ? target.getBoundingClientRect() : { left: 0, top: 0, width: screenWidth || 1, height: screenHeight || 1 }
+                const rect = this.hasBoundingClientRect(event.target)
+                    ? event.target.getBoundingClientRect()
+                    : { left: 0, top: 0, width: screenWidth || 1, height: screenHeight || 1 }
 
                 let e = 0.06575749909301447 * (screenHeight / 1)
                 let n = 0.06575749909301447 * (screenWidth / 1)

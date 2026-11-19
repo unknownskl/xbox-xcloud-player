@@ -1,14 +1,10 @@
 import xCloudPlayer, { xCloudPlayerConfig, PlayerChannels } from './player'
 import xCloudApiClient, {
     xCloudApiClientConfig,
-    xCloudApiClientConfigRequired,
-    StartStreamResponse,
     StartStreamReponse,
     ConsolesResponse,
     Console,
     ApiStatusResponse,
-    RequestHeaders,
-    StreamType,
 } from './apiclient'
 import Gamepad, {
     GamepadOptions,
@@ -83,18 +79,19 @@ export {
     ReportTypes,
 }
 
+export type StartStreamResponse = StartStreamReponse
+export type xCloudApiClientConfigRequired = Required<xCloudApiClientConfig>
+export type RequestHeaders = Record<string, string>
+export type StreamType = 'home' | 'cloud'
+
 export type {
     xCloudPlayerConfig,
     PlayerChannels,
     xCloudApiClientConfig,
-    xCloudApiClientConfigRequired,
-    StartStreamResponse,
     StartStreamReponse,
     ConsolesResponse,
     Console,
     ApiStatusResponse,
-    RequestHeaders,
-    StreamType,
     GamepadOptions,
     GamepadOptionsDefaults,
     GamepadAxisName,

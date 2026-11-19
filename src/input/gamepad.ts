@@ -165,8 +165,32 @@ export default class Gamepad {
         }
     }
 
+    private static readonly _validFrameKeys: ReadonlySet<string> = new Set<GamepadFrameKey>([
+        'Nexus',
+        'Menu',
+        'View',
+        'A',
+        'B',
+        'X',
+        'Y',
+        'DPadUp',
+        'DPadDown',
+        'DPadLeft',
+        'DPadRight',
+        'LeftShoulder',
+        'RightShoulder',
+        'LeftThumb',
+        'RightThumb',
+        'LeftThumbXAxis',
+        'LeftThumbYAxis',
+        'RightThumbXAxis',
+        'RightThumbYAxis',
+        'LeftTrigger',
+        'RightTrigger',
+    ])
+
     private isGamepadFrameKey(button:string): button is GamepadFrameKey {
-        return button !== 'GamepadIndex' && button in this.getDefaultFamepadFrame()
+        return Gamepad._validFrameKeys.has(button)
     }
 
     sendButtonState(button:GamepadFrameKey | string, value:number):void{
