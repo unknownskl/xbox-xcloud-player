@@ -11,6 +11,11 @@ class StreamApp {
 
     _player
 
+    _volume = 1
+    // Stores the last audible volume (0..1) to restore when unmuting from 0%
+    _lastNonZeroVolume = 1
+    _muted = false
+
     constructor() {
         this._apiClient = new xCloudPlayer.ApiClient({ host: 'http://'+window.location.hostname+':'+window.location.port })
         this._apiClient.getConsoles().then((consoles) => {
@@ -39,12 +44,39 @@ class StreamApp {
     }
 
     loaded(){
-        const holder = document.getElementById('xcloudTitle') as any
+        const holder = document.getElementById('xcloudTitle') as HTMLInputElement | null
 
-        holder.value = localStorage.getItem('xcloudTitle')
-        document.getElementById('xcloudTitle')?.addEventListener('change', (event) => {
-            const titleId = (event.target as any)?.value
-            localStorage.setItem('xcloudTitle', titleId)
+        if(holder !== null){
+            holder.value = localStorage.getItem('xcloudTitle') || ''
+            holder.addEventListener('change', (event) => {
+                const titleId = (event.target as HTMLInputElement)?.value
+                localStorage.setItem('xcloudTitle', titleId)
+            })
+        }
+
+        const savedVolume = localStorage.getItem('xcloudVolume')
+        if(savedVolume !== null){
+            const parsedVolume = parseFloat(savedVolume)
+            if(!Number.isNaN(parsedVolume)){
+                this._volume = Math.min(1, Math.max(0, parsedVolume))
+                if(this._volume > 0){
+                    this._lastNonZeroVolume = this._volume
+                }
+            }
+        }
+
+        if(localStorage.getItem('xcloudMuted') === 'true'){
+            this._muted = true
+        }
+
+        this.updateVolumeUI()
+
+        document.getElementById('volumeSlider')?.addEventListener('input', (event) => {
+            this.setVolume(Number((event.target as HTMLInputElement).value))
+        })
+
+        document.getElementById('muteButton')?.addEventListener('click', () => {
+            this.toggleMute()
         })
     }
 
@@ -104,7 +136,10 @@ class StreamApp {
         }
 
         console.log('Console is ready, lets setup the WebRTC client.')
-        this._player = new xCloudPlayer.Player('streamHolder')
+        this._player = new xCloudPlayer.Player('streamHolder', {
+            audio_volume: this._volume,
+            audio_muted: this._muted,
+        })
 
         this._player.onConnectionStateChange((state) => {
             connectionStatus.innerText = state
@@ -156,6 +191,68 @@ class StreamApp {
         } else {
             console.log('Player is already destroyed!')
         
+        }
+    }
+
+    setVolume(volumePercent:number){
+        if(typeof volumePercent !== 'number' || Number.isNaN(volumePercent)){
+            return
+        }
+
+        const clampedPercent = Math.min(100, Math.max(0, volumePercent))
+        this._volume = clampedPercent / 100
+        localStorage.setItem('xcloudVolume', this._volume.toString())
+
+        if(clampedPercent > 0){
+            this._lastNonZeroVolume = this._volume
+            if(this._muted){
+                this._muted = false
+                localStorage.setItem('xcloudMuted', 'false')
+                this._player?.setMuted(false)
+            }
+        }
+
+        if(this._player !== undefined){
+            this._player.setVolume(this._volume)
+        }
+
+        this.updateVolumeUI()
+    }
+
+    toggleMute(){
+        this._muted = !this._muted
+        localStorage.setItem('xcloudMuted', this._muted ? 'true' : 'false')
+
+        if(!this._muted && this._volume === 0){
+            this._volume = this._lastNonZeroVolume > 0 ? this._lastNonZeroVolume : 1
+            localStorage.setItem('xcloudVolume', this._volume.toString())
+            this._player?.setVolume(this._volume)
+        }
+
+        if(this._player !== undefined){
+            this._player.setMuted(this._muted)
+        }
+
+        this.updateVolumeUI()
+    }
+
+    updateVolumeUI(){
+        const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement | null
+        const volumeValue = document.getElementById('volumeValue')
+        const muteButton = document.getElementById('muteButton')
+        const volumePercent = Math.round(this._volume * 100)
+
+        if(volumeSlider !== null){
+            volumeSlider.value = volumePercent.toString()
+        }
+
+        if(volumeValue !== null){
+            volumeValue.innerText = this._muted ? 'Muted' : volumePercent+'%'
+        }
+
+        if(muteButton !== null){
+            muteButton.innerText = this._muted ? 'Unmute' : 'Mute'
+            muteButton.setAttribute('aria-pressed', this._muted ? 'true' : 'false')
         }
     }
 }
