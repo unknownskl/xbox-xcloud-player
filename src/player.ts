@@ -14,6 +14,8 @@ import AudioComponent from './render/audio'
 export interface xCloudPlayerConfig {
     audio_mono?: boolean;
     audio_bitrate?: number;
+    audio_volume?: number;
+    audio_muted?: boolean;
     video_bitrate?: number;
     keyframe_interval?: number;
 }
@@ -29,12 +31,16 @@ export default class xCloudPlayer {
     _config:Required<xCloudPlayerConfig> = {
         audio_mono: false,
         audio_bitrate: 0,
+        audio_volume: 1,
+        audio_muted: false,
         video_bitrate: 0,
         keyframe_interval: 5,
     }
 
     private _elementId: string
     private _isDestoyed = false
+    private _volume = 1
+    private _muted = false
 
     private _sdpHelper = new Sdp(this)
     private _iceHelper = new Ice(this)
@@ -50,6 +56,8 @@ export default class xCloudPlayer {
             ...this._config,
             ...options,
         }
+        this.setVolume(this._config.audio_volume)
+        this.setMuted(this._config.audio_muted)
 
         this._peerConnection.addTransceiver('audio', { direction: 'sendrecv' })
         const videoTransceiver = this._peerConnection.addTransceiver('video', { direction: 'recvonly' })
@@ -67,6 +75,10 @@ export default class xCloudPlayer {
                 this._videoComponent.create(stream)
 
             } else if(event.track.kind === 'audio'){
+                this._volume = this.getVolume()
+                this._muted = this.isMuted()
+                this._config.audio_volume = this._volume
+                this._config.audio_muted = this._muted
                 this._audioComponent?.destroy()
                 this._audioComponent = new AudioComponent(this)
                 this._audioComponent.create(stream)
@@ -143,6 +155,54 @@ export default class xCloudPlayer {
         } else {
             return undefined
         }
+    }
+
+    setVolume(volume:number):void {
+        if(typeof volume !== 'number' || Number.isNaN(volume)){
+            this._config.audio_volume = this._volume
+            return
+        }
+
+        const clampedVolume = Math.min(1, Math.max(0, volume))
+        this._volume = clampedVolume
+        this._config.audio_volume = clampedVolume
+
+        if(this._audioComponent){
+            this._audioComponent.setVolume(clampedVolume)
+        }
+    }
+
+    getVolume():number {
+        const audioElement = this.getAudioElement()
+        return audioElement !== undefined ? audioElement.volume : this._volume
+    }
+
+    setMuted(muted:boolean):void {
+        const isMuted = Boolean(muted)
+        this._muted = isMuted
+        this._config.audio_muted = isMuted
+
+        if(this._audioComponent){
+            this._audioComponent.setMuted(isMuted)
+        }
+    }
+
+    isMuted():boolean {
+        const audioElement = this.getAudioElement()
+        return audioElement !== undefined ? audioElement.muted : this._muted
+    }
+
+    mute():void {
+        this.setMuted(true)
+    }
+
+    unmute():void {
+        this.setMuted(false)
+    }
+
+    toggleMute():boolean {
+        this.setMuted(!this.isMuted())
+        return this.isMuted()
     }
 
     toggleDebugOverlay() {

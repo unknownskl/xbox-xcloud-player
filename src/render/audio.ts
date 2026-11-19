@@ -5,7 +5,7 @@ export default class AudioComponent {
 
     private _element:HTMLAudioElement | undefined
 
-    constructor(player:any){
+    constructor(player:xCloudPlayer){
         this._player = player
     }
 
@@ -16,7 +16,8 @@ export default class AudioComponent {
         const audioElement = document.createElement('audio')
         audioElement.srcObject = stream
         audioElement.autoplay = true
-        audioElement.muted = false
+        audioElement.muted = this._player.isMuted()
+        audioElement.volume = this._player.getVolume()
 
         this._element = audioElement
         element.appendChild(this._element)
@@ -24,6 +25,19 @@ export default class AudioComponent {
 
     getElement():HTMLAudioElement | undefined{
         return this._element
+    }
+
+    setVolume(volume:number):void{
+        if(typeof volume !== 'number' || Number.isNaN(volume)) {return}
+        if(this._element !== undefined){
+            this._element.volume = Math.min(1, Math.max(0, volume))
+        }
+    }
+
+    setMuted(muted:boolean):void{
+        if(this._element !== undefined){
+            this._element.muted = muted
+        }
     }
 
     destroy():void{
