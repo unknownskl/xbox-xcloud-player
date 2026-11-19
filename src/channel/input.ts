@@ -20,6 +20,8 @@ export default class InputChannel extends Channel {
     private _serverVideoHeight = 0
 
     private _inputQueue = new InputQueue(this.getPlayer())
+    private _gamepadLoopTimeout: ReturnType<typeof setTimeout> | undefined
+    private _isDestroyed = false
 
     getChannelName() {
         return 'input'
@@ -41,22 +43,38 @@ export default class InputChannel extends Channel {
     }
 
     start(){
+        if(this._isDestroyed === true){
+            return
+        }
+        if(this._gamepadLoopTimeout !== undefined){
+            clearTimeout(this._gamepadLoopTimeout)
+        }
+
         const Packet = new InputPacket(0)
         Packet.setMetadata(navigator.maxTouchPoints > 1 ? navigator.maxTouchPoints : 1)
-        this.send(Packet.toBuffer())
+        const buffer = Packet.toBuffer()
+        this.send(buffer)
 
-        console.log('[InputChannel] Sent metadata:', Packet, Packet.toBuffer())
+        console.log('[InputChannel] Sent metadata:', Packet, buffer)
 
-        setTimeout(this.gamepadStateLoop.bind(this), 16)
+        this._gamepadLoopTimeout = setTimeout(this.gamepadStateLoop.bind(this), 16)
     }
 
     onMessage(event: MessageEvent<any>) {
+        if(!(event.data instanceof ArrayBuffer) || event.data.byteLength < 1){
+            return
+        }
+
         const dataView = new DataView(event.data)
         const reportType = dataView.getUint8(0)
 
         console.log('[InputChannel] received:', dataView)
 
         if(reportType === ReportTypes.Vibration){
+            if(dataView.byteLength < 13){
+                return
+            }
+
             console.log('Received a vibration report')
             dataView.getUint8(2) // rumbleType: 0 = FourMotorRumble
             const gamepadIndex = dataView.getUint8(3)
@@ -89,6 +107,10 @@ export default class InputChannel extends Channel {
             }
 
         } else if(reportType === ReportTypes.ServerMetadata){
+            if(dataView.byteLength < 10){
+                return
+            }
+
             console.log('[InputChannel] Received server video dimensions:', dataView.getUint32(2, true), dataView.getUint32(6, true))
             this._serverVideoHeight = dataView.getUint32(2, true)
             this._serverVideoWidth = dataView.getUint32(6, true)
@@ -97,12 +119,16 @@ export default class InputChannel extends Channel {
     }
 
     gamepadStateLoop(){
+        if(this._isDestroyed === true){
+            return
+        }
+
         const gamepadHandlers = this.getPlayer()._channels.control.getGamepadHandlers()
         // console.log('[InputChannel] gamepadStateLoop() called', gamepadHandlers)
         const gamepadFrames:Array<GamepadFrame> = []
-        for(const gamepad in gamepadHandlers){
-            if(gamepadHandlers[gamepad] instanceof Gamepad){
-                const frame = (gamepadHandlers[gamepad] as Gamepad).getGamepadState()
+        for(const handler of Object.values(gamepadHandlers)){
+            if(handler instanceof Gamepad){
+                const frame = handler.getGamepadState()
                 if(frame !== undefined){
                     gamepadFrames.push(frame)
                 }
@@ -113,7 +139,9 @@ export default class InputChannel extends Channel {
             this.queueGamepadFrames(gamepadFrames)
         }
 
-        setTimeout(this.gamepadStateLoop.bind(this), 16)
+        if(this._isDestroyed === false){
+            this._gamepadLoopTimeout = setTimeout(this.gamepadStateLoop.bind(this), 16)
+        }
     }
 
     queueMetadataFrame(data:MetadataFrame){
@@ -136,7 +164,13 @@ export default class InputChannel extends Channel {
         this._inputQueue.queuePointerFrame(data)
     }
 
-    destroy() {
-        // console.log('DebugChannel destroy() called')
+    destroy():void {
+        this._isDestroyed = true
+        if(this._gamepadLoopTimeout !== undefined){
+            clearTimeout(this._gamepadLoopTimeout)
+            this._gamepadLoopTimeout = undefined
+        }
+        this._inputQueue.clearQueues()
+        super.destroy()
     }
 }

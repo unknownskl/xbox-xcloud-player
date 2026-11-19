@@ -65,5 +65,12 @@ export default class Channel {
     }
 
     // Channel destroy function
-    destroy() {}
+    destroy():void {
+        this._dataChannel.onopen = null
+        this._dataChannel.onmessage = null
+        this._dataChannel.onclosing = null
+        this._dataChannel.onclose = null
+        this._dataChannel.onerror = null
+        this._dataChannel.close?.()
+    }
 }
