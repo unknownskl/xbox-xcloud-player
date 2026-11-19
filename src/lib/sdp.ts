@@ -14,8 +14,8 @@ export default class Sdp {
         if(capabilities === undefined) {return []}
 
         const codecs:Array<string> = []
-        for(const codec in capabilities) {
-            if(!codecs.includes(capabilities[codec].mimeType)) {codecs.push(capabilities[codec].mimeType)}
+        for(const codec of capabilities) {
+            if(!codecs.includes(codec.mimeType)) {codecs.push(codec.mimeType)}
         }
 
         return codecs
@@ -62,28 +62,28 @@ export default class Sdp {
         const t3:Array<any> = []
         const t4:Array<any> = []
 
-        for(const codec in capabilities) {
-            if(capabilities[codec].mimeType.includes('H264')) {
-                if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=4d')) {
-                    t1.push(capabilities[codec])
+        for(const codec of capabilities) {
+            if(codec.mimeType.includes('H264')) {
+                if(codec.sdpFmtpLine?.includes('profile-level-id=4d')) {
+                    t1.push(codec)
 
-                } else if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=42e')) {
-                    t2.push(capabilities[codec])
+                } else if(codec.sdpFmtpLine?.includes('profile-level-id=42e')) {
+                    t2.push(codec)
 
-                } else if(capabilities[codec].sdpFmtpLine?.includes('profile-level-id=420')) {
-                    t3.push(capabilities[codec])
+                } else if(codec.sdpFmtpLine?.includes('profile-level-id=420')) {
+                    t3.push(codec)
                 } 
-            } else if(capabilities[codec].mimeType.includes('ulpfec')) {
-                t4.push(capabilities[codec])
-            } else if(capabilities[codec].mimeType.includes('flexfec')) {
-                t4.push(capabilities[codec])
-            } else if(capabilities[codec].mimeType.includes('VP9')) {
-                t4.push(capabilities[codec])
-            } else if(capabilities[codec].mimeType.includes('VP8')) {
-                t4.push(capabilities[codec])
+            } else if(codec.mimeType.includes('ulpfec')) {
+                t4.push(codec)
+            } else if(codec.mimeType.includes('flexfec')) {
+                t4.push(codec)
+            } else if(codec.mimeType.includes('VP9')) {
+                t4.push(codec)
+            } else if(codec.mimeType.includes('VP8')) {
+                t4.push(codec)
             }
             // else {
-            //     t4.push(capabilities[codec])
+            //     t4.push(codec)
             // }
         }
 
@@ -93,6 +93,9 @@ export default class Sdp {
     }
 
     _setBitrate(sdp, media, bitrate) {
+        if(!sdp){
+            return sdp
+        }
         const lines = sdp.split('\n')
         let line = -1
         for(let i=0; i < lines.length; i++) {
@@ -107,11 +110,11 @@ export default class Sdp {
         }
         line++
 
-        while(lines[line].indexOf('i=') === 0 || lines[line].indexOf('c=') === 0) {
+        while(line < lines.length && (lines[line].indexOf('i=') === 0 || lines[line].indexOf('c=') === 0)) {
             line++
         }
        
-        if (lines[line].indexOf('b') === 0) {
+        if (line < lines.length && lines[line].indexOf('b') === 0) {
             lines[line] = 'b=AS:'+bitrate
             return lines.join('\n')
         }
