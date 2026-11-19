@@ -1,4 +1,5 @@
 import Player from '../src/player'
+import AudioComponent from '../src/render/audio'
 import { mockRTCPeerConnection } from './testhelper'
 
 describe('Player', () => {
@@ -243,6 +244,69 @@ describe('Player', () => {
             expect(createElementMock).not.toHaveBeenCalled()
             expect(player.getAudioElement()).toBeUndefined()
 
+            player.destroy()
+        })
+
+        it('should ignore empty ontrack streams without destroying existing audio element', () => {
+            const mockAudioElement: any = {
+                srcObject: null,
+                autoplay: false,
+                muted: false,
+                volume: 1,
+                remove: jest.fn(),
+            }
+            const mockContainer = {
+                appendChild: jest.fn(),
+            };
+            (global as any).document = {
+                createElement: jest.fn(() => mockAudioElement),
+                getElementById: jest.fn(() => mockContainer),
+            }
+
+            const player = new Player('videoHolder')
+            player._peerConnection.ontrack!({
+                track: { kind: 'audio' },
+                streams: [{}],
+            } as any)
+
+            expect(player.getAudioElement()).toBe(mockAudioElement)
+
+            player._peerConnection.ontrack!({
+                track: { kind: 'audio' },
+                streams: [],
+            } as any)
+
+            expect(mockAudioElement.remove).not.toHaveBeenCalled()
+            expect(player.getAudioElement()).toBe(mockAudioElement)
+
+            player.destroy()
+        })
+
+        it('should ignore NaN in AudioComponent.setVolume', () => {
+            const mockAudioElement: any = {
+                srcObject: null,
+                autoplay: false,
+                muted: false,
+                volume: 0.7,
+                remove: jest.fn(),
+            }
+            const mockContainer = {
+                appendChild: jest.fn(),
+            };
+            (global as any).document = {
+                createElement: jest.fn(() => mockAudioElement),
+                getElementById: jest.fn(() => mockContainer),
+            }
+
+            const player = new Player('videoHolder', { audio_volume: 0.7 })
+            const audioComponent = new AudioComponent(player)
+            audioComponent.create({} as any)
+            expect(mockAudioElement.volume).toBe(0.7)
+
+            audioComponent.setVolume(Number.NaN)
+            expect(mockAudioElement.volume).toBe(0.7)
+
+            audioComponent.destroy()
             player.destroy()
         })
     })

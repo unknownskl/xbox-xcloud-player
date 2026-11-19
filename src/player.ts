@@ -64,11 +64,13 @@ export default class xCloudPlayer {
         videoTransceiver.setCodecPreferences(this._sdpHelper.getDefaultCodecPreferences())
 
         this._peerConnection.ontrack = (event) => {
+            const stream = event.streams[0]
+            if(stream === undefined) {return}
 
             if(event.track.kind === 'video'){
                 this._videoComponent?.destroy()
                 this._videoComponent = new VideoComponent(this)
-                this._videoComponent.create(event.streams[0])
+                this._videoComponent.create(stream)
 
             } else if(event.track.kind === 'audio'){
                 this._volume = this.getVolume()
@@ -77,7 +79,7 @@ export default class xCloudPlayer {
                 this._config.audio_muted = this._muted
                 this._audioComponent?.destroy()
                 this._audioComponent = new AudioComponent(this)
-                this._audioComponent.create(event.streams[0])
+                this._audioComponent.create(stream)
 
             } else {
                 console.log('[xPlayer] Detected an unknown stream type: ', event.track.kind)
@@ -151,7 +153,7 @@ export default class xCloudPlayer {
         }
     }
 
-    setVolume(volume:number) {
+    setVolume(volume:number):void {
         if(typeof volume !== 'number' || Number.isNaN(volume)){
             this._config.audio_volume = this._volume
             return
@@ -171,7 +173,7 @@ export default class xCloudPlayer {
         return audioElement !== undefined ? audioElement.volume : this._volume
     }
 
-    setMuted(muted:boolean) {
+    setMuted(muted:boolean):void {
         const isMuted = Boolean(muted)
         this._muted = isMuted
         this._config.audio_muted = isMuted
@@ -186,11 +188,11 @@ export default class xCloudPlayer {
         return audioElement !== undefined ? audioElement.muted : this._muted
     }
 
-    mute() {
+    mute():void {
         this.setMuted(true)
     }
 
-    unmute() {
+    unmute():void {
         this.setMuted(false)
     }
 

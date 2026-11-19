@@ -43,7 +43,7 @@ class StreamApp {
         })
     }
 
-    loaded(){
+    loaded():void{
         const holder = document.getElementById('xcloudTitle') as HTMLInputElement | null
 
         if(holder !== null){
@@ -194,7 +194,7 @@ class StreamApp {
         }
     }
 
-    setVolume(volumePercent:number){
+    setVolume(volumePercent:number):void{
         if(typeof volumePercent !== 'number' || Number.isNaN(volumePercent)){
             return
         }
@@ -219,7 +219,7 @@ class StreamApp {
         this.updateVolumeUI()
     }
 
-    toggleMute(){
+    toggleMute():void{
         this._muted = !this._muted
         localStorage.setItem('xcloudMuted', this._muted ? 'true' : 'false')
 
@@ -236,7 +236,7 @@ class StreamApp {
         this.updateVolumeUI()
     }
 
-    updateVolumeUI(){
+    updateVolumeUI():void{
         const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement | null
         const volumeValue = document.getElementById('volumeValue')
         const muteButton = document.getElementById('muteButton')

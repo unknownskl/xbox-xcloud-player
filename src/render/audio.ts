@@ -9,7 +9,7 @@ export default class AudioComponent {
         this._player = player
     }
 
-    create(stream:MediaStream) {
+    create(stream:MediaStream):void {
         const element = document.getElementById(this._player.getElementId())
         if(element === null) {return}
 
@@ -23,23 +23,24 @@ export default class AudioComponent {
         element.appendChild(this._element)
     }
 
-    getElement(){
+    getElement():HTMLAudioElement | undefined{
         return this._element
     }
 
-    setVolume(volume:number){
+    setVolume(volume:number):void{
+        if(typeof volume !== 'number' || Number.isNaN(volume)) {return}
         if(this._element !== undefined){
             this._element.volume = Math.min(1, Math.max(0, volume))
         }
     }
 
-    setMuted(muted:boolean){
+    setMuted(muted:boolean):void{
         if(this._element !== undefined){
             this._element.muted = muted
         }
     }
 
-    destroy(){
+    destroy():void{
         if(this._element !== undefined){
             this._element.srcObject = null
             this._element.remove()
