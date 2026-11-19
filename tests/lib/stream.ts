@@ -61,4 +61,56 @@ describe('Stream', () => {
             expect(error).toBeUndefined()
         })
     })
+
+    it('should clear polling intervals when stop() is called', async () => {
+        jest.useFakeTimers()
+        try {
+            const apiClient = new xCloudApiClient()
+            apiClient.get = jest.fn(() => Promise.resolve({ state: 'Provisioning' }))
+            apiClient.delete = jest.fn(() => Promise.resolve({ status: 200 }))
+
+            const stream = new Stream(apiClient, {
+                sessionId: '00000000-0000-0000-0000-000000000000',
+                sessionPath: 'v5/sessions/home/00000000-0000-0000-0000-000000000000',
+                state: 'Provisioning',
+            })
+
+            stream.waitForState('Provisioned')
+            expect(jest.getTimerCount()).toBe(1)
+
+            await stream.stop()
+            expect(jest.getTimerCount()).toBe(0)
+        } finally {
+            jest.clearAllTimers()
+            jest.useRealTimers()
+        }
+    })
+
+    it('should reject pending SDP polling promises when stop() is called', async () => {
+        jest.useFakeTimers()
+        try {
+            const apiClient = new xCloudApiClient()
+            apiClient.post = jest.fn(() => Promise.resolve({ status: 202 }))
+            apiClient.get = jest.fn(() => Promise.resolve({ status: 204 }))
+            apiClient.delete = jest.fn(() => Promise.resolve({ status: 200 }))
+
+            const stream = new Stream(apiClient, {
+                sessionId: '00000000-0000-0000-0000-000000000000',
+                sessionPath: 'v5/sessions/home/00000000-0000-0000-0000-000000000000',
+                state: 'Provisioned',
+            })
+
+            const offerPromise = stream.sendSDPOffer({ type: 'offer', sdp: 'v=0' })
+            await Promise.resolve()
+            await Promise.resolve()
+
+            const stopPromise = stream.stop()
+            await expect(offerPromise).rejects.toThrow('Stream stopped')
+            await stopPromise
+            expect(jest.getTimerCount()).toBe(0)
+        } finally {
+            jest.clearAllTimers()
+            jest.useRealTimers()
+        }
+    })
 })
