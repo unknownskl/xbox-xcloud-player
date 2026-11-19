@@ -1,0 +1,79 @@
+name: Tests and Sanitizers
+
+on:
+  push:
+    branches:
+      - main
+      - '**'
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  tests:
+    name: Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.x, 24.x]
+    steps:
+      - uses: actions/checkout@v5.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint code (strict)
+        run: npm run lint:strict
+
+      - name: Typecheck source and tests
+        run: npm run typecheck
+
+      - name: Build library and bundles
+        run: npm run build
+
+      - name: Run unit tests with coverage
+        env:
+          NODE_OPTIONS: --unhandled-rejections=strict
+        run: npm test
+
+  sanitizers:
+    name: Sanitizers (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.x, 24.x]
+    steps:
+      - uses: actions/checkout@v5.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Detect open handles and timer leaks
+        run: npm run test:open-handles
+
+      - name: Detect V8 heap and memory leaks
+        run: npm run test:leaks
+
+      - name: Run randomized combined sanitizer pass
+        run: npm run test:sanitizers
