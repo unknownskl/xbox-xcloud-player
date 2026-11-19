@@ -225,5 +225,25 @@ describe('Player', () => {
             expect(secondAudio.remove).toHaveBeenCalledTimes(1)
             expect(player.getAudioElement()).toBeUndefined()
         })
+
+        it('should not create a detached audio element when container element is missing', () => {
+            const createElementMock = jest.fn();
+            (global as any).document = {
+                createElement: createElementMock,
+                getElementById: jest.fn(() => null),
+            }
+
+            const player = new Player('missingHolder')
+
+            player._peerConnection.ontrack!({
+                track: { kind: 'audio' },
+                streams: [{}],
+            } as any)
+
+            expect(createElementMock).not.toHaveBeenCalled()
+            expect(player.getAudioElement()).toBeUndefined()
+
+            player.destroy()
+        })
     })
 })

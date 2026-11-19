@@ -10,6 +10,9 @@ export default class AudioComponent {
     }
 
     create(stream:MediaStream) {
+        const element = document.getElementById(this._player.getElementId())
+        if(element === null) {return}
+
         const audioElement = document.createElement('audio')
         audioElement.srcObject = stream
         audioElement.autoplay = true
@@ -17,10 +20,6 @@ export default class AudioComponent {
         audioElement.volume = this._player.getVolume()
 
         this._element = audioElement
-
-        const element = document.getElementById(this._player.getElementId())
-        if(element === null) {return}
-
         element.appendChild(this._element)
     }
 
