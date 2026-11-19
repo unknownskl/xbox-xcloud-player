@@ -134,11 +134,15 @@ export const mockRTCPeerConnection = () => {
             return {
                 addEventListener: (type, listener) => {
                     // console.log('dataChannel.addEventListener: ', type);
-                }
+                },
+                close: jest.fn(),
             }
         },
         addEventListener: (type, listener) => {
             // console.log('peerConnection.addEventListener: ', type);
+        },
+        removeEventListener: (type, listener) => {
+            // console.log('peerConnection.removeEventListener: ', type);
         },
         addTransceiver: (type, listener) => {
             // console.log('peerConnection.addTransceiver: ', type);
@@ -154,10 +158,13 @@ export const mockRTCPeerConnection = () => {
                 // new global.RTCRtpTransceiver(),
             ] as any
         },
-        close: () => {
-            // console.log('peerConnection.close');
-        }
-    } as RTCPeerConnection));
+        getStats: () => Promise.resolve([]),
+        setLocalDescription: () => Promise.resolve(),
+        setRemoteDescription: () => Promise.resolve(),
+        getSenders: () => [],
+        addIceCandidate: () => Promise.resolve(),
+        close: jest.fn(),
+    } as unknown as RTCPeerConnection));
 
     // jest.spyOn(global.console, 'log').mockImplementation(() => jest.fn());
 }

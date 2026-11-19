@@ -42,7 +42,7 @@ export default class xCloudPlayer {
     private _videoComponent: VideoComponent | undefined
     private _audioComponent: AudioComponent | undefined
 
-    _sdpHandler: (offer: RTCSessionDescriptionInit) => void = () => {}
+    _sdpHandler: ((offer: RTCSessionDescriptionInit) => void) | undefined = undefined
 
     constructor(elementId:string, options:xCloudPlayerConfig = {}) {
         this._elementId = elementId
@@ -56,14 +56,20 @@ export default class xCloudPlayer {
         videoTransceiver.setCodecPreferences(this._sdpHelper.getDefaultCodecPreferences())
 
         this._peerConnection.ontrack = (event) => {
+            const stream = event.streams[0]
+            if(stream === undefined){
+                return
+            }
 
             if(event.track.kind === 'video'){
+                this._videoComponent?.destroy()
                 this._videoComponent = new VideoComponent(this)
-                this._videoComponent.create(event.streams[0])
+                this._videoComponent.create(stream)
 
             } else if(event.track.kind === 'audio'){
+                this._audioComponent?.destroy()
                 this._audioComponent = new AudioComponent(this)
-                this._audioComponent.create(event.streams[0])
+                this._audioComponent.create(stream)
 
             } else {
                 console.log('[xPlayer] Detected an unknown stream type: ', event.track.kind)
@@ -90,9 +96,9 @@ export default class xCloudPlayer {
                 offerToReceiveVideo: true,
             }).then((offer) => {
                 const playerOffer = this._sdpHelper.setLocalSDP(offer)
-                this._peerConnection.setLocalDescription(playerOffer)
-
-                resolve(playerOffer)
+                return Promise.resolve(this._peerConnection.setLocalDescription(playerOffer)).then(() => {
+                    resolve(playerOffer)
+                })
             }).catch((error) => {
                 reject(error)
             })
@@ -102,9 +108,11 @@ export default class xCloudPlayer {
     setRemoteOffer(sdpRemote:string){
         const finalSdp = this._sdpHelper.setRemoteSDP(sdpRemote)
         try {
-            this._peerConnection.setRemoteDescription({
+            Promise.resolve(this._peerConnection.setRemoteDescription({
                 type: 'answer',
                 sdp: finalSdp,
+            })).catch((e) => {
+                console.log('[xPlayer] setRemoteOffer() Remote SDP is not valid:', sdpRemote, e)
             })
         } catch(e){
             console.log('[xPlayer] setRemoteOffer() Remote SDP is not valid:', sdpRemote, e)
@@ -149,18 +157,27 @@ export default class xCloudPlayer {
 
     destroy() {
         if(this._isDestoyed === false){
+            for(const channel of Object.values(this._channels)) {
+                channel.destroy()
+            }
+
+            this._statsHelper.destroy()
+            this._iceHelper.destroy()
+
+            if(this._videoComponent){
+                this._videoComponent.destroy()
+                this._videoComponent = undefined
+            }
+            if(this._audioComponent){
+                this._audioComponent.destroy()
+                this._audioComponent = undefined
+            }
+
             this._peerConnection.close()
 
             if(this._peerConnection.onconnectionstatechange){
                 this._peerConnection.onconnectionstatechange(new Event('connectionstatechanged'))
             }
-            
-            for(const channel in this._channels) {
-                this._channels[channel].destroy()
-            }
-
-            if(this._videoComponent){ this._videoComponent.destroy() }
-            if(this._audioComponent){ this._audioComponent.destroy() }
 
             this._isDestoyed = true
         } else {
