@@ -133,6 +133,7 @@ export default class Gamepad {
 
         if(this._rumbleInterval !== undefined){
             clearInterval(this._rumbleInterval)
+            this._rumbleInterval = undefined
         }
 
         if(this._options.enable_keyboard === true){
@@ -149,6 +150,8 @@ export default class Gamepad {
             window.removeEventListener('blur', this._listener.windowBlur)
             window.removeEventListener('focus', this._listener.windowFocus)
         }
+
+        this._player = undefined
     }
 
     sendButtonState(button, value){
@@ -231,27 +234,31 @@ export default class Gamepad {
 
     detectActiveGamepad(){
         if(this._physicalGamepadId < 0){
-            for(const gamepadBrowser in navigator.getGamepads()){
-                const gamepadIndex = navigator.getGamepads()[gamepadBrowser]?.index
+            for(const gamepadBrowser of navigator.getGamepads()){
+                const gamepadIndex = gamepadBrowser?.index
                 if(gamepadIndex === undefined){
                     continue
                 }
 
                 let gamepadFoundInHandler = false
-                for(const gamepad in this._player?._channels.control.getGamepadHandlers()){
-                    if(
-                        this._player?._channels.control.getGamepadHandlers()[gamepad] instanceof Gamepad &&
-                        (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId === navigator.getGamepads()[gamepadBrowser]?.index
-                    ) {
-                        console.log('[Gamepad] Active gamepad already detected:', gamepadIndex, (this._player?._channels.control.getGamepadHandlers()[gamepad] as Gamepad)._physicalGamepadId)
-                        gamepadFoundInHandler = true
-                        continue
+                const handlers = this._player?._channels.control.getGamepadHandlers()
+                if(handlers !== undefined){
+                    for(const handler of Object.values(handlers)){
+                        if(
+                            handler instanceof Gamepad &&
+                            handler._physicalGamepadId === gamepadIndex
+                        ) {
+                            console.log('[Gamepad] Active gamepad already detected:', gamepadIndex, handler._physicalGamepadId)
+                            gamepadFoundInHandler = true
+                            break
+                        }
                     }
                 }
 
                 if(gamepadFoundInHandler === false){
                     this._physicalGamepadId = gamepadIndex
                     console.log('[Gamepad] Active gamepad detected:', this._physicalGamepadId)
+                    break
                 }
             }
         } else {
@@ -296,12 +303,18 @@ export default class Gamepad {
         // Set buttons
         if(gamepad !== undefined){
             for(const button in this._options.gamepad_mapping){
-                frame[button] = gamepad.buttons[this._options.gamepad_mapping[button]].value
+                const mappedButton = gamepad.buttons[Number(this._options.gamepad_mapping[button])]
+                if(mappedButton !== undefined){
+                    frame[button] = mappedButton.value
+                }
             }
 
             // Set axis
             for(const axis in this._options.gamepad_axes_mapping){
-                frame[axis] = this.normaliseAxis(gamepad.axes[this._options.gamepad_axes_mapping[axis]])
+                const mappedAxis = gamepad.axes[Number(this._options.gamepad_axes_mapping[axis])]
+                if(mappedAxis !== undefined){
+                    frame[axis] = this.normaliseAxis(mappedAxis)
+                }
             }
         }
 
@@ -335,11 +348,7 @@ export default class Gamepad {
 
     getGamepad(index = -1){
         const gamepad = navigator.getGamepads()[index]
-        if(gamepad !== null) {
-            return gamepad
-        } else {
-            return undefined
-        }
+        return gamepad ?? undefined
     }
 
     getPhysicalGamepadId(){
@@ -385,36 +394,46 @@ export default class Gamepad {
             rumbleData.leftTrigger = 0
             rumbleData.rightTrigger = 0
 
-            gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)
+            Promise.resolve(gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)).catch(() => {
+                // Ignore vibration playEffect errors
+            })
 
-            clearInterval(this._rumbleInterval)
+            if(this._rumbleInterval !== undefined){
+                clearInterval(this._rumbleInterval)
+                this._rumbleInterval = undefined
+            }
             if(report.repeat > 0) {
                 let repeatCount = report.repeat
 
                 this._rumbleInterval = setInterval(() => {
                     if(repeatCount <= 0){
                         clearInterval(this._rumbleInterval)
+                        this._rumbleInterval = undefined
+                        return
                     }
 
                     if(gamepad.vibrationActuator !== undefined) {
-                        gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)
+                        Promise.resolve(gamepad.vibrationActuator?.playEffect('dual-rumble', rumbleData)).catch(() => {
+                            // Ignore vibration playEffect errors
+                        })
                     }
                     repeatCount--
 
                 }, report.delayMs + report.durationMs)
             }
         } else {
-            console.log('[Gamepad] Unknown vibration type:', (gamepad.vibrationActuator as any).type)
+            console.log('[Gamepad] Unknown vibration type:', (gamepad.vibrationActuator as { type?: string } | undefined)?.type)
         }
     }
 
-    normaliseAxis(value) {
-        if(Math.abs(value) < this._options.gamepad_deadzone) {
+    normaliseAxis(value:number):number {
+        const deadzone = Math.min(0.99, Math.max(0, this._options.gamepad_deadzone))
+        if(Math.abs(value) < deadzone) {
             return 0
         }
 
-        value = value - Math.sign(value) * this._options.gamepad_deadzone
-        value /= (1.0 - this._options.gamepad_deadzone)
+        value = value - Math.sign(value) * deadzone
+        value /= (1.0 - deadzone)
         
         return value
     }
