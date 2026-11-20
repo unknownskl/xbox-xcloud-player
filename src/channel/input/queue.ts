@@ -27,8 +27,8 @@ export default class InputQueue {
     }
 
     queueGamepadFrames(frames:Array<GamepadFrame>, forceSend = false) {
-        for(const frame in frames){
-            this._gamepadQueue.push(frames[frame])
+        for(const frame of frames){
+            this._gamepadQueue.push(frame)
         }
         this.checkQueueAndSend(forceSend)
     }

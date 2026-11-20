@@ -3,6 +3,7 @@ import xCloudPlayer from '../player'
 export default class MouseKeyboard {
     private _player: xCloudPlayer | undefined
     private _index: number
+    private _videoElement: HTMLVideoElement | undefined
 
     private _listener = {
         keyDown: this.onKeyDown.bind(this),
@@ -11,6 +12,7 @@ export default class MouseKeyboard {
         pointerClick: this.onPointerClick.bind(this),
         pointerScroll: this.onPointerScroll.bind(this),
         lockMouseKeyboard: this.lockMouseKeyboard.bind(this),
+        contextMenu: this.onContextMenu.bind(this),
     }
 
 
@@ -23,23 +25,23 @@ export default class MouseKeyboard {
 
         this._player._channels.control.sendGamepadState(this._index, true, this)
 
+        const videoElement = this._player.getVideoElement()
+
         // Mod the video UI to capture MKB input
-        if(this._player.getVideoElement() === undefined){
-            console.log('[MKB] VideoComponent is not attached. this._player._videoComponent is:', this._player.getVideoElement())
+        if(videoElement === undefined){
+            console.log('[MKB] VideoComponent is not attached. this._player._videoComponent is:', videoElement)
             return
         } else {
-            this._player.getVideoElement()?.addEventListener('pointermove', this._listener.pointerMove)
-            this._player.getVideoElement()?.addEventListener('pointerdown', this._listener.pointerClick)
-            this._player.getVideoElement()?.addEventListener('pointerup', this._listener.pointerClick)
-            this._player.getVideoElement()?.addEventListener('wheel', this._listener.pointerScroll)
-            this._player.getVideoElement()?.addEventListener('click', this._listener.lockMouseKeyboard)
+            this._videoElement = videoElement
+            this._videoElement.addEventListener('pointermove', this._listener.pointerMove)
+            this._videoElement.addEventListener('pointerdown', this._listener.pointerClick)
+            this._videoElement.addEventListener('pointerup', this._listener.pointerClick)
+            this._videoElement.addEventListener('wheel', this._listener.pointerScroll)
+            this._videoElement.addEventListener('click', this._listener.lockMouseKeyboard)
+            this._videoElement.addEventListener('contextmenu', this._listener.contextMenu)
     
             window.addEventListener('keydown', this._listener.keyDown)
             window.addEventListener('keyup', this._listener.keyUp)
-    
-            this._player.getVideoElement()?.addEventListener('contextmenu', event => {
-                event.preventDefault()
-            })
         }
 
     }
@@ -55,11 +57,22 @@ export default class MouseKeyboard {
         window.removeEventListener('keydown', this._listener.keyDown)
         window.removeEventListener('keyup', this._listener.keyUp)
         
-        this._player.getVideoElement()?.removeEventListener('pointermove', this._listener.pointerMove)
-        this._player.getVideoElement()?.removeEventListener('pointerdown', this._listener.pointerClick)
-        this._player.getVideoElement()?.removeEventListener('pointerup', this._listener.pointerClick)
-        this._player.getVideoElement()?.removeEventListener('wheel', this._listener.pointerScroll)
-        this._player.getVideoElement()?.removeEventListener('click', this._listener.lockMouseKeyboard)
+        const videoElement = this._videoElement ?? this._player.getVideoElement()
+        if(videoElement !== undefined){
+            videoElement.removeEventListener('pointermove', this._listener.pointerMove)
+            videoElement.removeEventListener('pointerdown', this._listener.pointerClick)
+            videoElement.removeEventListener('pointerup', this._listener.pointerClick)
+            videoElement.removeEventListener('wheel', this._listener.pointerScroll)
+            videoElement.removeEventListener('click', this._listener.lockMouseKeyboard)
+            videoElement.removeEventListener('contextmenu', this._listener.contextMenu)
+        }
+
+        this._videoElement = undefined
+        this._player = undefined
+    }
+
+    onContextMenu(event:MouseEvent):void{
+        event.preventDefault()
     }
 
     onPointerMove(event:PointerEvent){
@@ -123,8 +136,10 @@ export default class MouseKeyboard {
         }
 
         if ('keyboard' in navigator && 'lock' in (navigator.keyboard as any)) {
-            document.body.requestFullscreen().then(() => {
-                (navigator as any).keyboard.lock()
+            Promise.resolve(document.body.requestFullscreen()).then(() => {
+                return (navigator as any).keyboard.lock?.()
+            }).catch((error) => {
+                console.log('[MKB] Fullscreen or keyboard lock failed:', error)
             })
         } else {
             console.log('[MKB] Keyboard lock is not supported. Error:', 'NotSupportedError')

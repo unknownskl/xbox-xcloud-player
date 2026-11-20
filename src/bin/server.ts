@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import express from 'express'
+import express, { Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import { TokenStore, Xal, Msal } from 'xal-node'
 
@@ -123,6 +123,7 @@ app.get(['/api/msal'], (req, res) => {
 
     }).catch((err) => {
         console.log('error', err)
+        res.status(500)
         res.send(err)
     })
 })
@@ -140,6 +141,12 @@ app.get(['/v6/{*any}', '/v5/{*any}'], (req, res) => {
         client = Manager._apiCloudClient
     } else {
         client = Manager._apiClient
+    }
+
+    if(client === undefined){
+        res.status(503)
+        res.send('Cloud client not ready or unavailable.')
+        return
     }
 
     client.get(req.path, {}).then((result) => {
@@ -167,11 +174,52 @@ app.post(['/v5/{*any}'], (req, res) => {
     } else {
         client = Manager._apiClient
     }
-    client.post(req.path, JSON.stringify(req.body), { ...(req.header['x-ms-device-info'] !== undefined) ? { 'x-ms-device-info': req.header['x-ms-device-info'] } : {} }).then((result) => {
+
+    if(client === undefined){
+        res.status(503)
+        res.send('Cloud client not ready or unavailable.')
+        return
+    }
+
+    const deviceInfo = req.header('x-ms-device-info')
+    client.post(req.path, JSON.stringify(req.body), { ...(deviceInfo !== undefined ? { 'x-ms-device-info': deviceInfo } : {}) }).then((result) => {
         console.log('[PROXY] OK:', req.path)
         res.send(result)
 
     }).catch((err) => {
+        console.log('[PROXY] Error:', err)
+        res.status(500)
+        res.send(err)
+    })
+})
+
+app.delete(['/v5/{*any}'], (req: Request, res: Response) => {
+    if(Manager._apiClient === undefined){
+        res.status(503)
+        res.send('Server not ready yet. Please try again later.')
+        return
+    }
+
+    console.log('[PROXY] DELETE', req.path)
+    let client: ApiClient | undefined
+    if(req.path.includes('/cloud/')){
+        client = Manager._apiCloudClient
+    } else {
+        client = Manager._apiClient
+    }
+
+    if(client === undefined){
+        res.status(503)
+        res.send('Cloud client not ready or unavailable.')
+        return
+    }
+
+    const deviceInfo = req.header('x-ms-device-info')
+    client.delete(req.path, { ...(deviceInfo !== undefined ? { 'x-ms-device-info': deviceInfo } : {}) }).then((result) => {
+        console.log('[PROXY] OK:', req.path)
+        res.send(result)
+
+    }).catch((err:unknown) => {
         console.log('[PROXY] Error:', err)
         res.status(500)
         res.send(err)

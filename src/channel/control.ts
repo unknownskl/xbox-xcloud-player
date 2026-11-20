@@ -30,14 +30,19 @@ export default class ControlChannel extends Channel {
         }
     }
 
-    destroy() {
+    destroy():void {
         // console.log('DebugChannel destroy() called')
-        clearInterval(this._keyframeInterval)
+        if(this._keyframeInterval !== undefined){
+            clearInterval(this._keyframeInterval)
+            this._keyframeInterval = undefined
+        }
 
         this._gamepadHandlers[0]?.detach()
         this._gamepadHandlers[1]?.detach()
         this._gamepadHandlers[2]?.detach()
         this._gamepadHandlers[3]?.detach()
+
+        super.destroy()
     }
 
     sendAuthorization(){
@@ -52,6 +57,9 @@ export default class ControlChannel extends Channel {
         this.sendGamepadState(0, false)
 
         if(this.getPlayer()._config.keyframe_interval > 0) {
+            if(this._keyframeInterval !== undefined){
+                clearInterval(this._keyframeInterval)
+            }
             this._keyframeInterval = setInterval(() => {
                 this.requestKeyframeRequest(true)
             }, this.getPlayer()._config.keyframe_interval*1000)
@@ -94,12 +102,18 @@ export default class ControlChannel extends Channel {
     }
 
     getGamepadHandler(index):Gamepad|undefined{
-        for(const gamepad in this.getPlayer()._channels.control.getGamepadHandlers()){
+        const handlers = this.getPlayer()._channels.control.getGamepadHandlers()
+        const slotHandler = handlers[index]
+        if(slotHandler instanceof Gamepad){
+            return slotHandler
+        }
+
+        for(const handler of Object.values(handlers)){
             if(
-                this.getPlayer()._channels.control.getGamepadHandlers()[gamepad] instanceof Gamepad &&
-                (this.getPlayer()._channels.control.getGamepadHandlers()[gamepad] as Gamepad).getPhysicalGamepadId() === index
+                handler instanceof Gamepad &&
+                handler.getPhysicalGamepadId() === index
             ) {
-                return this.getPlayer()._channels.control.getGamepadHandlers()[gamepad]
+                return handler
             }
         }
 

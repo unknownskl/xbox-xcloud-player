@@ -9,7 +9,7 @@ export default class DebugChannel extends Channel {
         return { }
     }
 
-    destroy() {
-        // console.log('DebugChannel destroy() called')
+    destroy():void {
+        super.destroy()
     }
 }

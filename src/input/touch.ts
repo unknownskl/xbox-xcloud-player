@@ -3,6 +3,7 @@ import xCloudPlayer from '../player'
 export default class Touch {
     private _player: xCloudPlayer | undefined
     private _index: number
+    private _videoElement: HTMLVideoElement | undefined
 
     private _pointerEvents = {}
     private _lastPointerId = -1
@@ -22,14 +23,17 @@ export default class Touch {
 
         this._player._channels.control.sendGamepadState(this._index, true, this)
 
+        const videoElement = this._player.getVideoElement()
+
         // Mod the video UI to capture MKB input
-        if(this._player.getVideoElement() === undefined){
-            console.log('VideoComponent is not attached. this._player._videoComponent is:', this._player.getVideoElement())
+        if(videoElement === undefined){
+            console.log('VideoComponent is not attached. this._player._videoComponent is:', videoElement)
             return
         } else {
-            this._player.getVideoElement()?.addEventListener('pointermove', this._listener.onPointer, { passive: false })
-            this._player.getVideoElement()?.addEventListener('pointerdown', this._listener.onPointer, { passive: false })
-            this._player.getVideoElement()?.addEventListener('pointerup', this._listener.onPointer, { passive: false })
+            this._videoElement = videoElement
+            this._videoElement.addEventListener('pointermove', this._listener.onPointer, { passive: false })
+            this._videoElement.addEventListener('pointerdown', this._listener.onPointer, { passive: false })
+            this._videoElement.addEventListener('pointerup', this._listener.onPointer, { passive: false })
         }
 
     }
@@ -41,9 +45,15 @@ export default class Touch {
         }
         this._player._channels.control.sendGamepadState(this._index, false)
 
-        this._player.getVideoElement()?.removeEventListener('pointermove', this._listener.onPointer)
-        this._player.getVideoElement()?.removeEventListener('pointerdown', this._listener.onPointer)
-        this._player.getVideoElement()?.removeEventListener('pointerup', this._listener.onPointer)
+        const videoElement = this._videoElement ?? this._player.getVideoElement()
+        if(videoElement !== undefined){
+            videoElement.removeEventListener('pointermove', this._listener.onPointer)
+            videoElement.removeEventListener('pointerdown', this._listener.onPointer)
+            videoElement.removeEventListener('pointerup', this._listener.onPointer)
+        }
+
+        this._videoElement = undefined
+        this._player = undefined
     }
 
     onPointer(event:PointerEvent) {

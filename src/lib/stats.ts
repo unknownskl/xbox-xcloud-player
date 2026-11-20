@@ -3,6 +3,7 @@ import xCloudPlayer from '../player'
 export default class Stats {
     private _player: xCloudPlayer
     private _peerConnection:RTCPeerConnection
+    private _statsInterval: ReturnType<typeof setInterval> | undefined
 
     _videoCodec:string = ''
     _audioCodec:string = ''
@@ -22,11 +23,13 @@ export default class Stats {
         this._player = player
         this._peerConnection = player._peerConnection
 
-        setInterval(this.loop.bind(this), 1000)
+        this._statsInterval = setInterval(this.loop.bind(this), 1000)
     }
 
     loop(){
-        this._peerConnection.getStats().then((stats) => {
+        if(typeof this._peerConnection.getStats !== 'function') {return}
+
+        Promise.resolve(this._peerConnection.getStats()).then((stats) => {
             stats.forEach((report) => {
                 //  @TODO: Implement chat stats using type outbound-rtp
 
@@ -40,7 +43,16 @@ export default class Stats {
                     this.readRemoteCandidate(report)
                 }
             })
+        }).catch(() => {
+            // Ignore stats polling failures when peer connection closes
         })
+    }
+
+    destroy():void{
+        if(this._statsInterval !== undefined){
+            clearInterval(this._statsInterval)
+            this._statsInterval = undefined
+        }
     }
 
     readInboundRtp(report:RTCInboundRtpStreamStats){
@@ -77,7 +89,7 @@ export default class Stats {
     }
 
     readRemoteCandidate(report){
-        if(report.id !== this._activeRemoteCandidate) {return}
+        if(report.id !== this._activeRemoteCandidate || !report.address) {return}
 
         if(this.isPrivateIP(report.address)){
             this._remoteIsLocal = true
@@ -96,11 +108,13 @@ export default class Stats {
     }
 
     isPrivateIP(ip) {
+        if(typeof ip !== 'string' || ip === '') {return false}
         const parts = ip.split('.')
         return parts[0] === '10' || (parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31)) || (parts[0] === '192' && parts[1] === '168')
     }
 
     isIpv6(ip) {
+        if(typeof ip !== 'string' || ip === '') {return false}
         const parts = ip.split(':')
         return parts.length > 3 ? true : false
     }

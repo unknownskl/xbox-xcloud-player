@@ -8,8 +8,13 @@
     "build": "rimraf dist && tsc && webpack",
     "watch": "nodemon",
     "lint": "eslint src/",
+    "lint:strict": "eslint src/ --max-warnings=0",
     "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
     "test": "jest --coverage",
+    "test:open-handles": "node --unhandled-rejections=strict ./node_modules/jest/bin/jest.js --no-coverage --runInBand --detectOpenHandles --errorOnDeprecated",
+    "test:leaks": "node --expose-gc --unhandled-rejections=strict ./node_modules/jest/bin/jest.js --no-coverage --runInBand --detectLeaks --errorOnDeprecated",
+    "test:sanitizers": "node --expose-gc --unhandled-rejections=strict ./node_modules/jest/bin/jest.js --no-coverage --runInBand --detectOpenHandles --detectLeaks --errorOnDeprecated --randomize",
     "auth": "rimraf .xbox.tokens.json && xbox-auth auth --auth msal"
   },
   "repository": {

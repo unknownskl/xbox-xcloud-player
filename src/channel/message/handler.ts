@@ -60,8 +60,14 @@ export default class MessageHandler {
         this._channel.send(transaction)
     }
 
-    handleMessage(data) {
-        const jsonData = JSON.parse(data.content)
+    handleMessage(data: { id?: string; content: string }):void {
+        let jsonData: { TitleText?: string; ContentText?: string }
+        try {
+            jsonData = JSON.parse(data.content) as { TitleText?: string; ContentText?: string }
+        } catch(error:unknown) {
+            console.error('[MessageHandler] Failed to parse dialog content JSON:', error)
+            return
+        }
         console.log(jsonData)
         if(confirm(jsonData.TitleText+'\n\n'+jsonData.ContentText)){
             this.completeTransaction(data.id, { Result: 0 })

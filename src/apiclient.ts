@@ -99,15 +99,22 @@ export default class xCloudApiClient {
                     ...headers,
                 },
             }).then(response => {
+                const isOk = response.status >= 200 && response.status <= 299
                 response.json().then(data => {
-                    resolve(data)
+                    if(isOk){
+                        resolve(data)
+                    } else {
+                        reject({ status: response.status, error: data })
+                    }
                 }).catch((error) => {
-                    if(response.status >= 200 && response.status <= 299){
+                    if(isOk){
                         resolve({ status: response.status })
                     } else {
-                        reject({ error: error })
+                        reject({ status: response.status, error: error })
                     }
                 })
+            }).catch((error) => {
+                reject({ error: error })
             })
         })
     }
@@ -128,15 +135,22 @@ export default class xCloudApiClient {
                 },
                 body: body,
             }).then(response => {
+                const isOk = response.status >= 200 && response.status <= 299
                 response.json().then(data => {
-                    resolve(data)
+                    if(isOk){
+                        resolve(data)
+                    } else {
+                        reject({ status: response.status, error: data })
+                    }
                 }).catch((error) => {
-                    if(response.status >= 200 && response.status <= 299){
+                    if(isOk){
                         resolve({ status: response.status })
                     } else {
-                        reject({ error: error })
+                        reject({ status: response.status, error: error })
                     }
                 })
+            }).catch((error) => {
+                reject({ error: error })
             })
         })
     }
@@ -156,15 +170,22 @@ export default class xCloudApiClient {
                     ...headers,
                 },
             }).then(response => {
+                const isOk = response.status >= 200 && response.status <= 299
                 response.json().then(data => {
-                    resolve(data)
+                    if(isOk){
+                        resolve(data)
+                    } else {
+                        reject({ status: response.status, error: data })
+                    }
                 }).catch((error) => {
-                    if(response.status >= 200 && response.status <= 299){
+                    if(isOk){
                         resolve({ status: response.status })
                     } else {
-                        reject({ error: error })
+                        reject({ status: response.status, error: error })
                     }
                 })
+            }).catch((error) => {
+                reject({ error: error })
             })
         })
     }
@@ -482,6 +503,8 @@ export default class xCloudApiClient {
                         reject({ error: error })
                     })
                 }
+            }).catch((error) => {
+                reject({ error: error })
             })
         })
     }

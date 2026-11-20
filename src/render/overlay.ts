@@ -8,6 +8,7 @@ interface OverlayInterface {
 export default class Overlay {
     private _player:xCloudPlayer
     private _videoComponent:VideoComponent
+    private _refreshTimeout: ReturnType<typeof setTimeout> | undefined
 
     private _overlays:OverlayInterface = {
         debug: undefined,
@@ -27,6 +28,8 @@ export default class Overlay {
     }
 
     createDebugOverlay(){
+        this.destroy()
+
         this._overlays.debug = document.createElement('div')
         this._overlays.debug.id = 'playerDebugOverlay'
 
@@ -40,18 +43,24 @@ export default class Overlay {
 
         document.getElementById(this._player.getElementId())?.appendChild(this._overlays.debug)
 
-        setTimeout(() => {
-            this.refreshDebugOverlay()
-        }, 500)
         this.refreshDebugOverlay()
     }
 
     destroy(){
+        if(this._refreshTimeout !== undefined){
+            clearTimeout(this._refreshTimeout)
+            this._refreshTimeout = undefined
+        }
         this._overlays.debug?.remove()
         this._overlays.debug = undefined
     }
 
     refreshDebugOverlay(){
+        if(this._refreshTimeout !== undefined){
+            clearTimeout(this._refreshTimeout)
+            this._refreshTimeout = undefined
+        }
+
         if(this._overlays.debug !== undefined){
             this._overlays.debug.innerHTML = ''
 
@@ -63,7 +72,7 @@ export default class Overlay {
             const rttButtonState = (this._player.getStats()._rtt*1000 > 75) ? 'error' : (this._player.getStats()._rtt*1000 > 40) ? 'warning' : 'ok'
             this._overlays.debug.appendChild(this.createLabel('RTT', (this._player.getStats()._rtt*1000).toString()+' ms', rttButtonState))
             
-            setTimeout(() => {
+            this._refreshTimeout = setTimeout(() => {
                 this.refreshDebugOverlay()
             }, 500)
         }
@@ -92,7 +101,15 @@ export default class Overlay {
         }
 
         if(value !== ''){
-            element.innerHTML = `${text}: <span style="background: ${colors[style]}; border-radius: 5px; padding: 4px; padding-left: 8px; padding-right: 8px;">${value}</span>`
+            element.appendChild(document.createTextNode(`${text}: `))
+            const badge = document.createElement('span')
+            badge.style.background = colors[style] || colors['ok']
+            badge.style.borderRadius = '5px'
+            badge.style.padding = '4px'
+            badge.style.paddingLeft = '8px'
+            badge.style.paddingRight = '8px'
+            badge.textContent = value
+            element.appendChild(badge)
         } else {
             element.innerText = text
         }

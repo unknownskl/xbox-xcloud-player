@@ -10,7 +10,12 @@ export default class Stream {
     private _sessionPath: string
     private _state:'New'|'Provisioning'|'Provisioned'|'ReadyToConnect'|'Error'
 
-    private _waitInterval
+    private _waitInterval: ReturnType<typeof setInterval> | undefined
+    private _sdpInterval: ReturnType<typeof setInterval> | undefined
+    private _iceInterval: ReturnType<typeof setInterval> | undefined
+    private _sdpReject: ((reason?: unknown) => void) | undefined
+    private _iceReject: ((reason?: unknown) => void) | undefined
+    private _isStopped = false
 
     constructor(apiClient:xCloudApiClient, response:StartStreamReponse){
         this._apiClient = apiClient
@@ -31,15 +36,25 @@ export default class Stream {
         return '/'+this._sessionPath
     }
 
-    waitForState(desiredState:string){
+    waitForState(desiredState:string):void{
+        if(this._waitInterval !== undefined){
+            clearInterval(this._waitInterval)
+        }
         this._waitInterval = setInterval(() => {
+            if(this._isStopped){
+                clearInterval(this._waitInterval)
+                this._waitInterval = undefined
+                return
+            }
+
             this.refreshState().then((state) => {
 
-                if(state === desiredState){
+                if(state === desiredState || state === 'Error' || this._isStopped){
                     clearInterval(this._waitInterval)
+                    this._waitInterval = undefined
                 }
                 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 console.error('Failed to refresh state of stream:', error)
             })
         }, 500)
@@ -160,13 +175,51 @@ export default class Stream {
         })
     }
 
-    waitForSdpResponse(){
-        return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                this._apiClient.get(this.getSessionPath()+'/sdp').then(sdpResponse => {
-                    if((sdpResponse as any).status !== 204){
+    waitForSdpResponse():Promise<unknown>{
+        if(this._sdpInterval !== undefined){
+            clearInterval(this._sdpInterval)
+            this._sdpInterval = undefined
+        }
+        if(this._sdpReject !== undefined){
+            const prevReject = this._sdpReject
+            this._sdpReject = undefined
+            prevReject(new Error('SDP polling superseded'))
+        }
+
+        return new Promise<unknown>((resolve, reject) => {
+            if(this._isStopped){
+                reject(new Error('Stream stopped'))
+                return
+            }
+
+            this._sdpReject = reject
+            this._sdpInterval = setInterval(() => {
+                if(this._isStopped){
+                    clearInterval(this._sdpInterval)
+                    this._sdpInterval = undefined
+                    if(this._sdpReject === reject){
+                        this._sdpReject = undefined
+                    }
+                    reject(new Error('Stream stopped'))
+                    return
+                }
+                this._apiClient.get(this.getSessionPath()+'/sdp').then((sdpResponse:unknown) => {
+                    if(this._isStopped){
+                        clearInterval(this._sdpInterval)
+                        this._sdpInterval = undefined
+                        if(this._sdpReject === reject){
+                            this._sdpReject = undefined
+                        }
+                        reject(new Error('Stream stopped'))
+                        return
+                    }
+                    if((sdpResponse as { status?: number }).status !== 204){
+                        clearInterval(this._sdpInterval)
+                        this._sdpInterval = undefined
+                        if(this._sdpReject === reject){
+                            this._sdpReject = undefined
+                        }
                         resolve(sdpResponse)
-                        clearInterval(checkInterval)
                     }
 
                 }).catch(() => {
@@ -176,29 +229,67 @@ export default class Stream {
         })
     }
 
-    sendIceCandidates(candidates:Array<any>){
-        return new Promise((resolve, reject) => {
+    sendIceCandidates(candidates:Array<unknown>):Promise<unknown>{
+        return new Promise<unknown>((resolve, reject) => {
             this._apiClient.post(this.getSessionPath()+'/ice', JSON.stringify({ candidates: candidates }), { 'Content-Type': 'application/json', 'Accept': 'application/json' }).then(() => {
                 this.waitForIceResponse().then((iceResponse) => {
                     resolve(iceResponse)
 
-                }).catch((error) => {
+                }).catch((error:unknown) => {
                     reject(error)
                 })
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })
     }
 
-    waitForIceResponse(){
-        return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                this._apiClient.get(this.getSessionPath()+'/ice').then(iceResponse => {
-                    if((iceResponse as any).status !== 204){
+    waitForIceResponse():Promise<unknown>{
+        if(this._iceInterval !== undefined){
+            clearInterval(this._iceInterval)
+            this._iceInterval = undefined
+        }
+        if(this._iceReject !== undefined){
+            const prevReject = this._iceReject
+            this._iceReject = undefined
+            prevReject(new Error('ICE polling superseded'))
+        }
+
+        return new Promise<unknown>((resolve, reject) => {
+            if(this._isStopped){
+                reject(new Error('Stream stopped'))
+                return
+            }
+
+            this._iceReject = reject
+            this._iceInterval = setInterval(() => {
+                if(this._isStopped){
+                    clearInterval(this._iceInterval)
+                    this._iceInterval = undefined
+                    if(this._iceReject === reject){
+                        this._iceReject = undefined
+                    }
+                    reject(new Error('Stream stopped'))
+                    return
+                }
+                this._apiClient.get(this.getSessionPath()+'/ice').then((iceResponse:unknown) => {
+                    if(this._isStopped){
+                        clearInterval(this._iceInterval)
+                        this._iceInterval = undefined
+                        if(this._iceReject === reject){
+                            this._iceReject = undefined
+                        }
+                        reject(new Error('Stream stopped'))
+                        return
+                    }
+                    if((iceResponse as { status?: number }).status !== 204){
+                        clearInterval(this._iceInterval)
+                        this._iceInterval = undefined
+                        if(this._iceReject === reject){
+                            this._iceReject = undefined
+                        }
                         resolve(iceResponse)
-                        clearInterval(checkInterval)
                     }
 
                 }).catch(() => {
@@ -208,28 +299,58 @@ export default class Stream {
         })
     }
 
-    sendKeepalive(){
-        return new Promise((resolve, reject) => {
-            this._apiClient.post(this.getSessionPath()+'/keepalive', '').then(keepaliveResponse => {
+    sendKeepalive():Promise<unknown>{
+        return new Promise<unknown>((resolve, reject) => {
+            this._apiClient.post(this.getSessionPath()+'/keepalive', '').then((keepaliveResponse:unknown) => {
                 resolve(keepaliveResponse)
-            }).catch((error) => {
-                reject({ error: error })
+            }).catch((error:unknown) => {
+                reject(error)
             })
         })
     }
 
-    sendMSALAuth(userToken:string){
+    sendMSALAuth(userToken:string):Promise<unknown>{
         return this._apiClient.post(this.getSessionPath()+'/connect', JSON.stringify({
             'userToken': userToken,
         }), { 'Content-Type': 'application/json', 'Accept': 'application/json' })
     }
 
-    stop(){
-        return new Promise((resolve, reject) => {
+    private clearIntervals(reason?:Error):void{
+        if(this._waitInterval !== undefined){
+            clearInterval(this._waitInterval)
+            this._waitInterval = undefined
+        }
+        if(this._sdpInterval !== undefined){
+            clearInterval(this._sdpInterval)
+            this._sdpInterval = undefined
+        }
+        if(this._iceInterval !== undefined){
+            clearInterval(this._iceInterval)
+            this._iceInterval = undefined
+        }
+        if(reason !== undefined){
+            if(this._sdpReject !== undefined){
+                const rejectSdp = this._sdpReject
+                this._sdpReject = undefined
+                rejectSdp(reason)
+            }
+            if(this._iceReject !== undefined){
+                const rejectIce = this._iceReject
+                this._iceReject = undefined
+                rejectIce(reason)
+            }
+        }
+    }
+
+    stop():Promise<{ status: string }>{
+        this._isStopped = true
+        this.clearIntervals(new Error('Stream stopped'))
+
+        return new Promise<{ status: string }>((resolve, reject) => {
             this._apiClient.delete(this.getSessionPath()).then(() => {
                 resolve({ status: 'ok'})
 
-            }).catch((error) => {
+            }).catch((error:unknown) => {
                 reject(error)
             })
         })

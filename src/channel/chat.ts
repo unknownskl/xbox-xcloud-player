@@ -4,17 +4,27 @@ export default class ChatChannel extends Channel {
 
     _micPermissions:'granted'|'denied'|'prompt' = 'prompt'
     _micStream:MediaStream | undefined
+    private _permissionStatus:PermissionStatus | undefined
+    private _isDestroyed = false
 
     constructor(player:any){
         super(player)
 
-        navigator.permissions.query({ name: 'microphone' }).then((permissionStatus) => {
-            this._micPermissions = permissionStatus.state
-        
-            permissionStatus.onchange = () => {
+        if(typeof navigator !== 'undefined' && navigator.permissions?.query){
+            Promise.resolve(navigator.permissions.query({ name: 'microphone' })).then((permissionStatus) => {
+                if(this._isDestroyed){
+                    return
+                }
+                this._permissionStatus = permissionStatus
                 this._micPermissions = permissionStatus.state
-            }
-        })
+
+                permissionStatus.onchange = () => {
+                    this._micPermissions = permissionStatus.state
+                }
+            }).catch(() => {
+                // Ignore unsupported microphone permission queries
+            })
+        }
     }
 
     getChannelName() {
@@ -28,7 +38,10 @@ export default class ChatChannel extends Channel {
         }
     }
 
-    startMicrophone() {
+    startMicrophone():void {
+        if(this._isDestroyed){
+            return
+        }
         if(this._micPermissions === 'denied'){
             alert('Microphone permissions are denied. Please enable them in your browser settings.')
             return
@@ -42,27 +55,42 @@ export default class ChatChannel extends Channel {
             channelCount: 1,
             sampleRate: 24e3,
         } }).then((stream) => {
-            if(this._micStream !== undefined){
+            if(this._isDestroyed || this._micStream !== undefined){
+                stream.getTracks().forEach((track) => track.stop())
+                return
+            }
+
+            const audioTrack = stream.getAudioTracks()[0]
+            if(audioTrack === undefined){
+                stream.getTracks().forEach((track) => track.stop())
                 return
             }
 
             this._micStream = stream
 
             // Add to SDP
-            this.getPlayer()._peerConnection.addTrack(stream.getAudioTracks()[0], stream)
+            this.getPlayer()._peerConnection.addTrack(audioTrack, stream)
             this.getPlayer().createOffer().then((offer) => {
-                if(this.getPlayer()._sdpHandler){
-                    this.getPlayer()._sdpHandler(offer)
+                if(this._isDestroyed){
+                    return
+                }
+                const sdpHandler = this.getPlayer()._sdpHandler
+                if(sdpHandler !== undefined){
+                    sdpHandler(offer)
                 } else {
                     console.log('No SDP handler set. Set an SDP Handler via player.setChatSdpHandler()')
                 }
+            }).catch((err:unknown) => {
+                console.error('Failed to create chat offer:', err)
             })
-        }).catch((err) => {
-            alert(`Error connecting to microphone: ${err}`)
+        }).catch((err:unknown) => {
+            if(!this._isDestroyed){
+                alert(`Error connecting to microphone: ${err}`)
+            }
         })
     }
 
-    stopMicrophone() {
+    stopMicrophone():void {
         if(this._micStream === undefined) {return}
 
         this._micStream.getTracks().forEach((track) => {
@@ -78,7 +106,13 @@ export default class ChatChannel extends Channel {
         this._micStream = undefined
     }
 
-    destroy() {
-        // console.log('DebugChannel destroy() called')
+    destroy():void {
+        this._isDestroyed = true
+        this.stopMicrophone()
+        if(this._permissionStatus !== undefined){
+            this._permissionStatus.onchange = null
+            this._permissionStatus = undefined
+        }
+        super.destroy()
     }
 }

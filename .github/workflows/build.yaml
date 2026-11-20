@@ -10,6 +10,8 @@ on:
 jobs:
     build:
       runs-on: ubuntu-latest
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       strategy:
         matrix:
@@ -37,9 +39,8 @@ jobs:
           run: npm test
 
         - name: SonarCloud Scan
+          if: env.SONAR_TOKEN != ''
           uses: SonarSource/sonarqube-scan-action@v6.0.0
-          env: 
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           with:
             args: >
               -Dsonar.organization=unknownskl-github

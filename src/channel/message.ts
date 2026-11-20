@@ -28,8 +28,14 @@ export default class MessageChannel extends Channel {
         this.send(handshake)
     }
 
-    onMessage(event: MessageEvent<any>) {
-        const data = JSON.parse(event.data)
+    onMessage(event: MessageEvent<any>):void {
+        let data: { type?: string }
+        try {
+            data = JSON.parse(event.data) as { type?: string }
+        } catch(error:unknown) {
+            console.error('[MessageChannel] Failed to parse message JSON:', error)
+            return
+        }
         // console.log('[MessageChannel] received:', data)
 
         switch(data.type){
@@ -114,7 +120,7 @@ export default class MessageChannel extends Channel {
         }
     }
 
-    destroy() {
-        // console.log('DebugChannel destroy() called')
+    destroy():void {
+        super.destroy()
     }
 }

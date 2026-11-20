@@ -23,23 +23,33 @@ class StreamApp {
             if(consoleDiv === null){
                 return
             }
-            let consolesHtml = ''
-        
-            for(const device in consoles.results) {
-                consolesHtml += '<li>'
-                consolesHtml += '   '+consoles.results[device].deviceName+'('+consoles.results[device].consoleType+') <br />'
-                consolesHtml += '   '+consoles.results[device].serverId+' - '+consoles.results[device].powerState + '<br />'
-                consolesHtml += '   <button style="margin: 10px; padding: 5px;" onclick="examplePlayer.app.start(\'home\', \''+consoles.results[device].serverId+'\')">Start session</button>'
-                consolesHtml += '</li>'
+
+            consoleDiv.replaceChildren()
+            for(const device of consoles.results) {
+                const li = document.createElement('li')
+                li.appendChild(document.createTextNode(`${device.deviceName}(${device.consoleType})`))
+                li.appendChild(document.createElement('br'))
+                li.appendChild(document.createTextNode(`${device.serverId} - ${device.powerState}`))
+                li.appendChild(document.createElement('br'))
+
+                const button = document.createElement('button')
+                button.style.margin = '10px'
+                button.style.padding = '5px'
+                button.textContent = 'Start session'
+                button.addEventListener('click', () => {
+                    this.start('home', device.serverId)
+                })
+                li.appendChild(button)
+
+                consoleDiv.appendChild(li)
             }
-            consoleDiv.innerHTML = consolesHtml
         
         }).catch((error) => {
             const consoleDiv = document.getElementById('consolesList')
             if(consoleDiv === null){
                 return
             }
-            consoleDiv.innerHTML = JSON.stringify(error)
+            consoleDiv.textContent = JSON.stringify(error)
         })
     }
 
@@ -49,7 +59,7 @@ class StreamApp {
         if(holder !== null){
             holder.value = localStorage.getItem('xcloudTitle') || ''
             holder.addEventListener('change', (event) => {
-                const titleId = (event.target as HTMLInputElement)?.value
+                const titleId = (event.target as HTMLInputElement)?.value || ''
                 localStorage.setItem('xcloudTitle', titleId)
             })
         }
@@ -80,10 +90,19 @@ class StreamApp {
         })
     }
 
-    start(type, titleId){
+    start(type:'home'|'cloud', titleId:string):void{
         const connectionStatus = document.getElementById('connectionStatus')
         if(connectionStatus === null){
             return
+        }
+
+        if(this._player !== undefined || this._currentStream !== undefined){
+            this.destroyPlayer()
+        } else {
+            clearInterval(this._refreshInterval)
+            clearInterval(this._keepaliveInterval)
+            this._refreshInterval = undefined
+            this._keepaliveInterval = undefined
         }
 
         connectionStatus.innerText = 'Requesting stream: '+type+' - '+titleId
@@ -92,38 +111,59 @@ class StreamApp {
             connectionStatus.innerText = 'Stream requested, waiting to be ready: '+type+' - '+titleId
             
             this._currentStream = stream
-            this._currentStream.onProvisioned = () => {
+            const currentStream = stream
+            currentStream.onProvisioned = () => {
+                if(this._currentStream !== currentStream){
+                    return currentStream
+                }
                 console.log('Stream is provisioned. Lets start the player.')
                 this.loadPlayer()
+                clearInterval(this._keepaliveInterval)
                 this._keepaliveInterval = setInterval(() => {
-                    this._currentStream.sendKeepalive().then((response) => {
-                        if(response.code === 'SessionNotActive' || response.code === 'SessionNotFound'){
+                    currentStream.sendKeepalive().then((response:unknown) => {
+                        const resp = response as { code?: string } | undefined
+                        if(resp?.code === 'SessionNotActive' || resp?.code === 'SessionNotFound'){
                             clearInterval(this._keepaliveInterval)
+                            this._keepaliveInterval = undefined
                             console.log('Removing keepalive as session is not active anymore.')
                         }
                         console.log('Keepalive sent:', response)
-                    }).catch((error) => {
+                    }).catch((error:unknown) => {
+                        const errObj = error as { status?: number; code?: string; error?: { code?: string } } | undefined
+                        const code = errObj?.error?.code ?? errObj?.code
+                        const status = errObj?.status
+                        if(code === 'SessionNotActive' || code === 'SessionNotFound' || status === 404 || status === 410){
+                            clearInterval(this._keepaliveInterval)
+                            this._keepaliveInterval = undefined
+                            console.log('Removing keepalive as session is not active anymore.')
+                            return
+                        }
                         console.error('Failed to send keepalive:', error)
                     })
                 }, 30*1000)
+                return currentStream
             }
-            this._currentStream.onReadyToConnect = () => {
+            currentStream.onReadyToConnect = () => {
+                if(this._currentStream !== currentStream){
+                    return currentStream
+                }
                 fetch('/api/msal')
                     .then((response) => response.text())
                     .then((response) => {
-                        this._currentStream.sendMSALAuth(response).then((response) => {
-                            console.log('MSAL Auth response:', response)
-                        }).catch((error) => {
+                        currentStream.sendMSALAuth(response).then((authResponse) => {
+                            console.log('MSAL Auth response:', authResponse)
+                        }).catch((error:unknown) => {
                             console.error('Failed to send MSAL Auth:', error)
                         })
-                    }).catch((error) => {
+                    }).catch((error:unknown) => {
                         console.error('Failed to fetch MSAL token:', error)
                     })
                 console.log('Console is ready. Lets send over the MSAL token.')
+                return currentStream
             }
 
-            this._currentStream.waitForState('Provisioned')
-        }).catch((error) => {
+            currentStream.waitForState('Provisioned')
+        }).catch((error:unknown) => {
             console.error('Failed to start stream:', error)
         })
 
@@ -182,12 +222,23 @@ class StreamApp {
         console.log(this._player)
     }
 
-    destroyPlayer(){
+    destroyPlayer():void{
+        clearInterval(this._refreshInterval)
+        clearInterval(this._keepaliveInterval)
+        this._refreshInterval = undefined
+        this._keepaliveInterval = undefined
+
+        const prevStream = this._currentStream
+        this._currentStream = undefined
+        if(prevStream !== undefined){
+            prevStream.stop().catch(() => {
+                // Ignore stop errors during teardown
+            })
+        }
+
         if(this._player !== undefined){
             this._player.destroy()
-            clearInterval(this._refreshInterval)
-            clearInterval(this._keepaliveInterval)
-            delete this._player
+            this._player = undefined
         } else {
             console.log('Player is already destroyed!')
         

@@ -70,4 +70,35 @@ describe('ApiClient', () => {
             expect(error).toBeUndefined()
         })
     })
+
+    it('should reject on fetch network failure instead of hanging', async () => {
+        const originalFetch = global.fetch
+        const networkError = new Error('Network down')
+        global.fetch = jest.fn(() => Promise.reject(networkError)) as any
+
+        try {
+            const apiClient = new ApiClient({ host: 'https://example.test' })
+            await expect(apiClient.get('/test')).rejects.toEqual({ error: networkError })
+        } finally {
+            global.fetch = originalFetch
+        }
+    })
+
+    it('should reject on HTTP error status even when response body is valid JSON', async () => {
+        const originalFetch = global.fetch
+        global.fetch = jest.fn(() => Promise.resolve({
+            status: 500,
+            json: () => Promise.resolve({ message: 'Internal Server Error' }),
+        })) as any
+
+        try {
+            const apiClient = new ApiClient({ host: 'https://example.test' })
+            await expect(apiClient.post('/test', '{}')).rejects.toEqual({
+                status: 500,
+                error: { message: 'Internal Server Error' },
+            })
+        } finally {
+            global.fetch = originalFetch
+        }
+    })
 })
